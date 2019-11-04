@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',      # CORS Django
 
+    # Module in Project
+    'sale_portal.user'
 ]
 
 MIDDLEWARE = [
@@ -78,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'sale_portal.wsgi.application'
+WSGI_APPLICATION = 'sale_portal.wsgi.wsgi_be.application'
 
 
 # Database
@@ -95,24 +97,9 @@ DATABASES = {
     },
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+# User Model
+AUTH_USER_MODEL = 'user.User'
+AUTH_PASSWORD_VALIDATORS = []
 
 
 # CORS Django
