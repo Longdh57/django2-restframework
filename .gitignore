@@ -1,0 +1,9 @@
+.idea/*
+.env
+__pycache__/
+/static/
+/media/excel/*
+/media/images/*
+/media/sale_report_form/*
+.venv/*
+
