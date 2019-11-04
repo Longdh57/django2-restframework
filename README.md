@@ -1,22 +1,22 @@
-# CMS Vnpay - Sale Portal API
+# CMS Vnpay Sale Portal
  
 # Main Function
-*- UI:*  
-Provide a System which helps Sale manager can manage sale staff. Application version 1 use framework Django version 2.1.5 to develop.  
-*- API:*  
-Provide backend system to connect and control action from UI to Database. Use framework Django version 2.1.5 to develop.
+*- Frontend:*  
+Provide a System which helps Sale manager can manage sale staff. Application version 1 use framework Django version 2.2.7 to develop.  
+*- Backend:*  
+Provide backend system to connect and control action from UI to Database. Use framework Django version 2.2.7 to develop.
 
 ## Requirement
 - [Python](https://www.python.org/) 3.6 or newer  
-- [Postgres Sql](https://www.postgresql.org/) 10.8 or newer  
+- [Postgres Sql](https://www.postgresql.org/) 10 or newer  
 - [Virtualenv](https://virtualenv.pypa.io/en/latest/)
 
 ## Installation
-**Clone from git VNPAY**  
-`git clone http://gitkhdn.vnpay.local/khdn/gs/sales-portal-core.git`  
+**Clone from git**  
+`git clone git@gitlab.com:long.daohai4894/sale-portal-v2.git`  
 
 **Install and create virtualenv**  
-`cd sales-portal-core`  
+`cd sales-portal`  
 `virtualenv -p python3 .venv`  
 `source .venv/bin/activate`  
 
@@ -46,15 +46,14 @@ Provide backend system to connect and control action from UI to Database. Use fr
 `GRANT ALL PRIVILEGES ON DATABASE sms TO sms_user;`  
 
 **Re-check connection to database in .env file and run migrate**  
-`python manage.py migrate`  
+`python manage.py migrate --setting=sale_portal.setting_be`  
 
-**Make a user as superuser**  
-`python manage.py createsuperuser`
+**Create a superuser**  
+`python manage.py createsuperuser --setting=sale_portal.setting_be`
 
 **Run project**  
-`python manage.py runserver 0.0.0.0:9001`  
-
-Open [http://localhost:9001/](http://localhost:9001/) to check
+For Backend: `python manage.py runserver --setting=sale_portal.setting_be`  
+For Frontend: `python manage.py runserver --setting=sale_portal.setting_fe`  
 
 ## Clone data from server
 **Make sure you can connection to MMS_DB_NAME (recheck in file .env and .env.sample)  
@@ -74,4 +73,4 @@ Run command:**
 
 ## Author
 Developer: [Hai Long Dao](http://longblog.info)  
-_============VNpay Sale Portal 16/1/2019============_
+_============VNpay Sale Portal 04/11/2019============_

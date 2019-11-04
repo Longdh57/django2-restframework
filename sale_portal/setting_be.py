@@ -1,14 +1,16 @@
 import os
 import ast
-import datetime
 
-from django.db import connections
 from dotenv import find_dotenv, load_dotenv
+from django.core.management.commands.runserver import Command as runserver
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
 load_dotenv(os.path.join(BASE_DIR, '.env'), override=True, verbose=True)
+
+runserver.default_port = "9001"
+print('START SALE PORTAL BACKEND...')
 
 
 def get_list(text):
