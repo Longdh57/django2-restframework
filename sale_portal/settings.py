@@ -35,7 +35,6 @@ DEBUG = get_bool_from_env('DEBUG', True)
 ALLOWED_HOSTS = get_list(
     os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1'), )
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,16 +44,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',      # CORS Django
+    'corsheaders',  # CORS Django
 
     # Module in Project
+    'sale_portal.administrative_unit',
+    'sale_portal.cronjob',
     'sale_portal.user'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',        # CORS Django
+    'corsheaders.middleware.CorsMiddleware',  # CORS Django
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -82,7 +83,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sale_portal.wsgi.wsgi_be.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -95,12 +95,19 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     },
+    'mms': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('MMS_DB_NAME', ''),
+        'USER': os.environ.get('MMS_DB_USER', ''),
+        'PASSWORD': os.environ.get('MMS_DB_PASSWORD', ''),
+        'HOST': os.environ.get('MMS_DB_HOST', ''),
+        'PORT': os.environ.get('MMS_DB_PORT', ''),
+    },
 }
 
 # User Model
 AUTH_USER_MODEL = 'user.User'
 AUTH_PASSWORD_VALIDATORS = []
-
 
 # CORS Django
 FRONTEND_URL = os.environ.get('FRONTEND_URL', '')
@@ -108,7 +115,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = [
     FRONTEND_URL
 ]
-
 
 # Config send email
 EMAIL_USE_TLS = True
@@ -119,7 +125,6 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'secret111')
 EMAIL_PORT = 587
 EMAIL_USER_RECEIVER = os.environ.get('EMAIL_USER_RECEIVER', 'long.daohai4894@gmail.com')
 
-
 # Internationalization
 LANGUAGE_CODE = 'vi'
 USE_TZ = False
@@ -127,11 +132,9 @@ TIME_ZONE = 'Asia/Ho_Chi_Minh'
 USE_I18N = True
 USE_L10N = True
 
-
 # Set LOGIN_REDIRECT_URL and LOGOUT_REDIRECT_URL
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
-
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
