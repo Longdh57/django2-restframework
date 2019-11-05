@@ -12,11 +12,3 @@ class QrStatus(models.Model):
     class Meta:
         db_table = 'qr_status'
         default_permissions = ()
-
-    @staticmethod
-    def get_merchant_status_list():
-        merchant_status_list={}
-        data = QrStatus.objects.filter(type='MERCHANT').values('code', 'description')
-        for item in data:
-            merchant_status_list.pop(item['code'], item['description'])
-        return merchant_status_list
