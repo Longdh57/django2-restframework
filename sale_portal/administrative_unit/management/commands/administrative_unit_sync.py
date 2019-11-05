@@ -7,7 +7,7 @@ from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWar
 
 
 class Command(BaseCommand):
-    help = 'Synchronize table: qr_merchant to table: merchant at the first time'
+    help = 'Synchronize table: qr_province, qr_district, qr_wards'
 
     def truncate_table(self, db_name='qr_province'):
         cursor = connection.cursor()
