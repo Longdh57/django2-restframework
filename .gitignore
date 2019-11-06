@@ -7,3 +7,4 @@ __pycache__/
 /media/sale_report_form/*
 .venv/*
 db.sqlite3
+*.log

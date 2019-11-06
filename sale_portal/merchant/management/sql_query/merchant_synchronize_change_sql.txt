@@ -1,0 +1,63 @@
+select
+  kq.qr_merchant_id as merchant_id,
+  kq.status         as status,
+  case
+  when status = 0
+    then 'New row in qr_merchant table'
+  when status = 1
+    then 'Deleted in qr_merchant table'
+  when status = 2
+    then 'Change in field status'
+  when status = 3
+    then 'Change in field merchant_address'
+  when status = 4
+    then 'Change in field merchant_name'
+  when status = 5
+    then 'Change in field merchant_code'
+  when status = 6
+    then 'Change in field merchant_brand'
+  when status = 7
+    then 'Change in field merchant_type_id'
+  when status = 8
+    then 'Change in field staff'
+  else 'Other change'
+  end               as description
+from (
+       select
+         mer.id      as mer_merchant_id,
+         mer.merchant_code as mer_merchant_code,
+         mer.merchant_name as mer_merchant_name,
+         mer.status        as mer_status,
+         mer.address       as mer_address,
+
+         qr.id             as qr_merchant_id,
+         qr.merchant_code  as qr_merchant_code,
+         qr.merchant_name  as qr_merchant_name,
+         qr.status         as qr_status,
+         qr.address        as qr_address,
+         qr.merchant_type  as qr_merchant_type,
+         case
+         when mer.id isnull
+           then 0
+         when qr.id isnull
+           then 1
+         when mer.status != qr.status
+           then 2
+         when mer.address != qr.address
+           then 3
+         when mer.merchant_name != qr.merchant_name
+           then 4
+         when mer.merchant_code != qr.merchant_code
+           then 5
+         when mer.merchant_brand != qr.merchant_brand
+           then 6
+         when mer.merchant_type != qr.merchant_type
+           then 7
+         when mer.staff != qr.staff
+           then 8
+         end               as status
+       from merchant mer
+         full outer join qr_merchant qr on mer.id = qr.id
+       order by qr.id asc
+     ) kq
+where status notnull

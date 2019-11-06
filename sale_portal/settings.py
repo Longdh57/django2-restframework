@@ -1,5 +1,6 @@
 import os
 import ast
+import logging
 
 from dotenv import find_dotenv, load_dotenv
 from django.core.management.commands.runserver import Command as runserver
@@ -8,6 +9,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
 load_dotenv(os.path.join(BASE_DIR, '.env'), override=True, verbose=True)
+
+# Logging, default at system.log, read more in https://cuccode.com/python_logging.html
+logging.basicConfig(filename=os.environ.get('LOGGING_FILE', 'system.log'), level=logging.DEBUG,
+                    format='[%(asctime)s] - [%(levelname)s] - %(message)s')
 
 runserver.default_port = "9001"
 print('START SALE PORTAL BACKEND...')
@@ -49,6 +54,7 @@ INSTALLED_APPS = [
     # Module in Project
     'sale_portal.administrative_unit',
     'sale_portal.cronjob',
+    'sale_portal.merchant',
     'sale_portal.qr_status',
     'sale_portal.user'
 ]

@@ -1,4 +1,8 @@
 from django.db import models
+from django.utils import timezone
+from django.contrib.postgres.fields import JSONField
+
+from sale_portal.merchant import MerchantLogType
 
 
 class QrMerchant(models.Model):
@@ -89,8 +93,7 @@ class Merchant(models.Model):
     merchant_code = models.CharField(max_length=20, null=True, help_text='Equivalent with qr_merchant.merchant_code')
     merchant_brand = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_merchant.merchant_brand')
     merchant_name = models.CharField(max_length=100, null=True, help_text='Equivalent with qr_merchant.merchant_name')
-    merchant_type = models.ForeignKey(QrTypeMerchant, on_delete=models.SET_NULL, blank=True, null=True,
-                                      help_text='Equivalent with qr_merchant.merchant_type')
+    merchant_type = models.IntegerField(null=True,help_text='Equivalent with qr_merchant.merchant_type')
     address = models.CharField(max_length=150, null=True, help_text='Equivalent with qr_merchant.address')
     description = models.CharField(max_length=100, null=True, help_text='Equivalent with qr_merchant.description')
     status = models.IntegerField(default=1, null=True, help_text='Equivalent with qr_merchant.status')
@@ -98,22 +101,12 @@ class Merchant(models.Model):
     staff = models.IntegerField(null=True, help_text='Equivalent with qr_merchant.staff')
     created_date = models.DateTimeField(null=True, help_text='Equivalent with qr_merchant.created_date')
     modify_date = models.DateTimeField(null=True, help_text='Equivalent with qr_merchant.modify_date')
-    is_take_care = models.IntegerField(default=1)
-    inactivated_take_care_date = models.DateTimeField(null=True, blank=True)
+    is_care = models.IntegerField(default=1)
+    un_care_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'merchant'
         default_permissions = ()
-        permissions = (
-            ('merchant_datatables', 'Can get merchant datatables'),
-            ('merchant_datatables_not_take_care', 'Can get merchant datatables not take care'),
-            ('merchant_list', 'Can get merchant list'),
-            ('merchant_detail', 'Can get merchant_detail'),
-            ('merchant_edit', 'Can use merchant_edit'),
-            ('merchant_set_not_take_care', 'Can use merchant_set_not_take_care'),
-            ('merchant_set_active_take_care', 'Can use merchant_set_active_take_care'),
-            ('merchant_import', 'Can use merchant import data'),
-        )
 
     def __str__(self):
         return self.merchant_code
@@ -125,61 +118,28 @@ class Merchant(models.Model):
             qr_merchant = None
         return qr_merchant
 
-    def get_staff(self):
-        try:
-            qr_staff = QrStaff.objects.get(pk=self.staff)
-            staff = Staff.objects.filter(email=qr_staff.email).first()
-        except QrStaff.DoesNotExist or Staff.DoesNotExist:
-            staff = None
-        return staff
+    def change_is_care(self):
+        if self.is_care == 1:
+            self.is_take_care = 0
+            self.un_care_date = timezone.now()
+            self.save()
+        else:
+            self.is_take_care = 1
+            self.un_care_date = None
+            self.save()
+        return
 
-    def get_team(self):
-        team = None
-        qr_staff = QrStaff.objects.get(pk=self.staff)
-        staff = Staff.objects.filter(email=qr_staff.email).first()
-        if staff is None:
-            return team
-        staff_team = StaffTeam.objects.filter(staff=staff)
-        if staff_team.count() > 0:
-            team = staff_team.first().team
-        return team
 
-    def get_merchant_cube(self):
-        shops = Shop.objects.filter(merchant=self)
-        shop_lists = []
-        for shop in shops:
-            shop_lists.append(str(shop.id))
-        shop_cubes = ShopCube.objects.filter(shop_id__in=shop_lists)
-        merchant_cube = {
-            'number_of_tran_7d': 0,
-            'number_of_tran_acm': 0,
-            'value_of_tran_7d': 0,
-            'value_of_tran_acm': 0,
-            'number_of_new_customer': 0,
-            'number_of_tran': 0,
-            'value_of_tran': 0,
-            'number_of_tran_30d': 0
-        }
-        for shop_cube in shop_cubes:
-            merchant_cube.update(
-                number_of_tran_7d=merchant_cube.get('number_of_tran_7d') + shop_cube.number_of_tran_7d,
-                number_of_tran_acm=merchant_cube.get('number_of_tran_acm') + shop_cube.number_of_tran_acm,
-                value_of_tran_7d=merchant_cube.get('value_of_tran_7d') + int(shop_cube.value_of_tran_7d),
-                value_of_tran_acm=merchant_cube.get('value_of_tran_acm') + int(shop_cube.value_of_tran_acm),
-                number_of_new_customer=merchant_cube.get('number_of_new_customer') + int(
-                    shop_cube.number_of_new_customer),
-                number_of_tran=merchant_cube.get('number_of_tran') + int(shop_cube.number_of_tran),
-                value_of_tran=merchant_cube.get('value_of_tran') + int(shop_cube.value_of_tran),
-                number_of_tran_30d=merchant_cube.get('number_of_tran_30d') + int(shop_cube.number_of_tran_30d),
-            )
-        return merchant_cube
+class MerchantLog(models.Model):
+    old_data = JSONField(blank=True, default=dict)
+    new_data = JSONField(blank=True, default=dict)
+    type = models.IntegerField(choices=MerchantLogType.CHOICES)
+    merchant_id = models.IntegerField(blank=True, null=True)
+    created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
-    def set_active_take_care(self):
-        self.is_take_care = 1
-        self.inactivated_take_care_date = None
-        self.save()
+    class Meta:
+        db_table = 'merchant_log'
+        default_permissions = ()
 
-    def set_not_take_care(self):
-        self.is_take_care = 0
-        self.inactivated_take_care_date = timezone.now()
-        self.save()
+    def get_new_data(self):
+        return self.new_data
