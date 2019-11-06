@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'sale_portal.administrative_unit',
     'sale_portal.cronjob',
     'sale_portal.merchant',
+    'sale_portal.terminal',
     'sale_portal.qr_status',
     'sale_portal.user'
 ]
