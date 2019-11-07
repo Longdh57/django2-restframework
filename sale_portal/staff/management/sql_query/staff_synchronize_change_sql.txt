@@ -1,0 +1,60 @@
+select
+  kq.*,
+  case
+  when kq.status = 0
+    then 'New row in qr_staff table'
+  when kq.status = 1
+    then 'Deleted in qr_staff table'
+  when kq.status = 2
+    then 'Updated information'
+  else 'No change'
+  end as description
+from (
+       select
+         s.id               as s_staff_id,
+         s.email            as s_email,
+         s.status           as s_status,
+
+         qr.staff_id        as qr_staff_id,
+         qr.staff_code      as qr_staff_code,
+         qr.nick_name       as qr_nick_name,
+         qr.full_name       as qr_full_name,
+         qr.email           as qr_email,
+         qr.mobile          as qr_mobile,
+         case when qr.total_status > 0
+           then 1
+         else -1 end        as qr_status,
+         qr.department_id   as qr_department_id,
+         qr.department_code as qr_department_code,
+         qr.created_date    as qr_created_date,
+         qr.modify_date     as qr_modify_date,
+
+         case
+         when s.id isnull
+           then 0
+         when qr.staff_id isnull
+           then 1
+         when s.status != (case when qr.total_status > 0
+           then 1
+                           else -1 end) or s.email != qr.email or s.staff_code != qr.staff_code
+              or s.nick_name != qr.nick_name or s.full_name != qr.full_name or s.mobile != qr.mobile
+              or s.department_id != qr.department_id or s.department_code != qr.department_code
+           then 2
+         else 3
+         end                as status
+       from staff s
+         full outer join (select
+                            st1.*,
+                            st2.status as total_status
+                          from qr_staff st1 inner join
+                            (select
+                               min(staff_id) as staff_id,
+                               sum(case
+                                   when status = 1
+                                     then 1
+                                   else 0
+                                   end)      as status
+                             from qr_staff
+                             group by email) st2
+                              on st1.staff_id = st2.staff_id) qr on s.id = qr.staff_id) kq
+where status notnull

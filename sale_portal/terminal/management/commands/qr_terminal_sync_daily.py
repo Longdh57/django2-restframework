@@ -1,8 +1,7 @@
 import logging
 
 from itertools import islice
-from django.db import connections
-from django.db import connection
+from django.db import connection, connections
 from django.core.management.base import BaseCommand
 
 from sale_portal.terminal.models import QrTerminal
