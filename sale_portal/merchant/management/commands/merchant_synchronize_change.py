@@ -1,8 +1,8 @@
 import os
 import logging
 
-from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
+from django.core.management.base import BaseCommand, CommandError
 
 from sale_portal.cronjob.views import cron_create, cron_update
 from sale_portal.merchant.models import Merchant, QrMerchant, MerchantLog
@@ -128,7 +128,8 @@ class Command(BaseCommand):
                         raise CommandError('Merchant with merchant_id: "%s" does not exist' % (
                             data['merchant_id']))
 
-            self.stdout.write(self.style.SUCCESS('Successfully command. Created: {}. Updated: {}'.format(created, updated)))
+            self.stdout.write(
+                self.style.SUCCESS('Successfully command. Created: {}. Updated: {}'.format(created, updated)))
 
             cron_update(cronjob, status=1)
 

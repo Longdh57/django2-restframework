@@ -1,6 +1,8 @@
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 
 from sale_portal.merchant.models import Merchant
+from sale_portal.terminal import TerminalLogType
 
 
 class QrTerminal(models.Model):
@@ -77,10 +79,30 @@ class QrTerminalContact(models.Model):
         return self.terminal_id
 
 
+class TerminalQueryset(models.QuerySet):
+    def create(self, **kwargs):
+        terminal = super().create(**kwargs)
+        return terminal
+
+    def register_vnpayment(self):
+        """Return register_vnpayment terminals."""
+        return self.filter(register_vnpayment=1)
+
+    def un_register_vnpayment(self):
+        """Return un register_vnpayment terminals."""
+        return self.exclude(register_vnpayment=1)
+
+
 class Terminal(models.Model):
     terminal_id = models.CharField(max_length=100, null=True, help_text='Equivalent with qr_terminal.terminal_id')
-    merchant = models.ForeignKey(Merchant, on_delete=models.SET_NULL, null=True,
-                                 help_text='Equivalent with qr_terminal.merchant_id')
+    merchant = models.ForeignKey(
+        Merchant,
+        on_delete=models.SET_NULL,
+        related_name="terminals",
+        blank=True,
+        null=True,
+        help_text='Equivalent with qr_terminal.merchant_id'
+    )
     terminal_name = models.CharField(max_length=100, null=True, help_text='Equivalent with qr_terminal.terminal_name')
     terminal_address = models.CharField(max_length=255, null=True,
                                         help_text='Equivalent with qr_terminal.terminal_address')
@@ -115,3 +137,18 @@ class Terminal(models.Model):
         except QrTerminalContact.DoesNotExist:
             qr_terminal_contact = None
         return qr_terminal_contact
+
+
+class TerminalLog(models.Model):
+    old_data = JSONField(blank=True, default=dict)
+    new_data = JSONField(blank=True, default=dict)
+    type = models.IntegerField(choices=TerminalLogType.CHOICES)
+    terminal_id = models.IntegerField(blank=True, null=True)
+    created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        db_table = 'terminal_log'
+        default_permissions = ()
+
+    def get_new_data(self):
+        return self.new_data

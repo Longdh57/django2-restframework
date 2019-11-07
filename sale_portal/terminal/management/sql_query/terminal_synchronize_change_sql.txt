@@ -1,0 +1,70 @@
+select
+  kq.qr_ter_terminal_id as terminal_id,
+  kq.qr_merchant_id     as merchant_id,
+  kq.status             as status,
+  case
+  when status = 0
+    then 'New row in qr_terminal table'
+  when status = 1
+    then 'Deleted in qr_terminal table'
+  when status = 2
+    then 'Change in field status'
+  when status = 3
+    then 'Change in field terminal_address'
+  when status = 4
+    then 'Change in field terminal_name'
+  when status = 5
+    then 'Change in field register_qr'
+  when status = 6
+    then 'Change in field register_vnpayment'
+  when status = 7
+    then 'Change in field wards_code'
+  when status = 8
+    then 'Change in field business_address'
+  else 'Other change'
+  end                   as description
+from (
+       select
+         ter.terminal_id        as ter_terminal_id,
+         ter.terminal_name      as ter_terminal_name,
+         ter.terminal_address   as ter_terminal_address,
+         ter.merchant_id        as ter_merchant_id,
+         ter.status             as ter_status,
+         ter.register_qr        as ter_register_qr,
+         ter.register_vnpayment as ter_register_vnpayment,
+         ter.wards_code         as ter_wards_code,
+         ter.business_address   as ter_business_address,
+
+         qr.terminal_id         as qr_ter_terminal_id,
+         qr.terminal_name       as qr_terminal_name,
+         qr.terminal_address    as qr_terminal_address,
+         qr.merchant_id         as qr_merchant_id,
+         qr.status              as qr_status,
+         qr.register_qr         as qr_register_qr,
+         qr.wards_code          as qr_wards_code,
+         qr.business_address    as qr_business_address,
+         case
+         when ter.terminal_id is null
+           then 0
+         when qr.terminal_id is null
+           then 1
+         when ter.status != qr.status
+           then 2
+         when ter.terminal_address != qr.terminal_address
+           then 3
+         when ter.terminal_name != qr.terminal_name
+           then 4
+         when ter.register_qr != qr.register_qr
+           then 5
+         when ter.register_vnpayment != qr.register_vnpayment
+           then 6
+         when ter.wards_code != qr.wards_code
+           then 7
+         when ter.business_address != qr.business_address
+           then 8
+         end                    as status
+       from terminal ter
+         full outer join qr_terminal qr on ter.terminal_id = qr.terminal_id and ter.merchant_id = qr.merchant_id
+       order by qr.id asc
+     ) kq
+where status notnull
