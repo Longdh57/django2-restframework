@@ -58,6 +58,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',  # CORS Django
 
+    # Rest framework
+    'rest_framework',
+
     # Module in Project
     'sale_portal.administrative_unit',
     'sale_portal.cronjob',
