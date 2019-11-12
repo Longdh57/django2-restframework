@@ -35,9 +35,18 @@ DEBUG = get_bool_from_env('DEBUG', True)
 ALLOWED_HOSTS = get_list(
     os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1'), )
 
+SALE_PORTAL_PROJECT = 'FRONTEND'
+
+# SITE URL
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:9002')
+
+# API URL
+API_URL = os.environ.get('API_URL', 'localhost:9001')
+
+# SITE ENVIRONMENT
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'LOCAL')
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,6 +54,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Module in Project
+    'sale_portal.temp',
 ]
 
 MIDDLEWARE = [
@@ -117,4 +129,14 @@ USE_I18N = True
 USE_L10N = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
+
+STATICFILES_DIRS = (
+    ('assets', os.path.join(BASE_DIR, 'sale_portal', 'static', 'assets')),
+    ('global_assets', os.path.join(BASE_DIR, 'sale_portal', 'static', 'global_assets')),
+)
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder']

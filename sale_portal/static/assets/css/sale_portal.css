@@ -1,0 +1,36 @@
+#navbar-nav-hide {
+    margin: 0 10px 0 -16px;
+}
+
+#navbar-nav-hide > a:hover {
+    background-color: #fff;
+}
+
+span.menu-hover {
+    display: none;
+    width: 13.375rem;
+    left: 3.5rem;
+    position: absolute;
+    color: white;
+    z-index: 2000;
+    background-color: #252f33;
+    margin-top: -0.7rem;
+    padding: 0.8rem 0.5rem;
+}
+.nav-item:hover a.active .menu-hover{
+    background-color: #26a69a !important;
+}
+
+.nav-item:hover .menu-hover{
+    display: block !important;
+}
+
+.word-wrap {
+    word-break: break-word;
+}
+
+@media screen and (max-width: 600px) {
+    #navbar-nav-hide {
+        display: none;
+    }
+}

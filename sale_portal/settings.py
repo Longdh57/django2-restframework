@@ -40,8 +40,15 @@ DEBUG = get_bool_from_env('DEBUG', True)
 ALLOWED_HOSTS = get_list(
     os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1'), )
 
-# Application definition
+SALE_PORTAL_PROJECT = 'BACKEND'
 
+# SITE URL
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:9002')
+
+# SITE ENVIRONMENT
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'LOCAL')
+
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -148,7 +155,6 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # Media file (Images, CSV, ...)
 MEDIA_URL = os.environ.get('MEDIA_URL', '/')

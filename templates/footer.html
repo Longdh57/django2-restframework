@@ -1,0 +1,19 @@
+{% now "Y" as current_year %}
+
+<div class="navbar navbar-expand-lg navbar-light">
+  <div class="text-center d-lg-none w-100">
+    <span class="navbar-text">
+        &copy; {{ current_year }} Vnpay - Sale Portal
+    </span>
+  </div>
+
+  <div class="navbar-collapse collapse" id="navbar-footer">
+    <span class="navbar-text">
+      &copy; {% now "Y" %} Vnpay - Sale Portal
+    </span>
+
+    <ul class="navbar-nav ml-lg-auto">
+      <li class="nav-item"><a href="#" class="navbar-nav-link" target="_blank"><i class="icon-alarm mr-2"></i> {% now "jS F Y" %}</a></li>
+    </ul>
+  </div>
+</div>
