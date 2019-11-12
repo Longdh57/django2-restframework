@@ -5,12 +5,13 @@ from django.views.generic import TemplateView
 
 from sale_portal.merchant.urls import urlpatterns as merchant_urls
 from sale_portal.user.urls import url_login_patterns as login_url
-
+from sale_portal.user.urls import url_test_patterns as test_url
 
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     api_urlpatterns = [
         url(r'^merchant/', include((merchant_urls, 'merchant'), namespace='merchant')),
         url(r'^api/login/', include(login_url)),
+        url(r'^api/test/', include(test_url)),
     ]
 
     urlpatterns = [

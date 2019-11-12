@@ -1,3 +1,20 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from .serializers import UserSerializer
 
-# Create your views here.
+
+def jwt_response_payload_handler(token, user=None, request=None):
+    return {
+        'token': token,
+        'user': UserSerializer(user, context={'request': request}).data
+    }
+
+
+@api_view(['GET'])
+# @login_required
+def test_api(request):
+    return JsonResponse({
+        'name_api': 'test',
+        'result': 'success'
+    }, status=200)
