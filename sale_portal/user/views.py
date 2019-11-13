@@ -9,12 +9,3 @@ def jwt_response_payload_handler(token, user=None, request=None):
         'token': token,
         'user': UserSerializer(user, context={'request': request}).data
     }
-
-
-@api_view(['GET'])
-# @login_required
-def test_api(request):
-    return JsonResponse({
-        'name_api': 'test',
-        'result': 'success'
-    }, status=200)

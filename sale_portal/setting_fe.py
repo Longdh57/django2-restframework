@@ -57,6 +57,12 @@ INSTALLED_APPS = [
 
     # Module in Project
     'sale_portal.temp',
+    'sale_portal.cronjob',
+    'sale_portal.merchant',
+    'sale_portal.qr_status',
+    'sale_portal.staff',
+    'sale_portal.team',
+    'sale_portal.terminal'
 ]
 
 MIDDLEWARE = [
