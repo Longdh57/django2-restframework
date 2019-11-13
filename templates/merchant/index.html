@@ -51,10 +51,6 @@
                   </div>
 
                   <div class="col-lg-2">
-                    <input type="text" class="form-control" name="department_name" placeholder="Phòng ban">
-                  </div>
-
-                  <div class="col-lg-2">
                     <select class="form-control select-search" name="staff_id" id="staff_id" data-fouc>
                       <option value="">--- Chọn NV Sale ---</option>
                     </select>
@@ -67,6 +63,28 @@
                       <option value="-1">Không hoạt động</option>
                       <option value="0">Khác</option>
                     </select>
+                  </div>
+
+                  <div class="col-lg-2">
+                    <div class="input-group">
+                      <input type="text" class="form-control pickadate-accessibility" name="from_date" id="from_date"
+                             placeholder="Từ ngày ...">
+                      <span class="input-group-prepend">
+                      <span class="input-group-text bg-primary-600 border-primary-600"><i
+                          class="icon-calendar3"></i></span>
+                    </span>
+                    </div>
+                  </div>
+
+                  <div class="col-lg-2">
+                    <div class="input-group">
+                      <input type="text" class="form-control pickadate-accessibility" name="to_date" id="to_date"
+                             placeholder="Đến ngày ...">
+                      <span class="input-group-prepend">
+                      <span class="input-group-text bg-primary-600 border-primary-600"><i
+                          class="icon-calendar3"></i></span>
+                    </span>
+                    </div>
                   </div>
 
                   <div class="col-lg-2">
@@ -84,8 +102,7 @@
           <th>Mã</th>
           <th>Brand</th>
           <th>Tên</th>
-          <th>Phòng ban</th>
-          <th>NV sale ký HĐ</th>
+          <th>NV ký HĐ</th>
           <th>Trạng thái</th>
           <th>Ngày tạo</th>
           <th>SL khách mới hôm qua</th>
@@ -220,6 +237,10 @@
 {% endblock %}
 
 {% block script %}
+  <script language="javascript" type=text/javascript>
+      var url_api = "{% get_api_url %}";
+  </script>
   <script src="{% static 'global_assets/js/plugins/tables/datatables/datatables.min.js' %}"></script>
   <script src="{% static 'global_assets/js/plugins/forms/selects/select2.min.js' %}"></script>
+  <script src="{% static 'assets/js/merchant/merchant.js' %}"></script>
 {% endblock %}
