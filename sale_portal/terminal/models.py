@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
+from sale_portal.shop.models import Shop
 from sale_portal.merchant.models import Merchant
 from sale_portal.terminal import TerminalLogType
 
@@ -80,15 +81,11 @@ class QrTerminalContact(models.Model):
 
 
 class TerminalQueryset(models.QuerySet):
-    def create(self, **kwargs):
-        terminal = super().create(**kwargs)
-        return terminal
-
-    def register_vnpayment(self):
+    def terminal_register_vnpayment(self):
         """Return register_vnpayment terminals."""
         return self.filter(register_vnpayment=1)
 
-    def un_register_vnpayment(self):
+    def terminal_un_register_vnpayment(self):
         """Return un register_vnpayment terminals."""
         return self.exclude(register_vnpayment=1)
 
@@ -116,6 +113,9 @@ class Terminal(models.Model):
                                         help_text='Equivalent with qr_terminal.business_address')
     created_date = models.DateTimeField(null=True, help_text='Equivalent with qr_terminal.created_date')
     modify_date = models.DateTimeField(null=True, help_text='Equivalent with qr_terminal.modify_date')
+    shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, related_name='terminals', blank=True, null=True)
+
+    objects = TerminalQueryset.as_manager()
 
     class Meta:
         db_table = 'terminal'
