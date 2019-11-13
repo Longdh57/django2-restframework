@@ -1,5 +1,9 @@
+import logging
+
 from django.db import models
+from django.dispatch import receiver
 from django.db.models import Q, Count
+from django.db.models.signals import post_save
 from django.contrib.postgres.fields import JSONField
 
 from sale_portal.user.models import User
@@ -47,6 +51,52 @@ class Shop(models.Model):
 
     def __str__(self):
         return self.name
+
+    def __init__(self, *args, **kwargs):
+        super(Shop, self).__init__(*args, **kwargs)
+        self.__important_fields = ['name', 'take_care_status', 'staff_id', 'merchant_id', 'province_id', 'district_id',
+                                   'wards_id', 'street', 'activated']
+        for field in self.__important_fields:
+            setattr(self, '__original_%s' % field, getattr(self, field))
+
+    def compare(self):
+        old_data = {}
+        new_data = {}
+        log_type = ShopLogType.CREATED
+
+        for field in self.__important_fields:
+            orig = '__original_%s' % field
+            old_data[field] = getattr(self, field)
+            new_data[field] = getattr(self, orig)
+            if field == 'staff_id' and getattr(self, orig) != getattr(self, field):
+                log_type = ShopLogType.CHANGE_STAFF
+            if field == 'take_care_status' and getattr(self, orig) != getattr(self, field):
+                log_type = ShopLogType.CHANGE_TAKE_CARE_STATUS
+            if field == 'activated' and getattr(self, orig) != getattr(self, field):
+                log_type = ShopLogType.CHANGE_ACTIVATED
+            if field not in ['staff_id', 'take_care_status', 'activated'] and getattr(self, orig) != getattr(self,
+                                                                                                             field):
+                log_type = ShopLogType.OTHER_UPDATE
+        return old_data, new_data, log_type
+
+    def save(self, *args, **kwargs):
+        try:
+            old_data, new_data, type = self.compare()
+            if type == ShopLogType.CREATED:
+                ShopLog.objects.create(new_data=new_data, shop_id=self.id, type=type)
+            else:
+                ShopLog.objects.create(old_data=old_data, new_data=new_data, shop_id=self.id, type=type)
+        except Exception as e:
+            logging.error('Save shop exception: %s', e)
+        super(Shop, self).save(*args, **kwargs)
+
+
+@receiver(post_save, sender=Shop)
+def create_code(sender, instance, created, *args, **kwargs):
+    if created:
+        instance.code = instance.id
+        instance.save()
+        return
 
 
 class ShopLog(models.Model):

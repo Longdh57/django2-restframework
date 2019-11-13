@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
@@ -123,6 +125,34 @@ class Terminal(models.Model):
 
     def __str__(self):
         return self.terminal_id
+
+    def __init__(self, *args, **kwargs):
+        super(Terminal, self).__init__(*args, **kwargs)
+        self.__important_fields = ['shop_id']
+        for field in self.__important_fields:
+            setattr(self, '__original_%s' % field, getattr(self, field))
+
+    def compare(self):
+        old_data = {}
+        new_data = {}
+        log_type = TerminalLogType.CREATE_NEW
+
+        for field in self.__important_fields:
+            orig = '__original_%s' % field
+            old_data[field] = getattr(self, field)
+            new_data[field] = getattr(self, orig)
+            if field == 'shop_id' and getattr(self, orig) != getattr(self, field):
+                log_type = TerminalLogType.CHANGE_SHOP
+        return old_data, new_data, log_type
+
+    def save(self, *args, **kwargs):
+        try:
+            old_data, new_data, type = self.compare()
+            if type == TerminalLogType.CHANGE_SHOP:
+                TerminalLog.objects.create(old_data=old_data, new_data=new_data, terminal_id=self.id, type=type)
+        except Exception as e:
+            logging.error('Save terminal exception: %s', e)
+        super(Terminal, self).save(*args, **kwargs)
 
     def get_qr_terminal(self):
         try:

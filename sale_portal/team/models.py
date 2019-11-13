@@ -1,3 +1,4 @@
+import logging
 import datetime
 
 from django.db import models
@@ -39,16 +40,22 @@ class Team(models.Model):
         return old_data, new_data, type
 
     def save(self, *args, **kwargs):
-        old_data, new_data, type = self.compare()
-        if type == TeamLogType.CREATED:
-            TeamLog.objects.create(new_data=new_data, team_id=self.id, type=type)
-        else:
-            TeamLog.objects.create(old_data=old_data, new_data=new_data, team_id=self.id, type=type)
+        try:
+            old_data, new_data, type = self.compare()
+            if type == TeamLogType.CREATED:
+                TeamLog.objects.create(new_data=new_data, team_id=self.id, type=type)
+            else:
+                TeamLog.objects.create(old_data=old_data, new_data=new_data, team_id=self.id, type=type)
+        except Exception as e:
+            logging.error('Save team exception: %s', e)
         super(Team, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        old_data, new_data, type = self.compare()
-        TeamLog.objects.create(old_data=old_data, team_id=self.id, type=TeamLogType.DELETED)
+        try:
+            old_data, new_data, type = self.compare()
+            TeamLog.objects.create(old_data=old_data, team_id=self.id, type=TeamLogType.DELETED)
+        except Exception as e:
+            logging.error('Delete team exception: %s', e)
         super(Team, self).delete()
 
     def __str__(self):
