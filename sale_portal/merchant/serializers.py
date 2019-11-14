@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.utils import formats
 
 from .models import Merchant
-from ..qr_status.models import QrStatus
 
 
 class MerchantSerializer(serializers.ModelSerializer):
