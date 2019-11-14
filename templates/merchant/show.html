@@ -123,6 +123,123 @@
       </table>
     </div>
   </div>
+
+  <div id="merchant_detail" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-lg" id="modal-shop-detail">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Thông tin chi tiết Merchant</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body p-0">
+          <!-- merchant information -->
+          <legend class="text-uppercase font-size-sm font-weight-bold pl-3 pr-3 text-primary">Thông tin merchant
+          </legend>
+          <div class="row">
+            <div class="col-md-7">
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-3 font-weight-bold">Mã Merchant</label>
+                <label class="col-lg-9" id="merchant_code"></label>
+              </div>
+
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-3 font-weight-bold">Merchant Brand</label>
+                <label class="col-lg-9" id="merchant_brand"></label>
+              </div>
+
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-3 font-weight-bold">Tên Merchant</label>
+                <label class="col-lg-9" id="merchant_name"></label>
+              </div>
+
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-3 font-weight-bold">Địa chỉ</label>
+                <label class="col-lg-9" id="merchant_address"></label>
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-4 font-weight-bold">Ngành nghề</label>
+                <label class="col-lg-8" id="merchant_type"></label>
+              </div>
+
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-4 font-weight-bold">NV ký HĐ</label>
+                <label class="col-lg-8" id="merchant_staff"></label>
+              </div>
+
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-4 font-weight-bold">Ngày tạo</label>
+                <label class="col-lg-8" id="merchant_created_date"></label>
+              </div>
+
+              <div class="col-md-12 mb-2 d-flex">
+                <label class="col-lg-4 font-weight-bold">Tình trạng</label>
+                <label class="col-lg-8" id="merchant_status"></label>
+              </div>
+            </div>
+          </div>
+          <!-- shop information -->
+          <legend class="text-uppercase font-size-sm font-weight-bold pl-3 pr-3 text-primary">Thông tin giao dịch</legend>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="col-md-12 mb-0 d-flex">
+                <label class="col-lg-7 font-weight-bold">SL KH mới hôm qua</label>
+                <label class="col-lg-5" id="number_of_new_customer"></label>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="col-md-12 mb-0 d-flex">
+                <label class="col-lg-7 font-weight-bold">SLGD hôm qua</label>
+                <label class="col-lg-5" id="number_of_tran"></label>
+              </div>
+              <div class="col-md-12 mb-0 d-flex">
+                <label class="col-lg-7 font-weight-bold">GTGD hôm qua</label>
+                <label class="col-lg-5" id="value_of_tran"></label>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="col-md-12 mb-0 d-flex">
+                <label class="col-lg-7 font-weight-bold">SLGD 7 ngày</label>
+                <label class="col-lg-5" id="number_of_tran_7d"></label>
+              </div>
+              <div class="col-md-12 mb-0 d-flex">
+                <label class="col-lg-7 font-weight-bold">GTGD 30 ngày</label>
+                <label class="col-lg-5" id="number_of_tran_30d"></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- shop information -->
+          <legend class="text-uppercase font-size-sm font-weight-bold pl-3 pr-3 text-primary">Danh sách terminal trực thuộc
+          </legend>
+
+          <div class="row">
+            <div class="col-md-12">
+              <table class="table table-togglable table-hover" id="tableTerminal">
+                <thead>
+                <tr>
+                  <th data-toggle="true">Terminal ID</th>
+                  <th data-hide="phone">Tên Terminal</th>
+                  <th data-hide="phone">Địa chỉ</th>
+                  <th data-hide="phone">Trạng thái Terminal</th>
+                </tr>
+                </thead>
+                <tbody id="tableTerminalBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block script %}
@@ -137,5 +254,5 @@
   <script src="{% static 'global_assets/js/plugins/pickers/pickadate/picker.date.js' %}"></script>
   <script src="{% static 'assets/js/picker_date.js' %}"></script>
   <!--My js-->
-  <script src="{% static 'assets/js/merchant/index.js' %}"></script>
+  <script src="{% static 'assets/js/merchant/merchant.js' %}"></script>
 {% endblock %}

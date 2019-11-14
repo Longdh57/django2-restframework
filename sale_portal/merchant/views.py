@@ -1,8 +1,11 @@
 from django.db.models import Q
 from django.http import JsonResponse
 from django.template.response import TemplateResponse
+from django.shortcuts import get_object_or_404
+from django.utils import formats
 from rest_framework import viewsets
 from datetime import datetime
+
 
 from .models import Merchant
 from .serializers import MerchantSerializer
@@ -47,15 +50,33 @@ class MerchantViewSet(viewsets.ModelViewSet):
 
 
 def show(request, pk):
-    # Trả về view, ví dụ TemplateResponse(request, 'merchant/show.html')
-    pass
+    ctx = {
+        'pk': pk,
+    }
+    return TemplateResponse(request, 'merchant/show.html', ctx)
 
 
 def detail(request, pk):
     # API detail
+    merchant = get_object_or_404(Merchant, pk=pk)
+    data = {
+        'merchant_id': merchant.id,
+        'merchant_code': merchant.merchant_code,
+        'merchant_brand': merchant.merchant_brand,
+        'merchant_name': merchant.merchant_name,
+        'address': merchant.address,
+        'type': merchant.get_type().full_name if merchant.get_type() else '',
+        'staff': {
+            'full_name': merchant.get_staff().full_name if merchant.get_staff() is not None else '',
+            'email': merchant.get_staff().email if merchant.get_staff() is not None else ''
+        },
+        'created_date': formats.date_format(merchant.created_date,
+                                            "SHORT_DATETIME_FORMAT") if merchant.created_date else '',
+        'status': merchant.get_status(),
+        'merchant_cube': merchant.get_merchant_cube(),
+    }
     return JsonResponse({
-        'data': 'Hello Binh',
-        'pk': pk
+        'data': data
     }, status=200)
 
 
