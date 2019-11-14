@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'sale_portal.merchant',
     'sale_portal.qr_status',
     'sale_portal.shop',
+    'sale_portal.shop_cube',
     'sale_portal.staff',
     'sale_portal.team',
     'sale_portal.terminal',
