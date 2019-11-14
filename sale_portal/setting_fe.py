@@ -56,13 +56,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Module in Project
-    'sale_portal.temp',
+    'sale_portal.administrative_unit',
     'sale_portal.cronjob',
     'sale_portal.merchant',
     'sale_portal.qr_status',
+    'sale_portal.shop',
+    'sale_portal.shop_cube',
     'sale_portal.staff',
     'sale_portal.team',
-    'sale_portal.terminal'
+    'sale_portal.temp',
+    'sale_portal.terminal',
+    'sale_portal.user',
 ]
 
 MIDDLEWARE = [
@@ -146,3 +150,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder']
+
+# User Model
+AUTH_USER_MODEL = 'user.User'
+AUTH_PASSWORD_VALIDATORS = []
