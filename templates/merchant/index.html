@@ -59,9 +59,13 @@
                   <div class="col-lg-2">
                     <select class="custom-select" name="status">
                       <option value="">--- Chọn trạng thái ---</option>
+                      <option value="-1">Đã đóng</option>
                       <option value="1">Hoạt động</option>
-                      <option value="-1">Không hoạt động</option>
-                      <option value="0">Khác</option>
+                      <option value="2">Khởi tạo</option>
+                      <option value="3">Chờ KD duyệt</option>
+                      <option value="4">Chờ KT duyệt</option>
+                      <option value="5">KD từ chối</option>
+                      <option value="6">KT từ chối</option>
                     </select>
                   </div>
 
@@ -96,22 +100,22 @@
           </fieldset>
         </form>
       </div>
-      <table class="table datatable-basic table-hover" id="datatables">
+      <table class="table datatable-basic table-hover" id="datatables" style="width:100%">
         <thead>
         <tr>
           <th>Mã</th>
           <th>Brand</th>
-          <th>Tên</th>
-          <th>NV ký HĐ</th>
-          <th>Trạng thái</th>
-          <th>Ngày tạo</th>
-          <th>SL khách mới hôm qua</th>
+          <th style="min-width: 200px;">Tên Merchant</th>
+          <th style="min-width: 163px;">NV ký HĐ</th>
+          <th style="min-width: 150px;">Ngày tạo</th>
+          <th>SL cửa hàng</th>
+          <th>KH mới hôm qua</th>
           <th>SLGD hôm qua</th>
           <th>GTGD hôm qua</th>
           <th>SLGD 7d</th>
           <th>SLGD 30d</th>
-          <th>SL cửa hàng</th>
-          <th></th>
+          <th style="min-width: 100px;">Tình trạng</th>
+          <th style="min-width: 95px;">Thao tác</th>
         </tr>
         </thead>
         <tbody>
@@ -242,5 +246,11 @@
   </script>
   <script src="{% static 'global_assets/js/plugins/tables/datatables/datatables.min.js' %}"></script>
   <script src="{% static 'global_assets/js/plugins/forms/selects/select2.min.js' %}"></script>
+  <!-- date picker-->
+  <script src="{% static 'global_assets/js/plugins/ui/moment/moment.min.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/pickers/pickadate/picker.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/pickers/pickadate/picker.date.js' %}"></script>
+  <script src="{% static 'assets/js/picker_date.js' %}"></script>
+  <!--My js-->
   <script src="{% static 'assets/js/merchant/merchant.js' %}"></script>
 {% endblock %}

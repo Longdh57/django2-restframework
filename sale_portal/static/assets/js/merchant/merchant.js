@@ -1,8 +1,5 @@
 var superuser = localStorage.getItem("is_superuser");
-console.log(superuser);
 var permissions = JSON.parse(localStorage.getItem("permissions"));
-console.log(permissions.includes("merchant_edit"));
-console.log(superuser || permissions.includes("merchant_edit"));
 
 function formatNumber(num) {
     return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
@@ -22,6 +19,8 @@ $(function () {
                 d.merchant_code = $('input[name=merchant_code]').val();
                 d.staff_id = $('select[name=staff_id]').val();
                 d.status = $('select[name=status]').val();
+                d.from_date = $('input[name=from_date]').val();
+                d.to_date = $('input[name=to_date]').val();
             },
             error: function (xhr, e) {
                 if (xhr.status == 403) {
@@ -44,8 +43,8 @@ $(function () {
             {data: "merchant_brand"},
             {data: "merchant_name", "sortable": false},
             {data: "staff", "sortable": false},
-            {data: "status", "sortable": false},
             {data: "created_date"},
+            {data: "count_shop", sortable: false},
             {
                 data: "merchant_cube",
                 sortable: false,
@@ -106,29 +105,28 @@ $(function () {
                     return data;
                 }
             },
-            {data: "count_shop", sortable: false},
+            {data: "status", "sortable": false},
             {
-                data: "merchant",
+                data: "id",
                 sortable: false,
                 render: function (data, type, row, meta) {
-//                    if (data != null) {
-//                        display = '<div class="list-icons">' +
-//                                '<a data-merchant_id="' + data + '" id="merchant-detail-' + data + '" class="list-icons-item">' +
-//                                '<i class="text-dark icon-info22"></i>' +
-//                                '</a>';
-//                        if (superuser || permissions.includes("merchant_edit")) {
-//                            display = display + '<a data-merchant_id="' + data + '" id="merchant-edit-' + data + '" class="list-icons-item">' +
-//                                    '<i class="text-primary icon-pencil5"></i>' +
-//                                    '</a>';
-//                        }
-//                        display = display + '</div>'
-//                    }
-//                    return display;
-                        return 0
+                    if (data != null) {
+                        display = '<div class="list-icons">' +
+                                '<a data-merchant_id="' + data + '" id="merchant-detail-' + data + '" class="list-icons-item">' +
+                                '<i class="text-dark icon-info22"></i>' +
+                                '</a>';
+                        if (superuser || permissions.includes("merchant_edit")) {
+                            display = display + '<a data-merchant_id="' + data + '" id="merchant-edit-' + data + '" class="list-icons-item">' +
+                                    '<i class="text-primary icon-pencil5"></i>' +
+                                    '</a>';
+                        }
+                        display = display + '</div>'
+                    }
+                    return display;
                 }
             }
           ],
-        order: [[6, "desc"]],
+        order: [[4, "desc"]],
         autoWidth: false,
         dom: '<"datatable-header"fl><"datatable-scroll"t><"datatable-footer"ip>',
         language: {
@@ -144,14 +142,20 @@ $(function () {
           }
     });
 
-      $('#search-form').on('submit', function (e) {
-          datatable.draw();
-          e.preventDefault();
-      });
+    $('#search-form').on('submit', function (e) {
+        var from_date = $('input[name=from_date]').val();
+        var to_date = $('input[name=to_date]').val();
+        if (Date.parse(from_date) > Date.parse(to_date)) {
+            alert("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc!");
+            return false;
+        }
+        datatable.draw();
+        e.preventDefault();
+    });
 
-      $('.datatable-basic').DataTable();
+    $('.datatable-basic').DataTable();
 
-      // ===============================================================================================
+    // ===============================================================================================
 
       $('#staff_id').select2({
           ajax: {

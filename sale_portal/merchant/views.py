@@ -2,6 +2,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.template.response import TemplateResponse
 from rest_framework import viewsets
+from datetime import datetime
 
 from .models import Merchant
 from .serializers import MerchantSerializer
@@ -23,6 +24,8 @@ class MerchantViewSet(viewsets.ModelViewSet):
         merchant_code = self.request.query_params.get('merchant_code', None)
         staff_id = self.request.query_params.get('staff_id', None)
         status = self.request.query_params.get('status', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
 
         if merchant_code is not None and merchant_code != '':
             merchant_code = format_string(merchant_code)
@@ -32,12 +35,13 @@ class MerchantViewSet(viewsets.ModelViewSet):
         if staff_id is not None and staff_id != '':
             queryset = queryset.filter(staff=staff_id)
         if status is not None and status != '':
-            if status == '1':
-                queryset = queryset.filter(status=1)
-            elif status == '-1':
-                queryset = queryset.filter(status=-1)
-            else:
-                queryset = queryset.exclude(status__in=(1, -1))
+            queryset = queryset.filter(status=status)
+        if from_date is not None and from_date != '':
+            queryset = queryset.filter(
+                created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+        if to_date is not None and to_date != '':
+            queryset = queryset.filter(
+                created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
         return queryset
 
