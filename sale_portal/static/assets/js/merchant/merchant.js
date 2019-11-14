@@ -44,9 +44,10 @@ $(function () {
             {data: "merchant_name", "sortable": false},
             {data: "staff", "sortable": false},
             {data: "created_date"},
-            {data: "count_shop", sortable: false},
+            {data: "count_ter", className: 'text-right', sortable: false},
             {
                 data: "merchant_cube",
+                className: 'text-right',
                 sortable: false,
                 render: function (data, type, row, meta) {
                     if (data != null) {
@@ -59,6 +60,7 @@ $(function () {
             },
             {
                 data: "merchant_cube",
+                className: 'text-right',
                 sortable: false,
                 render: function (data, type, row, meta) {
                     if (data != null) {
@@ -71,6 +73,7 @@ $(function () {
             },
             {
                 data: "merchant_cube",
+                className: 'text-right',
                 sortable: false,
                 render: function (data, type, row, meta) {
                     if (data != null) {
@@ -83,6 +86,7 @@ $(function () {
             },
             {
                 data: "merchant_cube",
+                className: 'text-right',
                 sortable: false,
                 render: function (data, type, row, meta) {
                     if (data != null) {
@@ -95,6 +99,7 @@ $(function () {
             },
             {
                 data: "merchant_cube",
+                className: 'text-right',
                 sortable: false,
                 render: function (data, type, row, meta) {
                     if (data != null) {
