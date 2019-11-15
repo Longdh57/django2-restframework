@@ -9,7 +9,7 @@ router.register(r'datatables', MerchantViewSet, 'Merchant')
 
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     urlpatterns = [
-        url(r'^', include(router.urls), name='get_list_merchant'),
+        url(r'^', include(router.urls), name='get_list_merchant_datatables'),
         url(r'^(?P<pk>[0-9]+)/detail/$', detail, name='detail'),
     ]
 else:

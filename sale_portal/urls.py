@@ -4,11 +4,13 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
 from sale_portal.merchant.urls import urlpatterns as merchant_urls
+from sale_portal.terminal.urls import urlpatterns as terminal_urls
 from sale_portal.user.urls import url_login_patterns as login_url
 
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     api_urlpatterns = [
         url(r'^merchant/', include((merchant_urls, 'merchant'), namespace='merchant')),
+        url(r'^terminal/', include((terminal_urls, 'terminal'), namespace='terminal')),
         url(r'^login/', include(login_url)),
     ]
 
