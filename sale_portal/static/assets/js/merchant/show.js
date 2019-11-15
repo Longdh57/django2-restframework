@@ -82,20 +82,6 @@ $(function () {
             },
             {data: "created_date"},
             {data: "status", "sortable": false},
-            {
-                data: "id",
-                sortable: false,
-                render: function (data, type, row, meta) {
-                    var display = '';
-                    if (data != null) {
-                        display = '<div class="list-icons">' +
-                                '<a href="/merchant/' + data + '/detail" class="list-icons-item">' +
-                                '<i class="text-dark icon-info22"></i>' +
-                                '</a></div>';
-                    }
-                    return display;
-                }
-            }
           ],
         order: [[4, "desc"]],
         autoWidth: false,
