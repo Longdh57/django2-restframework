@@ -9,11 +9,8 @@
 
 {% block header-script %}
   <script src="{% static 'global_assets/js/plugins/extensions/jquery_ui/interactions.min.js' %}"></script>
-  <script src="{% static 'global_assets/js/plugins/notifications/sweet_alert.min.js' %}"></script>
   <script src="{% static 'global_assets/js/plugins/forms/selects/select2.min.js' %}"></script>
-  <script src="{% static 'global_assets/js/plugins/forms/styling/uniform.min.js' %}"></script>
   <script src="{% static 'global_assets/js/plugins/forms/selects/bootstrap_multiselect.js' %}"></script>
-  <script src="{% static 'global_assets/js/plugins/forms/styling/switchery.min.js' %}"></script>
   <script src="{% static 'global_assets/js/plugins/notifications/pnotify.min.js' %}"></script>
 {% endblock %}
 
@@ -51,10 +48,6 @@
                   </div>
 
                   <div class="col-lg-2">
-                    <input type="text" class="form-control" name="department_name" placeholder="Phòng ban">
-                  </div>
-
-                  <div class="col-lg-2">
                     <select class="form-control select-search" name="staff_id" id="staff_id" data-fouc>
                       <option value="">--- Chọn NV Sale ---</option>
                     </select>
@@ -63,10 +56,36 @@
                   <div class="col-lg-2">
                     <select class="custom-select" name="status">
                       <option value="">--- Chọn trạng thái ---</option>
+                      <option value="-1">Đã đóng</option>
                       <option value="1">Hoạt động</option>
-                      <option value="-1">Không hoạt động</option>
-                      <option value="0">Khác</option>
+                      <option value="2">Khởi tạo</option>
+                      <option value="3">Chờ KD duyệt</option>
+                      <option value="4">Chờ KT duyệt</option>
+                      <option value="5">KD từ chối</option>
+                      <option value="6">KT từ chối</option>
                     </select>
+                  </div>
+
+                  <div class="col-lg-2">
+                    <div class="input-group">
+                      <input type="text" class="form-control pickadate-accessibility" name="from_date" id="from_date"
+                             placeholder="Từ ngày ...">
+                      <span class="input-group-prepend">
+                      <span class="input-group-text bg-primary-600 border-primary-600"><i
+                          class="icon-calendar3"></i></span>
+                    </span>
+                    </div>
+                  </div>
+
+                  <div class="col-lg-2">
+                    <div class="input-group">
+                      <input type="text" class="form-control pickadate-accessibility" name="to_date" id="to_date"
+                             placeholder="Đến ngày ...">
+                      <span class="input-group-prepend">
+                      <span class="input-group-text bg-primary-600 border-primary-600"><i
+                          class="icon-calendar3"></i></span>
+                    </span>
+                    </div>
                   </div>
 
                   <div class="col-lg-2">
@@ -78,23 +97,22 @@
           </fieldset>
         </form>
       </div>
-      <table class="table datatable-basic table-hover" id="datatables">
+      <table class="table datatable-basic table-hover" id="datatables" style="width:100%">
         <thead>
         <tr>
           <th>Mã</th>
           <th>Brand</th>
-          <th>Tên</th>
-          <th>Phòng ban</th>
-          <th>NV sale ký HĐ</th>
-          <th>Trạng thái</th>
+          <th>Tên Merchant</th>
+          <th>NV ký HĐ</th>
           <th>Ngày tạo</th>
-          <th>SL khách mới hôm qua</th>
+          <th>Số lượng DCNTT</th>
+          <th>KH mới hôm qua</th>
           <th>SLGD hôm qua</th>
           <th>GTGD hôm qua</th>
           <th>SLGD 7d</th>
           <th>SLGD 30d</th>
-          <th>SL cửa hàng</th>
-          <th></th>
+          <th>Tình trạng</th>
+          <th>Thao tác</th>
         </tr>
         </thead>
         <tbody>
@@ -102,124 +120,19 @@
       </table>
     </div>
   </div>
-
-  <div id="merchant_detail" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Thông tin Merchant</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-
-        <div class="modal-body">
-          <div class="table-responsive">
-            <table class="table">
-              <tbody>
-              <tr>
-                <td style="width: 30%"><strong>Code</strong></td>
-                <td id="merchant_code"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>Merchant Name</strong></td>
-                <td id="merchant_name"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>Địa chỉ</strong></td>
-                <td id="address"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>Department</strong></td>
-                <td id="department"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>NV sale ký HĐ</strong></td>
-                <td id="staff"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>Trạng thái</strong></td>
-                <td id="status"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>Loại</strong></td>
-                <td id="type"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>Ngày tạo</strong></td>
-                <td id="created_date"></td>
-              </tr>
-              <tr>
-                <td style="width: 30%"><strong>Đồng bộ</strong></td>
-                <td id="synchronized_status"></td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="merchant_edit" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Chỉnh sửa Merchant</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-
-        <form class="form-horizontal" id="merchant-edit" method="post">
-          {% csrf_token %}
-          <div class="modal-body">
-            <input type="hidden" class="form-control" id="edit_merchant_id" name="merchant_id" disabled>
-            <div class="form-group row">
-              <label class="col-form-label col-sm-3">Code</label>
-              <div class="col-sm-9">
-                <input type="text" class="form-control" id="edit_merchant_code" disabled>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-form-label col-sm-3">Name</label>
-              <div class="col-sm-9">
-                <input type="text" class="form-control" id="edit_merchant_name" disabled>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-form-label col-sm-3">Người quản lý</label>
-              <div class="col-sm-9">
-                <select class="form-control select-search" name="pic_id" id="pic_id" data-fouc>
-                  <option value="">--- Chọn NV Quản Lý ---</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-form-label col-sm-3">Loại</label>
-              <div class="col-sm-9">
-                <select class="form-control" id="edit_type" name="type">
-                  <option value="0">Cố định</option>
-                  <option value="1">Di chuyển</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
-            <button type="button" class="btn bg-primary" id="button-update">Cập nhật</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
 {% endblock %}
 
 {% block script %}
+  <script language="javascript" type=text/javascript>
+      var url_api = "{% get_api_url %}";
+  </script>
   <script src="{% static 'global_assets/js/plugins/tables/datatables/datatables.min.js' %}"></script>
   <script src="{% static 'global_assets/js/plugins/forms/selects/select2.min.js' %}"></script>
+  <!-- date picker-->
+  <script src="{% static 'global_assets/js/plugins/ui/moment/moment.min.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/pickers/pickadate/picker.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/pickers/pickadate/picker.date.js' %}"></script>
+  <script src="{% static 'assets/js/picker_date.js' %}"></script>
+  <!--My js-->
+  <script src="{% static 'assets/js/merchant/index.js' %}"></script>
 {% endblock %}

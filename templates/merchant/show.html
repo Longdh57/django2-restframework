@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load static %}
+{% load api_url %}
+
+{% block title %}
+  Merchant - {{ block.super }}
+{% endblock %}
+
+{% block header-script %}
+  <script src="{% static 'global_assets/js/plugins/extensions/jquery_ui/interactions.min.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/forms/selects/select2.min.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/forms/selects/bootstrap_multiselect.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/notifications/pnotify.min.js' %}"></script>
+{% endblock %}
+
+{% block page-title %}
+  <div class="page-title d-flex p-3">
+    <h4><i class="icon-cube3 mr-2"></i> <span class="font-weight-semibold">Chi tiết Merchant</span></h4>
+  </div>
+{% endblock %}
+
+{% block breadcrumb %}
+  <div class="d-flex">
+    <div class="breadcrumb">
+      <a href="{% url 'home' %}" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Trang chủ</a>
+      <a href="{% url 'merchant:index' %}" class="breadcrumb-item">Merchant</a>
+      <span class="breadcrumb-item active merchant-name"></span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-lg-8 col-md-12">
+      <div class="card">
+        <div class="card-header header-elements-inline">
+          <h6 class="card-title"><i class="icon-cube3 mr-2"></i>Thông tin Merchant: <span
+              class="font-weight-semibold terminal-name"></span></h6>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6">
+            <ul class="list-group list-group-flush border-top">
+              <li class="list-group-item">
+                <span class="font-weight-semibold">Mã Merchant</span>
+                <div class="ml-auto" id="merchant_code"></div>
+              </li>
+              <li class="list-group-item">
+                <span class="font-weight-semibold">Thương Hiệu:</span>
+                <div class="ml-auto" id="merchant_brand"></div>
+              </li>
+              <li class="list-group-item">
+                <span class="font-weight-semibold" style="min-width: 100px;">Tên Merchant:</span>
+                <div class="ml-auto" id="merchant_name"></div>
+              </li>
+              <li class="list-group-item">
+                <span class="font-weight-semibold" style="min-width: 70px;">Địa chỉ:</span>
+                <div class="ml-auto" id="merchant_address"></div>
+              </li>
+            </ul>
+          </div>
+          <div class="col-lg-6">
+            <ul class="list-group list-group-flush border-top">
+              <li class="list-group-item">
+                <span class="font-weight-semibold" style="min-width: 85px;">Ngành nghề</span>
+                <div class="ml-auto" id="merchant_type"></div>
+              </li>
+              <li class="list-group-item">
+                <span class="font-weight-semibold">NV ký HĐ</span>
+                <div class="ml-auto" id="merchant_staff"></div>
+              </li>
+              <li class="list-group-item">
+                <span class="font-weight-semibold">Ngày tạo</span>
+                <div class="ml-auto" id="merchant_created_date"></div>
+              </li>
+              <li class="list-group-item">
+                <span class="font-weight-semibold">Tình trạng</span>
+                <div class="ml-auto" id="merchant_status"></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-12">
+      <div class="card">
+        <div class="card-header header-elements-inline">
+          <h6 class="card-title"><i class="icon-qrcode mr-2"></i> Thông tin giao dịch</h6>
+        </div>
+        <ul class="list-group list-group-flush border-top">
+          <li class="list-group-item">
+            <span class="font-weight-semibold">SL KH mới hôm qua</span>
+            <div class="ml-auto" id="number_of_new_customer"></div>
+          </li>
+          <li class="list-group-item">
+            <span class="font-weight-semibold">SLGD hôm qua</span>
+            <div class="ml-auto" id="number_of_tran"></div>
+          </li>
+          <li class="list-group-item">
+            <span class="font-weight-semibold">GTGD hôm qua</span>
+            <div class="ml-auto" id="value_of_tran"></div>
+          </li>
+          <li class="list-group-item">
+            <span class="font-weight-semibold">SLGD 7 ngày</span>
+            <div class="ml-auto" id="number_of_tran_7d"></div>
+          </li>
+          <li class="list-group-item">
+            <span class="font-weight-semibold">GTGD 30 ngày</span>
+            <div class="ml-auto" id="number_of_tran_30d"></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="shop_info">
+    <div class="card-header header-elements-inline">
+      <h6 class="card-title"><i class="icon-cube mr-2"></i> Thông tin Terminal</h6>
+    </div>
+    <div class="table-responsive">
+      <table class="table" id="datatables" style="width:100%">
+        <thead>
+        <tr>
+          <th>Terminal_ID</th>
+          <th>Tên Terminal</th>
+          <th>Địa chỉ</th>
+          <th>Mã Shop</th>
+          <th>Ngày đăng ký</th>
+          <th>Tình trạng</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script language="javascript" type=text/javascript>
+      var url_api = "{% get_api_url %}";
+      window.MERCHANT_ID = {{ pk }};
+  </script>
+  <script src="{% static 'global_assets/js/plugins/tables/datatables/datatables.min.js' %}"></script>
+  <script src="{% static 'global_assets/js/plugins/forms/selects/select2.min.js' %}"></script>
+  <!--My js-->
+  <script src="{% static 'assets/js/merchant/show.js' %}"></script>
+{% endblock %}

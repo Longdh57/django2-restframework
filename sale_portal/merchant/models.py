@@ -3,6 +3,9 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
 
 from sale_portal.merchant import MerchantLogType
+from ..staff.models import Staff
+from ..shop_cube.models import ShopCube
+from ..qr_status.models import QrStatus
 
 
 class QrMerchant(models.Model):
@@ -128,6 +131,54 @@ class Merchant(models.Model):
             self.un_care_date = None
             self.save()
         return
+
+    def get_staff(self):
+        return Staff.objects.filter(pk=self.staff).first()
+
+    def get_type(self):
+        return QrTypeMerchant.objects.filter(id=self.merchant_type).first()
+
+    def get_status(self):
+        status = QrStatus.objects.filter(type='MERCHANT', code=self.status).first()
+        if status is None:
+            return '<span class="badge badge-dark">Khác</span>'
+        switcher = {
+            -1: '<span class="badge badge-danger">' + status.description + '</span>',
+            1: '<span class="badge badge-success">' + status.description + '</span>',
+            2: '<span class="badge badge-secondary">' + status.description + '</span>',
+            3: '<span class="badge badge-warning">' + status.description + '</span>',
+            4: '<span class="badge badge-primary">' + status.description + '</span>',
+            5: '<span class="badge badge-danger">' + status.description + '</span>',
+            6: '<span class="badge badge-danger">' + status.description + '</span>'
+        }
+        return switcher.get(status.code, '<span class="badge badge-dark">Khác</span>')
+
+    def get_merchant_cube(self):
+        shops = self.shops.values('id')
+        shop_cubes = ShopCube.objects.filter(shop_id__in=shops)
+        merchant_cube = {
+            'number_of_tran_7d': 0,
+            'number_of_tran_acm': 0,
+            'value_of_tran_7d': 0,
+            'value_of_tran_acm': 0,
+            'number_of_new_customer': 0,
+            'number_of_tran': 0,
+            'value_of_tran': 0,
+            'number_of_tran_30d': 0
+        }
+        for shop_cube in shop_cubes:
+            merchant_cube.update(
+                number_of_tran_7d=merchant_cube.get('number_of_tran_7d') + shop_cube.number_of_tran_7d,
+                number_of_tran_acm=merchant_cube.get('number_of_tran_acm') + shop_cube.number_of_tran_acm,
+                value_of_tran_7d=merchant_cube.get('value_of_tran_7d') + int(shop_cube.value_of_tran_7d),
+                value_of_tran_acm=merchant_cube.get('value_of_tran_acm') + int(shop_cube.value_of_tran_acm),
+                number_of_new_customer=merchant_cube.get('number_of_new_customer') + int(
+                    shop_cube.number_of_new_customer),
+                number_of_tran=merchant_cube.get('number_of_tran') + int(shop_cube.number_of_tran),
+                value_of_tran=merchant_cube.get('value_of_tran') + int(shop_cube.value_of_tran),
+                number_of_tran_30d=merchant_cube.get('number_of_tran_30d') + int(shop_cube.number_of_tran_30d),
+            )
+        return merchant_cube
 
 
 class MerchantLog(models.Model):

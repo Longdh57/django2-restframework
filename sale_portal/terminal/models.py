@@ -6,6 +6,8 @@ from django.contrib.postgres.fields import JSONField
 from sale_portal.shop.models import Shop
 from sale_portal.merchant.models import Merchant
 from sale_portal.terminal import TerminalLogType
+from ..qr_status.models import QrStatus
+from ..administrative_unit.models import QrProvince, QrDistrict, QrWards
 
 
 class QrTerminal(models.Model):
@@ -167,6 +169,43 @@ class Terminal(models.Model):
         except QrTerminalContact.DoesNotExist:
             qr_terminal_contact = None
         return qr_terminal_contact
+
+    def get_status(self):
+        status = QrStatus.objects.filter(type='TERMINAL', code=self.status).first()
+        if status is None:
+            return '<span class="badge badge-dark">Khác</span>'
+        switcher = {
+            -1: '<span class="badge badge-danger">' + status.description + '</span>',
+            1: '<span class="badge badge-success">' + status.description + '</span>',
+            2: '<span class="badge badge-secondary">' + status.description + '</span>',
+            3: '<span class="badge badge-warning">' + status.description + '</span>',
+            4: '<span class="badge badge-primary">' + status.description + '</span>',
+            5: '<span class="badge badge-danger">' + status.description + '</span>',
+            6: '<span class="badge badge-danger">' + status.description + '</span>'
+        }
+        return switcher.get(status.code, '<span class="badge badge-dark">Khác</span>')
+
+    def get_staff(self):
+        if self.shop is None or self.shop.staff is None:
+            return ''
+        return self.shop.staff.email
+
+    def get_team(self):
+        if self.shop is None or self.shop.staff is None or self.shop.staff.team is None:
+            return ''
+        return self.shop.staff.team.code
+
+    def get_province(self):
+        province = QrProvince.objects.filter(province_code=self.province_code).first()
+        return province if province else None
+
+    def get_district(self):
+        district = QrDistrict.objects.filter(district_code=self.district_code).first()
+        return district if district else None
+
+    def get_wards(self):
+        wards = QrWards.objects.filter(wards_code=self.wards_code).first()
+        return wards if wards else None
 
 
 class TerminalLog(models.Model):

@@ -1,21 +1,82 @@
+from django.db.models import Q
 from django.http import JsonResponse
 from django.template.response import TemplateResponse
+from django.shortcuts import get_object_or_404
+from django.utils import formats
+from rest_framework import viewsets
+from datetime import datetime
+
+
+from .models import Merchant
+from .serializers import MerchantSerializer
+
+from ..utils.field_formatter import format_string
 
 
 def index(request):
     return TemplateResponse(request, 'merchant/index.html')
 
 
+class MerchantViewSet(viewsets.ModelViewSet):
+    serializer_class = MerchantSerializer
+
+    def get_queryset(self):
+
+        queryset = Merchant.objects.all()
+
+        merchant_code = self.request.query_params.get('merchant_code', None)
+        staff_id = self.request.query_params.get('staff_id', None)
+        status = self.request.query_params.get('status', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
+
+        if merchant_code is not None and merchant_code != '':
+            merchant_code = format_string(merchant_code)
+            queryset = queryset.filter(
+                Q(merchant_code__icontains=merchant_code) | Q(merchant_name__icontains=merchant_code) | Q(
+                    merchant_brand__icontains=merchant_code))
+        if staff_id is not None and staff_id != '':
+            queryset = queryset.filter(staff=staff_id)
+        if status is not None and status != '':
+            queryset = queryset.filter(status=status)
+        if from_date is not None and from_date != '':
+            queryset = queryset.filter(
+                created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+        if to_date is not None and to_date != '':
+            queryset = queryset.filter(
+                created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
+
+        return queryset
+
+
 def show(request, pk):
-    # Trả về view, ví dụ TemplateResponse(request, 'merchant/show.html')
-    pass
+    ctx = {
+        'pk': pk,
+    }
+    return TemplateResponse(request, 'merchant/show.html', ctx)
 
 
 def detail(request, pk):
     # API detail
+    merchant = get_object_or_404(Merchant, pk=pk)
+    data = {
+        'merchant_id': merchant.id,
+        'merchant_code': merchant.merchant_code,
+        'merchant_brand': merchant.merchant_brand,
+        'merchant_name': merchant.merchant_name,
+        'address': merchant.address,
+        'type': merchant.get_type().full_name if merchant.get_type() else '',
+        'staff': {
+            'full_name': merchant.get_staff().full_name if merchant.get_staff() is not None else '',
+            'email': merchant.get_staff().email if merchant.get_staff() is not None else ''
+        },
+        'created_date': formats.date_format(merchant.created_date,
+                                            "SHORT_DATETIME_FORMAT") if merchant.created_date else '',
+        'status': merchant.get_status(),
+        'merchant_cube': merchant.get_merchant_cube(),
+    }
     return JsonResponse({
-        'data': 'Hello Binh',
-        'pk': pk
+        'data': data
     }, status=200)
 
 

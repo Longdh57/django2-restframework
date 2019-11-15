@@ -46,6 +46,7 @@
       padding: 8px;
       border-radius: 4px;
     }
+
   </style>
 
   <script>
@@ -60,6 +61,7 @@
               window.MENU = 'hide';
           }
       }
+
   </script>
 
 </head>
@@ -120,13 +122,13 @@
 
       <div class="breadcrumb-line breadcrumb-line-light header-elements-md-inline">
         {% block breadcrumb %}
-          <div class="d-flex">
-            <div class="breadcrumb">
-              <a href="{% url 'home' %}" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
-              <a href="#" class="breadcrumb-item">Link</a>
-              <span class="breadcrumb-item active">Current</span>
-            </div>
+        <div class="d-flex">
+          <div class="breadcrumb">
+            <a href="{% url 'home' %}" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+            <a href="#" class="breadcrumb-item">Link</a>
+            <span class="breadcrumb-item active">Current</span>
           </div>
+        </div>
         {% endblock %}
       </div>
     </div>
@@ -159,7 +161,38 @@
 
 {% block header-script %}{% endblock %}
 
+<!-- Check user login -->
+<script>
+    $(document).ready(function () {
+        if (localStorage.getItem("accessToken") === null || localStorage.getItem("username") === null) {
+            window.location.replace('/login');
+        } else {
+            var hours = 72;
+            var now = new Date().getTime();
+            var timeCreate = localStorage.getItem('timeCreate');
+            if (now - timeCreate > hours * 60 * 60 * 1000) {
+                localStorage.clear();
+                window.location.replace('/login');
+            }
+            $('#username').html(localStorage.getItem("username"))
+        }
+    });
+
+</script>
+
 {% block script %}{% endblock %}
+
+<!-- User logout -->
+<script>
+    $(document).ready(function () {
+        $('.logout').click(function () {
+            localStorage.clear();
+            jQuery(document).empty();
+            window.location.replace('/login');
+        });
+    });
+
+</script>
 
 {% block inline-script %}{% endblock %}
 

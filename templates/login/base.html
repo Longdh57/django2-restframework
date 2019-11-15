@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/Article">
+<head>
+  {% load staticfiles %}
+  {% load static %}
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="application-name" content="{{ site.name }}">
+  <link rel="icon" sizes="180x39" href="{% static 'global_assets/images/favicons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="32x7" href="{% static 'global_assets/images/favicons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x3" href="{% static 'global_assets/images/favicons/favicon-32x32.png' %}">
+  <link rel="mask-icon" href="{% static 'global_assets/images/favicons/favicon-32x32.png' %}">
+	<title>{% block title %}Sale Management System{% endblock %}</title>
+
+	<!-- Global stylesheets -->
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
+	<link href="{% static 'global_assets/css/icons/icomoon/styles.css' %}" rel="stylesheet" type="text/css">
+	<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css">
+	<link href="{% static 'assets/css/bootstrap_limitless.min.css' %}" rel="stylesheet" type="text/css">
+	<link href="{% static 'assets/css/layout.min.css' %}" rel="stylesheet" type="text/css">
+	<link href="{% static 'assets/css/components.min.css' %}" rel="stylesheet" type="text/css">
+	<link href="{% static 'assets/css/colors.min.css' %}" rel="stylesheet" type="text/css">
+	<!-- /global stylesheets -->
+
+  {% block header-styles %}{% endblock %}
+
+	<!-- Core JS files -->
+	<script src="{% static 'global_assets/js/main/jquery.min.js' %}"></script>
+	<script src="{% static 'global_assets/js/main/bootstrap.bundle.min.js' %}"></script>
+	<script src="{% static 'global_assets/js/plugins/loaders/blockui.min.js' %}"></script>
+	<!-- /core JS files -->
+
+	<!-- Theme JS files -->
+	<script src="{% static 'global_assets/js/plugins/forms/styling/uniform.min.js' %}"></script>
+
+	<script src="{% static 'assets/js/app.js' %}"></script>
+	<script src="{% static 'global_assets/js/demo_pages/login.js' %}"></script>
+	<!-- /theme JS files -->
+
+	<!-- Google Oauth2 -->
+  <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
+  <script>
+    function start() {
+      gapi.load('auth2', function() {
+        auth2 = gapi.auth2.init({
+          client_id: '985156013397-mnmr4icm45ek0g9rlf88qolau8kugrts.apps.googleusercontent.com',
+          // Scopes to request in addition to 'profile' and 'email'
+          //scope: 'additional_scope'
+        });
+      });
+    }
+  </script>
+	<!-- /Google Oauth2 -->
+
+</head>
+
+<body>
+
+	<!-- Page content -->
+	<div class="page-content">
+		<!-- Main content -->
+    {% block content %}{% endblock %}
+		<!-- /main content -->
+	</div>
+	<!-- /page content -->
+
+  {% block script %}{% endblock %}
+  {% block inline-script %}{% endblock %}
+</body>
+</html>
