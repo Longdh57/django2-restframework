@@ -99,3 +99,13 @@ $(function () {
           }
     });
 });
+
+function goBack() {
+    var parts = document.referrer.split('/');
+    console.log(parts);
+    if (parts.length > 1 && parts[parts.length-2] == 'merchant') {
+        window.history.back();
+    } else {
+        window.location.href = '/merchant';
+    }
+}
