@@ -8,7 +8,7 @@ from .models import Terminal
 
 
 class MerchantSerializer(serializers.ModelSerializer):
-    merchant = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Merchant

@@ -65,77 +65,22 @@ $(function () {
             }
         },
         columns: [
-            {data: "merchant_code"},
-            {data: "merchant_brand"},
-            {data: "merchant_name", "sortable": false},
-            {data: "staff", "sortable": false},
+            {data: "terminal_id"},
+            {data: "terminal_name"},
+            {data: "terminal_address", sortable: false},
+            {
+                data: "shop",
+                sortable: false,
+                render: function (data, type, row, meta) {
+                    if (data != null) {
+                        data = data.id;
+                    } else {
+                        data = ''
+                    }
+                    return data;
+                }
+            },
             {data: "created_date"},
-            {data: "count_ter", className: 'text-right', sortable: false},
-            {
-                data: "merchant_cube",
-                className: 'text-right',
-                sortable: false,
-                render: function (data, type, row, meta) {
-                    if (data != null) {
-                        data = formatNumber(data.number_of_new_customer);
-                    } else {
-                        data = 0
-                    }
-                    return data;
-                }
-            },
-            {
-                data: "merchant_cube",
-                className: 'text-right',
-                sortable: false,
-                render: function (data, type, row, meta) {
-                    if (data != null) {
-                        data = formatNumber(data.number_of_tran);
-                    } else {
-                        data = 0
-                    }
-                    return data;
-                }
-            },
-            {
-                data: "merchant_cube",
-                className: 'text-right',
-                sortable: false,
-                render: function (data, type, row, meta) {
-                    if (data != null) {
-                        data = formatNumber(data.value_of_tran);
-                    } else {
-                        data = 0
-                    }
-                    return data;
-                }
-            },
-            {
-                data: "merchant_cube",
-                className: 'text-right',
-                sortable: false,
-                render: function (data, type, row, meta) {
-                    if (data != null) {
-                        data = formatNumber(data.number_of_tran_7d);
-                    } else {
-                        data = 0
-                    }
-                    return data;
-                }
-            },
-            {
-                data: "merchant_cube",
-                className: 'text-right',
-                sortable: false,
-                render: function (data, type, row, meta) {
-                    if (data != null) {
-                        data = formatNumber(data.number_of_tran_30d);
-                    } else {
-                        data = 0
-                    }
-                    return data;
-                }
-            },
             {data: "status", "sortable": false},
             {
                 data: "id",
