@@ -159,14 +159,13 @@ $(function () {
 
     $('#staff_id').select2({
         ajax: {
-            url: url_api + '/api/staff/list_api/',
+            url: url_api + '/api/staff/list-staffs/',
             headers: {'Authorization': 'JWT ' + accessToken},
             type: 'GET',
             dataType: 'json',
             data: function (params) {
                 return {
-                    email: params.term,
-                    status: 1
+                    email: params.term
                 };
             },
             processResults: function (data, params) {

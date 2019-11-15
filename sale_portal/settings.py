@@ -190,6 +190,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
 }
 
+# Set Pagination default value
+PAGINATE_BY = 25
+
 # Custom JWT Token
 # Django REST framework JWT Additional Settings
 JWT_AUTH = {
