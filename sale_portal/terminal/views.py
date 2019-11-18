@@ -2,6 +2,9 @@ from django.db.models import Q
 from datetime import datetime
 
 from django.template.response import TemplateResponse
+from django.shortcuts import get_object_or_404
+from django.utils import formats
+from django.http import JsonResponse
 
 from rest_framework import viewsets
 from .serializers import TerminalSerializer
@@ -70,3 +73,52 @@ class TerminalViewSet(viewsets.ModelViewSet):
                 created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
         return queryset
+
+
+def detail(request, pk):
+    # API detail
+    terminal = get_object_or_404(Terminal, pk=pk)
+
+    shop = terminal.shop
+
+    data = {
+        'terminal_id': terminal.terminal_id,
+        'terminal_name': terminal.terminal_name,
+        'terminal_address': terminal.terminal_address,
+        'province_name': terminal.get_province().province_name if terminal.get_province() else '',
+        'district_name': terminal.get_district().district_name if terminal.get_district() else '',
+        'wards_name': terminal.get_wards().wards_name if terminal.get_wards() else '',
+        'business_address': terminal.business_address,
+        'merchant': {
+            'id': terminal.merchant.id if terminal.merchant else '',
+            'name': terminal.merchant.merchant_name if terminal.merchant else '',
+            'code': terminal.merchant.merchant_code if terminal.merchant else '',
+            'brand': terminal.merchant.merchant_brand if terminal.merchant else '',
+        },
+        'shop': {
+            'id': shop.id if shop else '',
+            'name': shop.name if shop else '',
+            'code': shop.code if shop else '',
+            'address': shop.address if shop else '',
+            'street': shop.street if shop else '',
+            'take_care_status': shop.take_care_status if shop else '',
+            'activated': shop.activated if shop else '',
+            'province_name': shop.province.province_name if (shop and shop.province) else '',
+            'district_name': shop.district.district_name if (shop and shop.district) else '',
+            'wards_name': shop.wards.wards_name if (shop and shop.wards) else '',
+            'staff': {
+                'full_name': shop.staff.full_name if (shop and shop.staff) else '',
+                'email': shop.staff.email if (shop and shop.staff) else ''
+            },
+            'team': {
+                'code': shop.staf.team.code if (shop and shop.staff and shop.staff.team) else '',
+                'name': shop.staf.team.name if (shop and shop.staff and shop.staff.team) else ''
+            }
+        },
+        'created_date': formats.date_format(terminal.created_date,
+                                            "SHORT_DATETIME_FORMAT") if terminal.created_date else '',
+        'status': terminal.get_status(),
+    }
+    return JsonResponse({
+        'data': data
+    }, status=200)

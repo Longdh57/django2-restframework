@@ -62,6 +62,6 @@ class TerminalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Terminal
         fields = (
-            'terminal_id', 'terminal_name', 'merchant', 'shop', 'staff', 'team', 'terminal_address', 'status',
+            'id', 'terminal_id', 'terminal_name', 'merchant', 'shop', 'staff', 'team', 'terminal_address', 'status',
             'province_name', 'district_name', 'ward_name', 'business_address', 'created_date'
         )
