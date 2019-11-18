@@ -79,7 +79,10 @@ def detail(request, pk):
     # API detail
     terminal = get_object_or_404(Terminal, pk=pk)
 
+    merchant = terminal.merchant
     shop = terminal.shop
+    staff = shop.staff if shop else None
+    team = staff.team if staff else None
 
     data = {
         'terminal_id': terminal.terminal_id,
@@ -90,10 +93,10 @@ def detail(request, pk):
         'wards_name': terminal.get_wards().wards_name if terminal.get_wards() else '',
         'business_address': terminal.business_address,
         'merchant': {
-            'id': terminal.merchant.id if terminal.merchant else '',
-            'name': terminal.merchant.merchant_name if terminal.merchant else '',
-            'code': terminal.merchant.merchant_code if terminal.merchant else '',
-            'brand': terminal.merchant.merchant_brand if terminal.merchant else '',
+            'id': merchant.id if merchant else '',
+            'name': merchant.merchant_name if merchant else '',
+            'code': merchant.merchant_code if merchant else '',
+            'brand': merchant.merchant_brand if merchant else '',
         },
         'shop': {
             'id': shop.id if shop else '',
@@ -107,12 +110,12 @@ def detail(request, pk):
             'district_name': shop.district.district_name if (shop and shop.district) else '',
             'wards_name': shop.wards.wards_name if (shop and shop.wards) else '',
             'staff': {
-                'full_name': shop.staff.full_name if (shop and shop.staff) else '',
-                'email': shop.staff.email if (shop and shop.staff) else ''
+                'full_name': staff.full_name if staff else '',
+                'email': staff.email if staff else ''
             },
             'team': {
-                'code': shop.staf.team.code if (shop and shop.staff and shop.staff.team) else '',
-                'name': shop.staf.team.name if (shop and shop.staff and shop.staff.team) else ''
+                'code': team.code if team else '',
+                'name': team.name if team else ''
             }
         },
         'created_date': formats.date_format(terminal.created_date,

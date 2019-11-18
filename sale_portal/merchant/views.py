@@ -59,6 +59,7 @@ def show(request, pk):
 def detail(request, pk):
     # API detail
     merchant = get_object_or_404(Merchant, pk=pk)
+    staff = merchant.get_staff()
     data = {
         'merchant_id': merchant.id,
         'merchant_code': merchant.merchant_code,
@@ -67,8 +68,8 @@ def detail(request, pk):
         'address': merchant.address,
         'type': merchant.get_type().full_name if merchant.get_type() else '',
         'staff': {
-            'full_name': merchant.get_staff().full_name if merchant.get_staff() is not None else '',
-            'email': merchant.get_staff().email if merchant.get_staff() is not None else ''
+            'full_name': staff.full_name if staff is not None else '',
+            'email': staff.email if staff is not None else ''
         },
         'created_date': formats.date_format(merchant.created_date,
                                             "SHORT_DATETIME_FORMAT") if merchant.created_date else '',

@@ -186,26 +186,19 @@ class Terminal(models.Model):
         return switcher.get(status.code, '<span class="badge badge-dark">Khác</span>')
 
     def get_staff(self):
-        if self.shop is None or self.shop.staff is None:
-            return ''
-        return self.shop.staff.email
+        return self.shop.staff if self.shop else None
 
     def get_team(self):
-        if self.shop is None or self.shop.staff is None or self.shop.staff.team is None:
-            return ''
-        return self.shop.staff.team.code
+        return self.shop.staff.team if self.shop and self.shop.staff else None
 
     def get_province(self):
-        province = QrProvince.objects.filter(province_code=self.province_code).first()
-        return province if province else None
+        return QrProvince.objects.filter(province_code=self.province_code).first()
 
     def get_district(self):
-        district = QrDistrict.objects.filter(district_code=self.district_code).first()
-        return district if district else None
+        return QrDistrict.objects.filter(district_code=self.district_code).first()
 
     def get_wards(self):
-        wards = QrWards.objects.filter(wards_code=self.wards_code).first()
-        return wards if wards else None
+        return QrWards.objects.filter(wards_code=self.wards_code).first()
 
 
 class TerminalLog(models.Model):

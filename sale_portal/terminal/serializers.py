@@ -42,19 +42,24 @@ class TerminalSerializer(serializers.ModelSerializer):
         return terminal.get_status()
 
     def get_staff(self, terminal):
-        return terminal.get_staff()
+        staff = terminal.get_staff()
+        return staff.email if staff else ''
 
     def get_team(self, terminal):
-        return terminal.get_team()
+        team = terminal.get_team()
+        return team.code if team else None
 
     def get_province_name(self, terminal):
-        return terminal.get_province().province_name if terminal.get_province() else ''
+        province = terminal.get_province()
+        return province.province_name if province else ''
 
     def get_district_name(self, terminal):
-        return terminal.get_district().district_name if terminal.get_district() else ''
+        district = terminal.get_district()
+        return district.district_name if district else ''
 
     def get_ward_name(self, terminal):
-        return terminal.get_wards().wards_name if terminal.get_wards() else ''
+        wards = terminal.get_wards()
+        return wards.wards_name if wards else ''
 
     def get_created_date(self, terminal):
         return formats.date_format(terminal.created_date, "SHORT_DATETIME_FORMAT") if terminal.created_date else ''
