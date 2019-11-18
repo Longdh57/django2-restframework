@@ -18,13 +18,20 @@
   <div class="page-title d-flex p-3">
     <h4><i class="icon-cube3 mr-2"></i> <span class="font-weight-semibold">Chi tiết Merchant</span></h4>
   </div>
+  <div class="header-elements d-none">
+    <div class="d-flex justify-content-center">
+      <a href="javascript:goBack();" class="btn btn-link btn-float text-default">
+        <i class="icon-list text-primary"></i><span>Danh sách</span>
+      </a>
+    </div>
+  </div>
 {% endblock %}
 
 {% block breadcrumb %}
   <div class="d-flex">
     <div class="breadcrumb">
       <a href="{% url 'home' %}" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Trang chủ</a>
-      <a href="{% url 'merchant:index' %}" class="breadcrumb-item">Merchant</a>
+      <a href="javascript:goBack()" class="breadcrumb-item">Merchant</a>
       <span class="breadcrumb-item active merchant-name"></span>
     </div>
   </div>

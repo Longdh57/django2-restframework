@@ -28,4 +28,5 @@ else:
         url(r'^$', TemplateView.as_view(template_name='home.html'), name='home'),
         url(r'^login/', TemplateView.as_view(template_name='login/login.html'), name='login'),
         url(r'^merchant/', include((merchant_urls, 'merchant'), namespace='merchant')),
+        url(r'^terminal/', include((terminal_urls, 'terminal'), namespace='terminal')),
     ]
