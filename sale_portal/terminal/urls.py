@@ -3,7 +3,7 @@ from django.conf import settings
 from rest_framework import routers
 
 # from .views import index, TerminalViewSet, detail, show
-from .views import TerminalViewSet
+from .views import index, TerminalViewSet
 
 router = routers.DefaultRouter()
 router.register(r'datatables', TerminalViewSet, 'Terminal')
@@ -15,6 +15,6 @@ if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     ]
 else:
     urlpatterns = [
-        # url(r'^$', index, name='index'),
+        url(r'^$', index, name='index'),
         # url(r'^(?P<pk>[0-9]+)/detail/$', show, name='show'),
     ]

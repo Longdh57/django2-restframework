@@ -1,12 +1,18 @@
 from django.db.models import Q
 from datetime import datetime
 
+from django.template.response import TemplateResponse
+
 from rest_framework import viewsets
 from .serializers import TerminalSerializer
 from .models import Terminal
 from ..utils.field_formatter import format_string
 from ..shop.models import Shop
 from ..staff.models import Staff
+
+
+def index(request):
+    return TemplateResponse(request, 'terminal/index.html')
 
 
 class TerminalViewSet(viewsets.ModelViewSet):
