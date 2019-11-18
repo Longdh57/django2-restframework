@@ -90,6 +90,9 @@ class Staff(models.Model):
             logging.error('Staff_log exception: %s', e)
         super(Staff, self).save(*args, **kwargs)
 
+    def get_status(self):
+        return '<span class="badge badge-success">Kích hoạt</span>' if self.status == 1 else '<span class="badge badge-danger">Chưa kích hoạt</span>'
+
 
 class StaffLog(models.Model):
     old_data = JSONField(blank=True, default=dict)
