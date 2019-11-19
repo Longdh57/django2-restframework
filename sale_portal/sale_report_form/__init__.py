@@ -24,6 +24,20 @@ class SaleReportFormCreateNewResults:
     )
 
 
+class SaleReportFormNewUsingApplications:
+
+    CHOICES = (
+        ('iPos', 'iPos'),
+        ('Sapo', 'Sapo'),
+        ('KiotViet', 'KiotViet'),
+        ('POS365', 'POS365'),
+        ('Cukcuk', 'Cukcuk'),
+        ('Ocha', 'Ocha'),
+        ('PM khác', 'PM khác'),
+        ('Chưa sử dụng', 'Chưa sử dụng'),
+    )
+
+
 class SaleReportFormShopStatus:
     CLOSED = 0
     LIQUIDATION_QR = 1
