@@ -4,7 +4,7 @@ from sale_portal.user.models import User
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
 from sale_portal.sale_report_form import SaleReportFormPurposeTypes, SaleReportFormCreateNewResults, \
-    SaleReportFormShopStatus, SaleReportFormShopConfirm, SaleReportFormCashierReward
+    SaleReportFormNewUsingApplications, SaleReportFormShopStatus, SaleReportFormShopConfirm, SaleReportFormCashierReward
 
 
 class SaleReport(models.Model):
@@ -38,6 +38,8 @@ class SaleReport(models.Model):
     new_phone = models.CharField(max_length=100, help_text='Noi dung mo moi phone', null=True)
     new_result = models.IntegerField(choices=SaleReportFormCreateNewResults.CHOICES, null=True, blank=True,
                                      help_text='Noi dung mo moi result')
+    new_using_application = models.CharField(choices=SaleReportFormNewUsingApplications.CHOICES, max_length=100,
+                                             null=True, blank=True)
     new_note = models.TextField(help_text='Noi dung ghi chu', null=True)
 
     # Noi dung Cham soc, Trien Khai
