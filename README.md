@@ -13,10 +13,10 @@ Provide backend system to connect and control action from UI to Database. Use fr
 
 ## Installation
 **Clone from git**  
-`git clone git@gitlab.com:long.daohai4894/sale-portal-v2.git`  
+`git clone git@gitlab.com:long.daohai4894/sale-portal-v2.git sale_portal_v2`
 
 **Install and create virtualenv**  
-`cd sales-portal`  
+`cd sale_portal_v2`
 `virtualenv -p python3 .venv`  
 `source .venv/bin/activate`  
 
@@ -38,39 +38,29 @@ Provide backend system to connect and control action from UI to Database. Use fr
 `GEODATA_GOOGLE_ACCOUNT_TOKEN`  # to call Gmaps API to get Lon, Lat
 
 **Create a Postgres Database in system**  
-`sudo -u postgres psql`  
-`CREATE DATABASE sms;`  
-`CREATE USER sms_user;`  
-`ALTER USER sms_user with encrypted password 'secret123';`  
-`ALTER USER postgre_tutorial WITH SUPERUSER;`  
-`GRANT ALL PRIVILEGES ON DATABASE sms TO sms_user;`  
+`sudo -u postgres psql      # Login to postgres-cli`
+`CREATE DATABASE sp;`
+`CREATE USER sp_user;`
+`ALTER USER sp_user with encrypted password 'secret';`
+`ALTER USER sp_user WITH SUPERUSER;`
+`GRANT ALL PRIVILEGES ON DATABASE sp TO sp_user;`
 
 **Re-check connection to database in .env file and run migrate**  
-`python manage.py migrate --setting=sale_portal.setting_be`  
+```python manage.py migrate```
 
 **Create a superuser**  
-`python manage.py createsuperuser --setting=sale_portal.setting_be`
+`python manage.py createsuperuser`
 
 **Run project**  
-For Backend: `python manage.py runserver --setting=sale_portal.setting_be`  
+For Backend: `python manage.py runserver`
 For Frontend: `python manage.py runserver --setting=sale_portal.setting_fe`  
 
-## Clone data from server
-**Make sure you can connection to MMS_DB_NAME (recheck in file .env and .env.sample)  
-Run command:**
-- `python manage.py qr_province_sync` 
-- `python manage.py qr_district_sync` 
-- `python manage.py qr_ward_sync` 
+## Make demo data
+**Link to download file sql to import [sp.sql](https://drive.google.com/open?id=1T-HDF6b6QUo2dT8oSM5FdcipJdm3bIrK)
 
-- `python manage.py first_time_synchronize_qr_department` 
-- `python manage.py first_time_synchronize_qr_merchant` 
-- `python manage.py first_time_synchronize_qr_staff` 
-- `python manage.py first_time_synchronize_qr_terminal` 
 
-- `python manage.py first_time_synchronize_staff` 
-- `python manage.py first_time_synchronize_merchant` 
-- `python manage.py first_time_synchronize_terminal` 
-
-## Author
-Developer: [Hai Long Dao](http://longblog.info)  
+# Author
+Maintainer: Dinh Huy Binh
+Developer: [Hai Long Dao](http://longblog.info)
+Developer: Nguyen The Chi Dung
 _============VNpay Sale Portal 04/11/2019============_
