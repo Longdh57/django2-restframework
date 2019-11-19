@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'sale_portal.cronjob',
     'sale_portal.merchant',
     'sale_portal.qr_status',
+    'sale_portal.sale_report_form',
     'sale_portal.shop',
     'sale_portal.shop_cube',
     'sale_portal.staff',
