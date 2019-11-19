@@ -7,6 +7,7 @@ from sale_portal.user.urls import url_login_patterns as login_urls
 from sale_portal.merchant.urls import urlpatterns as merchant_urls
 from sale_portal.terminal.urls import urlpatterns as terminal_urls
 from sale_portal.staff.urls import urlpatterns as staff_urls
+from sale_portal.sale_report_form.urls import urlpatterns as sale_report_form_urls
 
 
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
@@ -15,6 +16,7 @@ if settings.SALE_PORTAL_PROJECT == 'BACKEND':
         url(r'^merchant/', include((merchant_urls, 'merchant'), namespace='merchant')),
         url(r'^terminal/', include((terminal_urls, 'terminal'), namespace='terminal')),
         url(r'^staff/', include((staff_urls, 'staff'), namespace='staff')),
+        url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),
     ]
 
     urlpatterns = [
