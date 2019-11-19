@@ -185,7 +185,7 @@ REST_FRAMEWORK = {
         'rest_framework_datatables.renderers.DatatablesRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_datatables.filters.DatatablesFilterBackend',
+        'rest_framework_datatables.filters.DatatablesFilterBackend', 'rest_framework.filters.OrderingFilter',
     ),
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
     'DEFAULT_PAGINATION_CLASS': 'sale_portal.utils.pagination.StandardResultsSetPagination',

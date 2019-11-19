@@ -55,6 +55,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Rest framework
+    'rest_framework',
+
     # Module in Project
     'sale_portal.administrative_unit',
     'sale_portal.cronjob',
