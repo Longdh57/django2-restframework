@@ -37,7 +37,7 @@ Provide backend system to connect and control action from UI to Database. Use fr
  
 `GEODATA_GOOGLE_ACCOUNT_TOKEN`  # to call Gmaps API to get Lon, Lat
 
-**Create a Postgres Database in system**  
+**Create a Postgres Database in system**
 `sudo -u postgres psql      # Login to postgres-cli`
 `CREATE DATABASE sp;`
 `CREATE USER sp_user;`
@@ -56,7 +56,7 @@ For Backend: `python manage.py runserver`
 For Frontend: `python manage.py runserver --setting=sale_portal.setting_fe`  
 
 ## Make demo data
-**Link to download file sql to import [sp.sql](https://drive.google.com/open?id=1T-HDF6b6QUo2dT8oSM5FdcipJdm3bIrK)
+**Link to download file sql to import [sp.sql](https://drive.google.com/drive/folders/1HIuoYAJH17lKmBL1Qa2ZvMsaKaESzLVV?usp=sharing)
 
 
 # Author
