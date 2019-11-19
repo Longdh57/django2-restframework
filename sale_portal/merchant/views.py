@@ -5,6 +5,9 @@ from django.shortcuts import get_object_or_404
 from django.utils import formats
 from rest_framework import viewsets
 from datetime import datetime
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view
 
 
 from .models import Merchant
@@ -56,6 +59,28 @@ def show(request, pk):
     return TemplateResponse(request, 'merchant/show.html', ctx)
 
 
+@api_view(['GET'])
+@login_required
+def list_merchants(request):
+
+    queryset = Merchant.objects.values('id', 'merchant_code', 'merchant_name', 'merchant_brand')
+
+    code = request.GET.get('code', None)
+
+    if code is not None and code != '':
+        queryset = queryset.filter(Q(merchant_code__icontains=code) | Q(merchant_brand__icontains=code))
+
+    queryset = queryset.order_by('merchant_brand')[0:settings.PAGINATE_BY]
+
+    data = [{'id': merchant['id'], 'code': merchant['merchant_code'] + ' - ' + merchant['merchant_brand']} for merchant in queryset]
+
+    return JsonResponse({
+        'data': data
+    }, status=200)
+
+
+@api_view(['GET'])
+@login_required
 def detail(request, pk):
     # API detail
     merchant = get_object_or_404(Merchant, pk=pk)
