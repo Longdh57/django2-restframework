@@ -38,12 +38,12 @@ Provide backend system to connect and control action from UI to Database. Use fr
 `GEODATA_GOOGLE_ACCOUNT_TOKEN`  # to call Gmaps API to get Lon, Lat
 
 **Create a Postgres Database in system**
-`sudo -u postgres psql      # Login to postgres-cli`
-`CREATE DATABASE sp;`
-`CREATE USER sp_user;`
-`ALTER USER sp_user with encrypted password 'secret';`
-`ALTER USER sp_user WITH SUPERUSER;`
-`GRANT ALL PRIVILEGES ON DATABASE sp TO sp_user;`
+`sudo -u postgres psql      # Login to postgres-cli`  
+`CREATE DATABASE sp;`  
+`CREATE USER sp_user;`  
+`ALTER USER sp_user with encrypted password 'secret';`  
+`ALTER USER sp_user WITH SUPERUSER;`  
+`GRANT ALL PRIVILEGES ON DATABASE sp TO sp_user;`  
 
 **Re-check connection to database in .env file and run migrate**  
 ```python manage.py migrate```
@@ -52,7 +52,7 @@ Provide backend system to connect and control action from UI to Database. Use fr
 `python manage.py createsuperuser`
 
 **Run project**  
-For Backend: `python manage.py runserver`
+For Backend: `python manage.py runserver`  
 For Frontend: `python manage.py runserver --setting=sale_portal.setting_fe`  
 
 ## Make demo data
@@ -60,7 +60,7 @@ For Frontend: `python manage.py runserver --setting=sale_portal.setting_fe`
 
 
 # Author
-Maintainer: Dinh Huy Binh
-Developer: [Hai Long Dao](http://longblog.info)
-Developer: Nguyen The Chi Dung
+Maintainer: Dinh Huy Binh  
+Developer: [Hai Long Dao](http://longblog.info)  
+Developer: Nguyen The Chi Dung  
 _============VNpay Sale Portal 04/11/2019============_
