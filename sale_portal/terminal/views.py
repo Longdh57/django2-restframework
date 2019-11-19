@@ -6,6 +6,10 @@ from django.shortcuts import get_object_or_404
 from django.utils import formats
 from django.http import JsonResponse
 
+from django.conf import settings
+from rest_framework.decorators import api_view
+from django.contrib.auth.decorators import login_required
+
 from rest_framework import viewsets
 from .serializers import TerminalSerializer
 from .models import Terminal
@@ -75,6 +79,32 @@ class TerminalViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+@api_view(['GET'])
+@login_required
+def list_terminals(request):
+
+    queryset = Terminal.objects.values('id', 'terminal_id', 'terminal_name')
+
+    name = request.GET.get('name', None)
+    merchant_id = request.GET.get('merchant_id', None)
+
+    if name is not None and name != '':
+        queryset = queryset.filter(Q(terminal_id__icontains=name) | Q(terminal_name__icontains=name))
+    if merchant_id is not None and merchant_id != '':
+        queryset = queryset.filter(merchant_id=merchant_id)
+
+    queryset = queryset.order_by('terminal_name')[0:settings.PAGINATE_BY]
+
+    data = [{'id': terminal['id'], 'name': terminal['terminal_id'] + ' - ' + terminal['terminal_name']} for
+            terminal in queryset]
+
+    return JsonResponse({
+        'data': data
+    }, status=200)
+
+
+@api_view(['GET'])
+@login_required
 def detail(request, pk):
     # API detail
     terminal = get_object_or_404(Terminal, pk=pk)

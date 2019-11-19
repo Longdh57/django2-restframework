@@ -72,7 +72,8 @@ def list_merchants(request):
 
     queryset = queryset.order_by('merchant_brand')[0:settings.PAGINATE_BY]
 
-    data = [{'id': merchant['id'], 'code': merchant['merchant_code'] + ' - ' + merchant['merchant_brand']} for merchant in queryset]
+    data = [{'id': merchant['id'], 'code': merchant['merchant_code'] + ' - ' + merchant['merchant_brand']} for
+            merchant in queryset]
 
     return JsonResponse({
         'data': data
