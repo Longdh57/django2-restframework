@@ -1,5 +1,6 @@
 Django==2.2.7
 django-cors-headers==3.1.1
+django-rest-swagger==2.1.2
 djangorestframework==3.9.1
 djangorestframework-datatables==0.4.1
 djangorestframework-jwt==1.11.0

@@ -123,6 +123,7 @@ INSTALLED_APPS = [
     # Rest framework
     'rest_framework',
     'rest_framework_datatables',
+    'rest_framework_swagger',
 
     # Module in Project
     'sale_portal.administrative_unit',
@@ -248,9 +249,10 @@ REST_FRAMEWORK = {
         'rest_framework_datatables.renderers.DatatablesRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_datatables.filters.DatatablesFilterBackend',
+        'rest_framework_datatables.filters.DatatablesFilterBackend', 'rest_framework.filters.OrderingFilter',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'sale_portal.utils.pagination.StandardResultsSetPagination',
     'PAGE_SIZE': 50,
 }
 
@@ -292,4 +294,22 @@ JWT_AUTH = {
 
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_AUTH_COOKIE': None,
+}
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'JWT authorization'
+        }
+    },
+    "enabled_methods": [
+        'get',
+        'post',
+        'put',
+        'delete'
+    ],
 }
