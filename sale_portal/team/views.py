@@ -12,13 +12,13 @@ from ..utils.field_formatter import format_string
 
 class TeamViewSet(mixins.ListModelMixin,
                   viewsets.GenericViewSet):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - name -- text
+    """
     serializer_class = TeamSerializer
 
     def get_queryset(self):
-        """
-            Parameters for this api : Có thể bỏ trống hoặc không gửi lên
-            - name -- text
-        """
 
         queryset = Team.objects.all()
 
