@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     # Rest framework
     'rest_framework',
     'rest_framework_datatables',
+    'rest_framework_swagger',
 
     # Module in Project
     'sale_portal.administrative_unit',
@@ -230,4 +231,22 @@ JWT_AUTH = {
 
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_AUTH_COOKIE': None,
+}
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'JWT authorization'
+        }
+    },
+    "enabled_methods": [
+        'get',
+        'post',
+        'put',
+        'delete'
+    ],
 }
