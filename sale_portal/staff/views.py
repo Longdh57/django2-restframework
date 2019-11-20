@@ -3,14 +3,15 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.conf import settings
 from rest_framework.decorators import api_view
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 
 from .models import Staff
 from .serializers import StaffSerializer
 from ..utils.field_formatter import format_string
 
 
-class StaffViewSet(viewsets.ModelViewSet):
+class StaffViewSet(mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
     serializer_class = StaffSerializer
 
     def get_queryset(self):

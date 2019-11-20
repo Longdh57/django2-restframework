@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.template.response import TemplateResponse
 from django.shortcuts import get_object_or_404
 from django.utils import formats
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -20,7 +20,8 @@ def index(request):
     return TemplateResponse(request, 'merchant/index.html')
 
 
-class MerchantViewSet(viewsets.ModelViewSet):
+class MerchantViewSet(mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
     serializer_class = MerchantSerializer
 
     def get_queryset(self):

@@ -10,7 +10,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from django.contrib.auth.decorators import login_required
 
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from .serializers import TerminalSerializer
 from .models import Terminal
 from ..utils.field_formatter import format_string
@@ -22,7 +22,8 @@ def index(request):
     return TemplateResponse(request, 'terminal/index.html')
 
 
-class TerminalViewSet(viewsets.ModelViewSet):
+class TerminalViewSet(mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
     serializer_class = TerminalSerializer
 
     def get_queryset(self):

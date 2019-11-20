@@ -8,11 +8,14 @@ from sale_portal.merchant.urls import urlpatterns as merchant_urls
 from sale_portal.terminal.urls import urlpatterns as terminal_urls
 from sale_portal.staff.urls import urlpatterns as staff_urls
 from sale_portal.team.urls import urlpatterns as team_urls
+from rest_framework_swagger.views import get_swagger_view
+
+schema_view = get_swagger_view(title='Sale_Portal API')
 
 
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     api_urlpatterns = [
-        url(r'^login/', include(login_urls)),
+        url(r'^login', include(login_urls)),
         url(r'^merchant/', include((merchant_urls, 'merchant'), namespace='merchant')),
         url(r'^terminal/', include((terminal_urls, 'terminal'), namespace='terminal')),
         url(r'^staff/', include((staff_urls, 'staff'), namespace='staff')),
@@ -20,6 +23,7 @@ if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     ]
 
     urlpatterns = [
+        url(r'^$', schema_view),
         url(r'^api/', include((api_urlpatterns))),
     ]
 
