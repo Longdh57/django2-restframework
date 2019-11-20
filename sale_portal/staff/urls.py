@@ -5,12 +5,12 @@ from .views import list_staffs, StaffViewSet
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register(r'datatables', StaffViewSet, 'Staff')
+router.register(r'', StaffViewSet, 'Staff')
 
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     urlpatterns = [
-        url(r'^', include(router.urls), name='get_list_staff_datatables'),
-        url(r'^list-staffs/$', list_staffs, name='get_list_staffs'),
+        url(r'^', include(router.urls), name='Restful API Staff'),
+        url(r'^list', list_staffs, name='get_list_staffs'),
     ]
 else:
     urlpatterns = [
