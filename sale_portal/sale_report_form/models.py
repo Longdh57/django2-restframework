@@ -102,7 +102,9 @@ class SaleReport(models.Model):
     class Meta:
         db_table = 'sale_report_form'
         ordering = ['-created_date']
-        default_permissions = ()
+        default_permissions = (
+            ('sale_report_create', 'Can create sale_report'),
+        )
 
     def get_shop(self):
         try:

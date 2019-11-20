@@ -5,6 +5,8 @@ import datetime
 
 from dotenv import find_dotenv, load_dotenv
 from django.core.management.commands.runserver import Command as runserver
+import logging.config
+from structlog import configure, processors, stdlib, threadlocal
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
@@ -33,7 +35,66 @@ def get_bool_from_env(name, default_value):
                 '{} is an invalid value for {}'.format(value, name)) from e
     return default_value
 
+if not os.path.exists('log'):
+    os.makedirs('log')
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'json': {
+            'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)s %(thread)s %(message)s',
+            'class': 'pythonjsonlogger.jsonlogger.JsonFormatter'
+        }
+    },
+    'handlers': {
+        'default': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 1,
+            'filename': 'log/log.log',
+            'backupCount': 15,
+            'formatter': 'json',
+        },
+        'request': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 1,
+            'filename': 'log/request.log',
+            'backupCount': 15,
+            'formatter': 'json',
+        }
+    },
+    'loggers': {
+        'dev': {
+            'handlers': ['default'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'request': {
+            'handlers': ['request'],
+            'level': 'DEBUG',
+            'propagate': True
+        }
+    }
+}
+)
 
+configure(
+    context_class=threadlocal.wrap_dict(dict),
+    logger_factory=stdlib.LoggerFactory(),
+    wrapper_class=stdlib.BoundLogger,
+    processors=[
+        stdlib.filter_by_level,
+        stdlib.add_logger_name,
+        stdlib.add_log_level,
+        stdlib.PositionalArgumentsFormatter(),
+        processors.TimeStamper(fmt="iso"),
+        processors.StackInfoRenderer(),
+        processors.format_exc_info,
+        stdlib.render_to_log_kwargs]
+)
 SECRET_KEY = os.environ.get('SECRET_KEY', '')
 
 DEBUG = get_bool_from_env('DEBUG', True)
@@ -83,10 +144,12 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS Django
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'sale_portal.middleware.RequestLogMiddleware',
+    # 'sale_portal.middleware.ExceptionLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'sale_portal.urls'
