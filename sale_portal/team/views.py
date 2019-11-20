@@ -12,13 +12,13 @@ from ..utils.field_formatter import format_string
 
 class TeamViewSet(mixins.ListModelMixin,
                   viewsets.GenericViewSet):
-    """
-        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
-        - name -- text
-    """
     serializer_class = TeamSerializer
 
     def get_queryset(self):
+        """
+            Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+            - name -- text
+        """
 
         queryset = Team.objects.all()
 
@@ -29,6 +29,21 @@ class TeamViewSet(mixins.ListModelMixin,
             queryset = queryset.filter(Q(name__icontains=name) | Q(code__icontains=name))
 
         return queryset
+
+    def create(self, request):
+        return JsonResponse({
+            'data': "post method"
+        }, status=200)
+
+    def update(self, request, pk):
+        return JsonResponse({
+            'data': "update method"
+        }, status=200)
+
+    def destroy(self, request, pk):
+        return JsonResponse({
+            'data': "delete method"
+        }, status=200)
 
 
 @api_view(['GET'])
