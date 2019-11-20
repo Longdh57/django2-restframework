@@ -20,7 +20,8 @@ def index(request):
     return TemplateResponse(request, 'merchant/index.html')
 
 
-class MerchantViewSet(viewsets.GenericViewSet):
+class MerchantViewSet(mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
     """
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - merchant_code -- text
