@@ -31,21 +31,25 @@ class TeamViewSet(mixins.ListModelMixin,
         return queryset
 
     def create(self, request):
+        """        """
         return JsonResponse({
             'data': "post method"
         }, status=200)
 
     def retrieve(self, request, pk):
+        """        """
         return JsonResponse({
             'data': "get detail method"
         }, status=200)
 
     def update(self, request, pk):
+        """        """
         return JsonResponse({
             'data': "update method"
         }, status=200)
 
     def destroy(self, request, pk):
+        """        """
         return JsonResponse({
             'data': "delete method"
         }, status=200)

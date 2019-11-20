@@ -20,8 +20,7 @@ def index(request):
     return TemplateResponse(request, 'merchant/index.html')
 
 
-class MerchantViewSet(mixins.ListModelMixin,
-                      viewsets.GenericViewSet):
+class MerchantViewSet(viewsets.GenericViewSet):
     """
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - merchant_code -- text
@@ -61,19 +60,23 @@ class MerchantViewSet(mixins.ListModelMixin,
         return queryset
 
     def create(self, request):
+        """        """
         return JsonResponse({
             'data': "post method"
         }, status=200)
 
     def retrieve(self, request, pk):
+        """        """
         return detail(request, pk)
 
     def update(self, request, pk):
+        """        """
         return JsonResponse({
             'data': "update method"
         }, status=200)
 
     def destroy(self, request, pk):
+        """        """
         return JsonResponse({
             'data': "delete method"
         }, status=200)
