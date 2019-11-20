@@ -10,3 +10,5 @@ PyJWT==1.7.1
 python-dotenv==0.10.3
 pytz==2019.3
 sqlparse==0.3.0
+structlog==19.2.0
+python-json-logger==0.1.11
