@@ -12,6 +12,10 @@ from ..utils.field_formatter import format_string
 
 class TeamViewSet(mixins.ListModelMixin,
                   viewsets.GenericViewSet):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - name -- text
+    """
     serializer_class = TeamSerializer
 
     def get_queryset(self):
@@ -30,6 +34,10 @@ class TeamViewSet(mixins.ListModelMixin,
 @api_view(['GET'])
 @login_required
 def list_teams(request):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - code -- text
+    """
 
     queryset = Team.objects.values('id', 'code', 'name')
 

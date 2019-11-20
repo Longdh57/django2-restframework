@@ -12,6 +12,12 @@ from ..utils.field_formatter import format_string
 
 class StaffViewSet(mixins.ListModelMixin,
                    viewsets.GenericViewSet):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - staff_code -- text
+        - full_name -- text
+        - status -- number in {-1,1}
+    """
     serializer_class = StaffSerializer
 
     def get_queryset(self):
@@ -37,6 +43,10 @@ class StaffViewSet(mixins.ListModelMixin,
 @api_view(['GET'])
 @login_required
 def list_staffs(request):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - email -- text
+    """
 
     queryset = Staff.objects.values('id', 'email', 'full_name')
 

@@ -24,6 +24,19 @@ def index(request):
 
 class TerminalViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - terminal_id -- text
+        - merchant_id -- number
+        - staff_id -- number
+        - team_id -- number
+        - province_code -- text
+        - district_code -- text
+        - ward_code -- text
+        - status -- number in {-1,1,2,3,4,5,6}
+        - from_date -- dd/mm/yyyy
+        - to_date -- dd/mm/yyyy
+    """
     serializer_class = TerminalSerializer
 
     def get_queryset(self):
@@ -83,6 +96,12 @@ class TerminalViewSet(mixins.ListModelMixin,
 @api_view(['GET'])
 @login_required
 def list_terminals(request):
+
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - name -- text
+        - merchant_id -- number
+    """
 
     queryset = Terminal.objects.values('id', 'terminal_id', 'terminal_name')
 

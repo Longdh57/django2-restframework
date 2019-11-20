@@ -22,6 +22,14 @@ def index(request):
 
 class MerchantViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - merchant_code -- text
+        - staff_id -- number
+        - status -- number in {-1,1,2,3,4,5,6}
+        - from_date -- dd/mm/yyyy
+        - to_date -- dd/mm/yyyy
+    """
     serializer_class = MerchantSerializer
 
     def get_queryset(self):
@@ -63,6 +71,10 @@ def show(request, pk):
 @api_view(['GET'])
 @login_required
 def list_merchants(request):
+    """
+        Parameters for this api : Có thể bỏ trống hoặc không cần gửi lên
+        - code -- text
+    """
 
     queryset = Merchant.objects.values('id', 'merchant_code', 'merchant_name', 'merchant_brand')
 
