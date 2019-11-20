@@ -35,6 +35,11 @@ class TeamViewSet(mixins.ListModelMixin,
             'data': "post method"
         }, status=200)
 
+    def retrieve(self, request, pk):
+        return JsonResponse({
+            'data': "get detail method"
+        }, status=200)
+
     def update(self, request, pk):
         return JsonResponse({
             'data': "update method"
