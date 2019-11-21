@@ -8,6 +8,7 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
+from ..qr_status.views import get_merchant_status_list
 
 
 from .models import Merchant
@@ -60,27 +61,9 @@ class MerchantViewSet(mixins.ListModelMixin,
 
         return queryset
 
-    def create(self, request):
-        """        """
-        return JsonResponse({
-            'data': "post method"
-        }, status=200)
-
     def retrieve(self, request, pk):
         """        """
         return detail(request, pk)
-
-    def update(self, request, pk):
-        """        """
-        return JsonResponse({
-            'data': "update method"
-        }, status=200)
-
-    def destroy(self, request, pk):
-        """        """
-        return JsonResponse({
-            'data': "delete method"
-        }, status=200)
 
 
 def show(request, pk):
@@ -138,6 +121,15 @@ def detail(request, pk):
     }
     return JsonResponse({
         'data': data
+    }, status=200)
+
+
+@api_view(['GET'])
+@login_required
+def list_status(request):
+
+    return JsonResponse({
+        'data': get_merchant_status_list()
     }, status=200)
 
 
