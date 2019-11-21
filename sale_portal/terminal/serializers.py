@@ -47,7 +47,7 @@ class TerminalSerializer(serializers.ModelSerializer):
 
     def get_team(self, terminal):
         team = terminal.get_team()
-        return team.code if team else None
+        return team.code if team else ''
 
     def get_province_name(self, terminal):
         province = terminal.get_province()
