@@ -226,7 +226,17 @@ LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
+
+STATICFILES_DIRS = (
+    ('assets', os.path.join(BASE_DIR, 'sale_portal', 'static', 'assets')),
+    ('global_assets', os.path.join(BASE_DIR, 'sale_portal', 'static', 'global_assets')),
+)
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder']
 
 # Media file (Images, CSV, ...)
 MEDIA_URL = os.environ.get('MEDIA_URL', '/')
