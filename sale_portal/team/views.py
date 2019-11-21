@@ -32,8 +32,18 @@ class TeamViewSet(mixins.ListModelMixin,
 
     def create(self, request):
         """        """
+        name = request.POST.get("name", None)
+        code = request.POST.get('code', None)
+        description = request.POST.get('description', None)
+
+        # if name is None or name =
+
+        team = Team.objects.filter(Q(name=name) | Q(code=code)).first()
+
         return JsonResponse({
-            'data': "post method"
+            'name': name,
+            'code': code,
+            'description': description,
         }, status=200)
 
     def retrieve(self, request, pk):

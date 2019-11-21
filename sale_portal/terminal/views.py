@@ -16,6 +16,7 @@ from .models import Terminal
 from ..utils.field_formatter import format_string
 from ..shop.models import Shop
 from ..staff.models import Staff
+from ..qr_status.views import get_terminal_status_list
 
 
 def index(request):
@@ -92,12 +93,6 @@ class TerminalViewSet(mixins.ListModelMixin,
 
         return queryset
 
-    def create(self, request):
-        """        """
-        return JsonResponse({
-            'data': "post method"
-        }, status=200)
-
     def retrieve(self, request, pk):
         """        """
         return detail(request, pk)
@@ -106,12 +101,6 @@ class TerminalViewSet(mixins.ListModelMixin,
         """        """
         return JsonResponse({
             'data': "update method"
-        }, status=200)
-
-    def destroy(self, request, pk):
-        """        """
-        return JsonResponse({
-            'data': "delete method"
         }, status=200)
 
 
@@ -195,4 +184,13 @@ def detail(request, pk):
     }
     return JsonResponse({
         'data': data
+    }, status=200)
+
+
+@api_view(['GET'])
+@login_required
+def list_status(request):
+
+    return JsonResponse({
+        'data': get_terminal_status_list()
     }, status=200)
