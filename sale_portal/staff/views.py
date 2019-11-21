@@ -13,6 +13,7 @@ from ..utils.field_formatter import format_string
 class StaffViewSet(mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     """
+        API get list Staff \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - staff_code -- text
         - full_name -- text
@@ -40,13 +41,17 @@ class StaffViewSet(mixins.ListModelMixin,
         return queryset
 
     def retrieve(self, request, pk):
-        """        """
+        """
+            API get detail Staff
+        """
         return JsonResponse({
             'data': "get detail method"
         }, status=200)
 
     def update(self, request, pk):
-        """        """
+        """
+            API update Staff
+        """
         return JsonResponse({
             'data': "update method"
         }, status=200)
@@ -56,6 +61,7 @@ class StaffViewSet(mixins.ListModelMixin,
 @login_required
 def list_staffs(request):
     """
+        API get list Staff to select \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - email -- text
     """
