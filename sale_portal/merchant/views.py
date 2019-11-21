@@ -60,6 +60,28 @@ class MerchantViewSet(mixins.ListModelMixin,
 
         return queryset
 
+    def create(self, request):
+        """        """
+        return JsonResponse({
+            'data': "post method"
+        }, status=200)
+
+    def retrieve(self, request, pk):
+        """        """
+        return detail(request, pk)
+
+    def update(self, request, pk):
+        """        """
+        return JsonResponse({
+            'data': "update method"
+        }, status=200)
+
+    def destroy(self, request, pk):
+        """        """
+        return JsonResponse({
+            'data': "delete method"
+        }, status=200)
+
 
 def show(request, pk):
     ctx = {
@@ -93,7 +115,6 @@ def list_merchants(request):
     }, status=200)
 
 
-@api_view(['GET'])
 @login_required
 def detail(request, pk):
     # API detail

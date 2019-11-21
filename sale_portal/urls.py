@@ -17,11 +17,11 @@ schema_view = get_swagger_view(title='Sale_Portal API')
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     api_urlpatterns = [
         url(r'^login', include(login_urls)),
-        url(r'^merchant/', include((merchant_urls, 'merchant'), namespace='merchant')),
-        url(r'^terminal/', include((terminal_urls, 'terminal'), namespace='terminal')),
-        url(r'^staff/', include((staff_urls, 'staff'), namespace='staff')),
+        url(r'^merchants/', include((merchant_urls, 'merchant'), namespace='merchant')),
+        url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
+        url(r'^staffs/', include((staff_urls, 'staff'), namespace='staff')),
         url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),
-        url(r'^team/', include((team_urls, 'team'), namespace='team')),
+        url(r'^teams/', include((team_urls, 'team'), namespace='team')),
     ]
 
     urlpatterns = [
