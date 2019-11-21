@@ -24,6 +24,7 @@ def index(request):
 class MerchantViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
     """
+        API get list Merchant \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - merchant_code -- text
         - staff_id -- number
@@ -62,7 +63,9 @@ class MerchantViewSet(mixins.ListModelMixin,
         return queryset
 
     def retrieve(self, request, pk):
-        """        """
+        """
+            API get detail Merchant
+        """
         return detail(request, pk)
 
 
@@ -77,6 +80,7 @@ def show(request, pk):
 @login_required
 def list_merchants(request):
     """
+        API get list Merchant to select \n
         Parameters for this api : Có thể bỏ trống hoặc không cần gửi lên
         - code -- text
     """
@@ -127,7 +131,9 @@ def detail(request, pk):
 @api_view(['GET'])
 @login_required
 def list_status(request):
-
+    """
+        API get list status of Merchant
+    """
     return JsonResponse({
         'data': get_merchant_status_list()
     }, status=200)

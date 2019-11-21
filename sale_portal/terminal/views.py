@@ -26,6 +26,7 @@ def index(request):
 class TerminalViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
     """
+        API get list Terminal \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - terminal_id -- text
         - merchant_id -- number
@@ -94,11 +95,15 @@ class TerminalViewSet(mixins.ListModelMixin,
         return queryset
 
     def retrieve(self, request, pk):
-        """        """
+        """
+            API get detail Terminal
+        """
         return detail(request, pk)
 
     def update(self, request, pk):
-        """        """
+        """
+            API update Terminal
+        """
         return JsonResponse({
             'data': "update method"
         }, status=200)
@@ -109,6 +114,7 @@ class TerminalViewSet(mixins.ListModelMixin,
 def list_terminals(request):
 
     """
+        API get list Terminal to select \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - name -- text
         - merchant_id -- number
@@ -136,7 +142,6 @@ def list_terminals(request):
 
 @login_required
 def detail(request, pk):
-    # API detail
     terminal = get_object_or_404(Terminal, pk=pk)
 
     merchant = terminal.merchant
@@ -190,7 +195,9 @@ def detail(request, pk):
 @api_view(['GET'])
 @login_required
 def list_status(request):
-
+    """
+        API get list status of Terminal
+    """
     return JsonResponse({
         'data': get_terminal_status_list()
     }, status=200)

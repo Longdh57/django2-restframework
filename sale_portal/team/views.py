@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Q
@@ -13,6 +14,7 @@ from ..utils.field_formatter import format_string
 class TeamViewSet(mixins.ListModelMixin,
                   viewsets.GenericViewSet):
     """
+        API get list Team \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - name -- text
     """
@@ -31,42 +33,64 @@ class TeamViewSet(mixins.ListModelMixin,
         return queryset
 
     def create(self, request):
-        """        """
-        name = request.POST.get("name", None)
-        code = request.POST.get('code', None)
-        description = request.POST.get('description', None)
+        """
+            API create team
+        """
+        body = json.loads(request.body)
+        name = code = description = None
+        if 'name' in body:
+            name = body['name']
+        if 'code' in body:
+            code = body['code']
+        if 'description' in body:
+            description = body['description']
 
         if name is None or name == '' or code is None or code == '':
             return JsonResponse({
-                'name': name,
-                'code': code,
-                'description': description,
-        }, status=400)
+                'message': 'Invalid body (name or code invalid)'
+            }, status=400)
 
-        # if name is None or name =
+        name = format_string(name)
+        code = format_string(code)
 
         team = Team.objects.filter(Q(name=name) | Q(code=code)).first()
 
+        if team is not None:
+            return JsonResponse({
+                'message': 'name or code be used by other Team'
+            }, status=400)
+
+        team = Team(
+            code=code,
+            name=name,
+            description=description
+        )
+        team.save()
+
         return JsonResponse({
-            'name': name,
-            'code': code,
-            'description': description,
-        }, status=200)
+            'data': team.id
+        }, status=201)
 
     def retrieve(self, request, pk):
-        """        """
+        """
+            API get detail Team
+        """
         return JsonResponse({
             'data': "get detail method"
         }, status=200)
 
     def update(self, request, pk):
-        """        """
+        """
+            API update Team
+        """
         return JsonResponse({
             'data': "update method"
         }, status=200)
 
     def destroy(self, request, pk):
-        """        """
+        """
+            API delete Team
+        """
         return JsonResponse({
             'data': "delete method"
         }, status=200)
@@ -76,6 +100,7 @@ class TeamViewSet(mixins.ListModelMixin,
 @login_required
 def list_teams(request):
     """
+        API get list Team to select \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - code -- text
     """
