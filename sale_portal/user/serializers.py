@@ -10,6 +10,7 @@ ROLE = {
     1: 'TEAM MANAGER',
     2: 'SALE',
     3: 'OTHER',
+    4: 'admin',
 }
 
 
@@ -24,6 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
         return permissions
 
     def get_role(self, user):
+        if user.is_superuser:
+            return ROLE[4]
         if user.is_area_manager:
             return ROLE[0]
         else:
