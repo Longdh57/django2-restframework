@@ -1,3 +1,5 @@
+import json
+import logging
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Q
@@ -8,6 +10,7 @@ from rest_framework import viewsets, mixins
 from .models import Staff
 from .serializers import StaffSerializer
 from ..utils.field_formatter import format_string
+from  ..team.models import Team
 
 
 class StaffViewSet(mixins.ListModelMixin,
@@ -83,3 +86,95 @@ def list_staffs(request):
         'status': 200,
         'data': data
     }, status=200)
+
+
+@api_view(['POST', 'PUT', 'DELETE'])
+@login_required
+def change_staff_team(request):
+    """
+        API update team for Staff (POST: create, PUT: update, DELETE: delete) \n
+        Request body for this api : Không được bỏ trống
+        - { \n
+            'staff_id' : 4, \n
+            'team_id' : 6 \n
+            }
+    """
+    try:
+        body = json.loads(request.body)
+        staff_id = team_id  = None
+        if 'staff_id' in body:
+            staff_id = body['staff_id']
+        if 'team_id' in body:
+            team_id = body['team_id']
+
+        if staff_id is None or staff_id == '' or team_id is None or team_id == '':
+            return JsonResponse({
+                'status': 400,
+                'message': 'Invalid body'
+            }, status=400)
+
+        staff = Staff.objects.filter(pk=staff_id).first()
+        if staff is None:
+            return JsonResponse({
+                'status': 404,
+                'message': 'Staff not found'
+            }, status=404)
+        team = Team.objects.filter(pk=team_id).first()
+        if team is None:
+            return JsonResponse({
+                'status': 404,
+                'message': 'Team not found'
+            }, status=404)
+
+        if request.method == 'POST':
+            if staff.team is not None:
+                message = 'Staff đã thuộc team này từ trước'
+                if staff.team.id != team.id:
+                    message = 'Staff đang thuộc 1 Team khác'
+                return JsonResponse({
+                    'status': 400,
+                    'message': message
+                }, status=400)
+            else:
+                staff.update(
+                    team=team
+                )
+
+        if request.method == 'PUT':
+            if staff.team is None or staff.team.id == team.id:
+                message = 'Staff đã thuộc team này từ trước'
+                if staff.team is None:
+                    message = 'Staff đang không thuộc team nào, không thể chuyển Team'
+                return JsonResponse({
+                    'status': 400,
+                    'message': message
+                }, status=400)
+            else:
+                staff.update(
+                    team=team
+                )
+
+        if request.method == 'DELETE':
+            if staff.team is None or staff.team.id != team.id:
+                message = 'Staff không thuộc team hiện tại'
+                if staff.team is None:
+                    message = 'Staff đang không thuộc team nào, không thể xóa Team'
+                return JsonResponse({
+                    'status': 400,
+                    'message': message
+                }, status=400)
+            else:
+                staff.update(
+                    team=None
+                )
+
+        return JsonResponse({
+            'status': 200,
+            'data': 'success'
+        }, status=200)
+    except Exception as e:
+        logging.error('Update team for staff exception: %s', e)
+        return JsonResponse({
+            'status': 500,
+            'data': 'Internal sever error'
+        }, status=500)
