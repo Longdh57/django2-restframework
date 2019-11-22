@@ -1,6 +1,7 @@
 import json
+import logging
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.conf import settings
 from rest_framework.decorators import api_view
@@ -9,6 +10,7 @@ from rest_framework import viewsets, mixins
 from .models import Team
 from .serializers import TeamSerializer
 from ..utils.field_formatter import format_string
+from ..shop.models import Shop
 
 
 class TeamViewSet(mixins.ListModelMixin,
@@ -36,40 +38,46 @@ class TeamViewSet(mixins.ListModelMixin,
         """
             API create team
         """
-        body = json.loads(request.body)
-        name = code = description = None
-        if 'name' in body:
-            name = body['name']
-        if 'code' in body:
-            code = body['code']
-        if 'description' in body:
-            description = body['description']
+        try:
+            body = json.loads(request.body)
+            name = code = description = None
+            if 'name' in body:
+                name = body['name']
+            if 'code' in body:
+                code = body['code']
+            if 'description' in body:
+                description = body['description']
 
-        if name is None or name == '' or code is None or code == '':
+            if name is None or name == '' or code is None or code == '':
+                return JsonResponse({
+                    'message': 'Invalid body (name or code invalid)'
+                }, status=400)
+
+            name = format_string(name)
+            code = format_string(code)
+
+            team = Team.objects.filter(Q(name=name) | Q(code=code)).first()
+
+            if team is not None:
+                return JsonResponse({
+                    'message': 'name or code be used by other Team'
+                }, status=400)
+
+            team = Team(
+                code=code,
+                name=name,
+                description=description
+            )
+            team.save()
+
             return JsonResponse({
-                'message': 'Invalid body (name or code invalid)'
-            }, status=400)
-
-        name = format_string(name)
-        code = format_string(code)
-
-        team = Team.objects.filter(Q(name=name) | Q(code=code)).first()
-
-        if team is not None:
+                'data': team.id
+            }, status=201)
+        except Exception as e:
+            logging.error('Create team exception: %s', e)
             return JsonResponse({
-                'message': 'name or code be used by other Team'
-            }, status=400)
-
-        team = Team(
-            code=code,
-            name=name,
-            description=description
-        )
-        team.save()
-
-        return JsonResponse({
-            'data': team.id
-        }, status=201)
+                'data': 'Internal sever error'
+            }, status=500)
 
     def retrieve(self, request, pk):
         """
@@ -83,17 +91,75 @@ class TeamViewSet(mixins.ListModelMixin,
         """
             API update Team
         """
-        return JsonResponse({
-            'data': "update method"
-        }, status=200)
+        try:
+            team = Team.objects.filter(pk=pk)
+            if team is None:
+                return JsonResponse({
+                    'message': 'Team not found'
+                }, status=404)
+            body = json.loads(request.body)
+            name = code = description = None
+            if 'name' in body:
+                name = body['name']
+            if 'code' in body:
+                code = body['code']
+            if 'description' in body:
+                description = body['description']
+
+            if name is None or name == '' or code is None or code == '':
+                return JsonResponse({
+                    'message': 'Invalid body (name or code invalid)'
+                }, status=400)
+
+            name = format_string(name)
+            code = format_string(code)
+
+            Team.objects.filter(Q(name=name) | Q(code=code)).count()
+
+            if Team.objects.filter(Q(name=name) | Q(code=code)).count() > 0:
+                return JsonResponse({
+                    'message': 'name or code be used by other Team'
+                }, status=400)
+
+            team.update(
+                code=code,
+                name=name,
+                description=description
+            )
+
+            return JsonResponse({
+                'data': 'success'
+            }, status=200)
+        except Exception as e:
+            logging.error('Update team exception: %s', e)
+            return JsonResponse({
+                'data': 'Internal sever error'
+            }, status=500)
 
     def destroy(self, request, pk):
         """
             API delete Team
         """
-        return JsonResponse({
-            'data': "delete method"
-        }, status=200)
+        try:
+            team = Team.objects.filter(pk=pk).first()
+            if team is None:
+                return JsonResponse({
+                    'message': 'Team not found'
+                }, status=404)
+            staffs = team.staff_set.all()
+            Shop.objects.filter(staff__in=staffs).update(
+                staff=None
+            )
+            staffs.update(
+                team=None
+            )
+            team.delete()
+            return HttpResponse(status=204)
+        except Exception as e:
+            logging.error('Delete team exception: %s', e)
+            return JsonResponse({
+                'data': 'Internal sever error'
+            }, status=500)
 
 
 @api_view(['GET'])
