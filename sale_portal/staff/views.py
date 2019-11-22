@@ -45,6 +45,7 @@ class StaffViewSet(mixins.ListModelMixin,
             API get detail Staff
         """
         return JsonResponse({
+            'status': 200,
             'data': "get detail method"
         }, status=200)
 
@@ -53,6 +54,7 @@ class StaffViewSet(mixins.ListModelMixin,
             API update Staff
         """
         return JsonResponse({
+            'status': 200,
             'data': "update method"
         }, status=200)
 
@@ -78,5 +80,6 @@ def list_staffs(request):
     data = [{'id': staff['id'], 'email': staff['full_name'] + ' - ' + staff['email']} for staff in queryset]
 
     return JsonResponse({
+        'status': 200,
         'data': data
     }, status=200)
