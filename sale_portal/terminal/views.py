@@ -46,6 +46,7 @@ class TerminalViewSet(mixins.ListModelMixin,
         queryset = Terminal.objects.all()
 
         terminal_id = self.request.query_params.get('terminal_id', None)
+        terminal_name = self.request.query_params.get('terminal_name', None)
         merchant_id = self.request.query_params.get('merchant_id', None)
         staff_id = self.request.query_params.get('staff_id', None)
         team_id = self.request.query_params.get('team_id', None)
@@ -58,7 +59,11 @@ class TerminalViewSet(mixins.ListModelMixin,
 
         if terminal_id is not None and terminal_id != '':
             terminal_id = format_string(terminal_id)
-            queryset = queryset.filter(Q(terminal_id__icontains=terminal_id) | Q(terminal_name__icontains=terminal_id))
+            queryset = queryset.filter(terminal_id__icontains=terminal_id)
+
+        if terminal_name is not None and terminal_name != '':
+            terminal_name = format_string(terminal_name)
+            queryset = queryset.filter(terminal_name__icontains=terminal_name)
 
         if merchant_id is not None and merchant_id != '':
             queryset = queryset.filter(merchant_id=merchant_id)
