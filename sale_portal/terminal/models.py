@@ -172,18 +172,7 @@ class Terminal(models.Model):
 
     def get_status(self):
         status = QrStatus.objects.filter(type='TERMINAL', code=self.status).first()
-        if status is None:
-            return '<span class="badge badge-dark">Khác</span>'
-        switcher = {
-            -1: '<span class="badge badge-danger">' + status.description + '</span>',
-            1: '<span class="badge badge-success">' + status.description + '</span>',
-            2: '<span class="badge badge-secondary">' + status.description + '</span>',
-            3: '<span class="badge badge-warning">' + status.description + '</span>',
-            4: '<span class="badge badge-primary">' + status.description + '</span>',
-            5: '<span class="badge badge-danger">' + status.description + '</span>',
-            6: '<span class="badge badge-danger">' + status.description + '</span>'
-        }
-        return switcher.get(status.code, '<span class="badge badge-dark">Khác</span>')
+        return status.code if status else None
 
     def get_staff(self):
         return self.shop.staff if self.shop else None
