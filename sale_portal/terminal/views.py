@@ -1,8 +1,8 @@
+import logging
 from django.db.models import Q
 from datetime import datetime
 
 from django.template.response import TemplateResponse
-from django.shortcuts import get_object_or_404
 from django.utils import formats
 from django.http import JsonResponse
 
@@ -105,6 +105,7 @@ class TerminalViewSet(mixins.ListModelMixin,
             API update Terminal
         """
         return JsonResponse({
+            'status': 200,
             'data': "update method"
         }, status=200)
 
@@ -136,60 +137,74 @@ def list_terminals(request):
             terminal in queryset]
 
     return JsonResponse({
+        'status': 200,
         'data': data
     }, status=200)
 
 
 @login_required
 def detail(request, pk):
-    terminal = get_object_or_404(Terminal, pk=pk)
+    try:
+        terminal = Terminal.objects.filter(pk=pk).first()
+        if terminal is None:
+            return JsonResponse({
+                'status': 404,
+                'message': 'Terminal not found'
+            }, status=404)
 
-    merchant = terminal.merchant
-    shop = terminal.shop
-    staff = shop.staff if shop else None
-    team = staff.team if staff else None
+        merchant = terminal.merchant
+        shop = terminal.shop
+        staff = shop.staff if shop else None
+        team = staff.team if staff else None
 
-    data = {
-        'terminal_id': terminal.terminal_id,
-        'terminal_name': terminal.terminal_name,
-        'terminal_address': terminal.terminal_address,
-        'province_name': terminal.get_province().province_name if terminal.get_province() else '',
-        'district_name': terminal.get_district().district_name if terminal.get_district() else '',
-        'wards_name': terminal.get_wards().wards_name if terminal.get_wards() else '',
-        'business_address': terminal.business_address,
-        'merchant': {
-            'id': merchant.id if merchant else '',
-            'name': merchant.merchant_name if merchant else '',
-            'code': merchant.merchant_code if merchant else '',
-            'brand': merchant.merchant_brand if merchant else '',
-        },
-        'shop': {
-            'id': shop.id if shop else '',
-            'name': shop.name if shop else '',
-            'code': shop.code if shop else '',
-            'address': shop.address if shop else '',
-            'street': shop.street if shop else '',
-            'take_care_status': shop.take_care_status if shop else '',
-            'activated': shop.activated if shop else '',
-            'province_name': shop.province.province_name if (shop and shop.province) else '',
-            'district_name': shop.district.district_name if (shop and shop.district) else '',
-            'wards_name': shop.wards.wards_name if (shop and shop.wards) else '',
-            'staff': {
-                'full_name': staff.full_name if staff else '',
-                'email': staff.email if staff else ''
+        data = {
+            'terminal_id': terminal.terminal_id,
+            'terminal_name': terminal.terminal_name,
+            'terminal_address': terminal.terminal_address,
+            'province_name': terminal.get_province().province_name if terminal.get_province() else '',
+            'district_name': terminal.get_district().district_name if terminal.get_district() else '',
+            'wards_name': terminal.get_wards().wards_name if terminal.get_wards() else '',
+            'business_address': terminal.business_address,
+            'merchant': {
+                'id': merchant.id if merchant else '',
+                'name': merchant.merchant_name if merchant else '',
+                'code': merchant.merchant_code if merchant else '',
+                'brand': merchant.merchant_brand if merchant else '',
             },
-            'team': {
-                'code': team.code if team else '',
-                'name': team.name if team else ''
-            }
-        },
-        'created_date': formats.date_format(terminal.created_date,
-                                            "SHORT_DATETIME_FORMAT") if terminal.created_date else '',
-        'status': terminal.get_status(),
-    }
-    return JsonResponse({
-        'data': data
-    }, status=200)
+            'shop': {
+                'id': shop.id if shop else '',
+                'name': shop.name if shop else '',
+                'code': shop.code if shop else '',
+                'address': shop.address if shop else '',
+                'street': shop.street if shop else '',
+                'take_care_status': shop.take_care_status if shop else '',
+                'activated': shop.activated if shop else '',
+                'province_name': shop.province.province_name if (shop and shop.province) else '',
+                'district_name': shop.district.district_name if (shop and shop.district) else '',
+                'wards_name': shop.wards.wards_name if (shop and shop.wards) else '',
+                'staff': {
+                    'full_name': staff.full_name if staff else '',
+                    'email': staff.email if staff else ''
+                },
+                'team': {
+                    'code': team.code if team else '',
+                    'name': team.name if team else ''
+                }
+            },
+            'created_date': formats.date_format(terminal.created_date,
+                                                "SHORT_DATETIME_FORMAT") if terminal.created_date else '',
+            'status': terminal.get_status(),
+        }
+        return JsonResponse({
+            'status': 200,
+            'data': data
+        }, status=200)
+    except Exception as e:
+        logging.error('Get detail terminal exception: %s', e)
+        return JsonResponse({
+            'status': 500,
+            'message': 'Internal sever error'
+        }, status=500)
 
 
 @api_view(['GET'])
@@ -199,5 +214,6 @@ def list_status(request):
         API get list status of Terminal
     """
     return JsonResponse({
+        'status': 200,
         'data': get_terminal_status_list()
     }, status=200)

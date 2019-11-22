@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django.http import JsonResponse
 from django.template.response import TemplateResponse
-from django.shortcuts import get_object_or_404
+import logging
 from django.utils import formats
 from rest_framework import viewsets, mixins
 from datetime import datetime
@@ -98,6 +98,7 @@ def list_merchants(request):
             merchant in queryset]
 
     return JsonResponse({
+        'status': 200,
         'data': data
     }, status=200)
 
@@ -105,27 +106,40 @@ def list_merchants(request):
 @login_required
 def detail(request, pk):
     # API detail
-    merchant = get_object_or_404(Merchant, pk=pk)
-    staff = merchant.get_staff()
-    data = {
-        'merchant_id': merchant.id,
-        'merchant_code': merchant.merchant_code,
-        'merchant_brand': merchant.merchant_brand,
-        'merchant_name': merchant.merchant_name,
-        'address': merchant.address,
-        'type': merchant.get_type().full_name if merchant.get_type() else '',
-        'staff': {
-            'full_name': staff.full_name if staff is not None else '',
-            'email': staff.email if staff is not None else ''
-        },
-        'created_date': formats.date_format(merchant.created_date,
-                                            "SHORT_DATETIME_FORMAT") if merchant.created_date else '',
-        'status': merchant.get_status(),
-        'merchant_cube': merchant.get_merchant_cube(),
-    }
-    return JsonResponse({
-        'data': data
-    }, status=200)
+    try:
+        merchant = Merchant.objects.filter(pk=pk).first()
+        if merchant is None:
+            return JsonResponse({
+                'status': 404,
+                'message': 'Merchant not found'
+            }, status=404)
+        staff = merchant.get_staff()
+        data = {
+            'merchant_id': merchant.id,
+            'merchant_code': merchant.merchant_code,
+            'merchant_brand': merchant.merchant_brand,
+            'merchant_name': merchant.merchant_name,
+            'address': merchant.address,
+            'type': merchant.get_type().full_name if merchant.get_type() else '',
+            'staff': {
+                'full_name': staff.full_name if staff is not None else '',
+                'email': staff.email if staff is not None else ''
+            },
+            'created_date': formats.date_format(merchant.created_date,
+                                                "SHORT_DATETIME_FORMAT") if merchant.created_date else '',
+            'status': merchant.get_status(),
+            'merchant_cube': merchant.get_merchant_cube(),
+        }
+        return JsonResponse({
+            'status': 200,
+            'data': data
+        }, status=200)
+    except Exception as e:
+        logging.error('Get detail merchant exception: %s', e)
+        return JsonResponse({
+            'status': 500,
+            'message': 'Internal sever error'
+        }, status=500)
 
 
 @api_view(['GET'])
@@ -135,6 +149,7 @@ def list_status(request):
         API get list status of Merchant
     """
     return JsonResponse({
+        'status': 200,
         'data': get_merchant_status_list()
     }, status=200)
 

@@ -50,6 +50,7 @@ class TeamViewSet(mixins.ListModelMixin,
 
             if name is None or name == '' or code is None or code == '':
                 return JsonResponse({
+                    'status': 400,
                     'message': 'Invalid body (name or code invalid)'
                 }, status=400)
 
@@ -60,6 +61,7 @@ class TeamViewSet(mixins.ListModelMixin,
 
             if team is not None:
                 return JsonResponse({
+                    'status': 400,
                     'message': 'name or code be used by other Team'
                 }, status=400)
 
@@ -71,11 +73,13 @@ class TeamViewSet(mixins.ListModelMixin,
             team.save()
 
             return JsonResponse({
+                'status': 200,
                 'data': team.id
             }, status=201)
         except Exception as e:
             logging.error('Create team exception: %s', e)
             return JsonResponse({
+                'status': 500,
                 'data': 'Internal sever error'
             }, status=500)
 
@@ -84,6 +88,7 @@ class TeamViewSet(mixins.ListModelMixin,
             API get detail Team
         """
         return JsonResponse({
+            'status': 200,
             'data': "get detail method"
         }, status=200)
 
@@ -92,9 +97,10 @@ class TeamViewSet(mixins.ListModelMixin,
             API update Team
         """
         try:
-            team = Team.objects.filter(pk=pk)
+            team = Team.objects.filter(pk=pk).first()
             if team is None:
                 return JsonResponse({
+                    'status': 404,
                     'message': 'Team not found'
                 }, status=404)
             body = json.loads(request.body)
@@ -108,6 +114,7 @@ class TeamViewSet(mixins.ListModelMixin,
 
             if name is None or name == '' or code is None or code == '':
                 return JsonResponse({
+                    'status': 400,
                     'message': 'Invalid body (name or code invalid)'
                 }, status=400)
 
@@ -118,6 +125,7 @@ class TeamViewSet(mixins.ListModelMixin,
 
             if Team.objects.filter(Q(name=name) | Q(code=code)).count() > 0:
                 return JsonResponse({
+                    'status': 400,
                     'message': 'name or code be used by other Team'
                 }, status=400)
 
@@ -128,11 +136,13 @@ class TeamViewSet(mixins.ListModelMixin,
             )
 
             return JsonResponse({
+                'status': 200,
                 'data': 'success'
             }, status=200)
         except Exception as e:
             logging.error('Update team exception: %s', e)
             return JsonResponse({
+                'status': 500,
                 'data': 'Internal sever error'
             }, status=500)
 
@@ -144,6 +154,7 @@ class TeamViewSet(mixins.ListModelMixin,
             team = Team.objects.filter(pk=pk).first()
             if team is None:
                 return JsonResponse({
+                    'status': 404,
                     'message': 'Team not found'
                 }, status=404)
             staffs = team.staff_set.all()
@@ -154,10 +165,14 @@ class TeamViewSet(mixins.ListModelMixin,
                 team=None
             )
             team.delete()
-            return HttpResponse(status=204)
+            return JsonResponse({
+                'status': 200,
+                'data': 'success'
+            }, status=200)
         except Exception as e:
             logging.error('Delete team exception: %s', e)
             return JsonResponse({
+                'status': 500,
                 'data': 'Internal sever error'
             }, status=500)
 
@@ -183,5 +198,6 @@ def list_teams(request):
     data = [{'id': team['id'], 'name': team['name'] + ' - ' + team['code']} for team in queryset]
 
     return JsonResponse({
+        'status': 200,
         'data': data
     }, status=200)
