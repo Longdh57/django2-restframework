@@ -17,10 +17,6 @@ from .serializers import MerchantSerializer
 from ..utils.field_formatter import format_string
 
 
-def index(request):
-    return TemplateResponse(request, 'merchant/index.html')
-
-
 class MerchantViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
     """
@@ -67,13 +63,6 @@ class MerchantViewSet(mixins.ListModelMixin,
             API get detail Merchant
         """
         return detail(request, pk)
-
-
-def show(request, pk):
-    ctx = {
-        'pk': pk,
-    }
-    return TemplateResponse(request, 'merchant/show.html', ctx)
 
 
 @api_view(['GET'])
@@ -154,18 +143,8 @@ def list_status(request):
     }, status=200)
 
 
-def create(request):
-    # Trả về view tạo mới, ví dụ TemplateResponse(request, 'merchant/create.html')
-    pass
-
-
 def store(request):
     # API tạo mới
-    pass
-
-
-def edit(request, pk):
-    # Trả về view edit, ví dụ TemplateResponse(request, 'merchant/edit.html')
     pass
 
 

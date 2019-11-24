@@ -13,28 +13,19 @@ from rest_framework_swagger.views import get_swagger_view
 
 schema_view = get_swagger_view(title='Sale_Portal API')
 
+api_urlpatterns = [
+    url(r'^login', include(login_urls)),
+    url(r'^merchants/', include((merchant_urls, 'merchant'), namespace='merchant')),
+    url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),
+    url(r'^staffs/', include((staff_urls, 'staff'), namespace='staff')),
+    url(r'^teams/', include((team_urls, 'team'), namespace='team')),
+    url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
+]
 
-if settings.SALE_PORTAL_PROJECT == 'BACKEND':
-    api_urlpatterns = [
-        url(r'^login', include(login_urls)),
-        url(r'^merchants/', include((merchant_urls, 'merchant'), namespace='merchant')),
-        url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
-        url(r'^staffs/', include((staff_urls, 'staff'), namespace='staff')),
-        url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),
-        url(r'^teams/', include((team_urls, 'team'), namespace='team')),
-    ]
+urlpatterns = [
+    url(r'^$', schema_view),
+    url(r'^api/', include((api_urlpatterns))),
+]
 
-    urlpatterns = [
-        url(r'^$', schema_view),
-        url(r'^api/', include((api_urlpatterns))),
-    ]
-
-    if settings.DEBUG:
-        urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    urlpatterns = [
-        url(r'^$', TemplateView.as_view(template_name='home.html'), name='home'),
-        url(r'^login/', TemplateView.as_view(template_name='login/login.html'), name='login'),
-        url(r'^merchant/', include((merchant_urls, 'merchant'), namespace='merchant')),
-        url(r'^terminal/', include((terminal_urls, 'terminal'), namespace='terminal')),
-    ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
