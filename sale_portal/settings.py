@@ -2,10 +2,10 @@ import os
 import ast
 import logging
 import datetime
+import logging.config
 
 from dotenv import find_dotenv, load_dotenv
 from django.core.management.commands.runserver import Command as runserver
-import logging.config
 from structlog import configure, processors, stdlib, threadlocal
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -35,8 +35,10 @@ def get_bool_from_env(name, default_value):
                 '{} is an invalid value for {}'.format(value, name)) from e
     return default_value
 
+
 if not os.path.exists('log'):
     os.makedirs('log')
+
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': True,
@@ -102,8 +104,6 @@ DEBUG = get_bool_from_env('DEBUG', True)
 ALLOWED_HOSTS = get_list(
     os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1'), )
 
-SALE_PORTAL_PROJECT = 'BACKEND'
-
 # SITE URL
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:9002')
 
@@ -149,7 +149,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'sale_portal.middleware.RequestLogMiddleware',
-    # 'sale_portal.middleware.ExceptionLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'sale_portal.urls'
@@ -170,10 +169,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'sale_portal.wsgi.wsgi_be.application'
-
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+WSGI_APPLICATION = 'sale_portal.wsgi.application'
 
 DATABASES = {
     'default': {
@@ -229,10 +225,7 @@ LOGOUT_REDIRECT_URL = 'login'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 
-STATICFILES_DIRS = (
-    ('assets', os.path.join(BASE_DIR, 'sale_portal', 'static', 'assets')),
-    ('global_assets', os.path.join(BASE_DIR, 'sale_portal', 'static', 'global_assets')),
-)
+STATICFILES_DIRS = ()
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
