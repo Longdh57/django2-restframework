@@ -30,6 +30,8 @@ class Shop(models.Model):
     description = models.TextField(null=True)
     take_care_status = models.IntegerField(choices=ShopTakeCareStatus.CHOICES, default=ShopTakeCareStatus.CREATED_TODAY)
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
+    staff_of_chain = models.ForeignKey(Staff, on_delete=models.SET_NULL, related_name='shop_chains', blank=True,
+                                       null=True)
     merchant = models.ForeignKey(Merchant, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
     province = models.ForeignKey(QrProvince, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
     district = models.ForeignKey(QrDistrict, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
@@ -54,8 +56,8 @@ class Shop(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Shop, self).__init__(*args, **kwargs)
-        self.__important_fields = ['name', 'take_care_status', 'staff_id', 'merchant_id', 'province_id', 'district_id',
-                                   'wards_id', 'street', 'activated']
+        self.__important_fields = ['name', 'take_care_status', 'staff_id', 'staff_of_chain_id', 'merchant_id',
+                                   'province_id', 'district_id', 'wards_id', 'street', 'activated']
         for field in self.__important_fields:
             setattr(self, '__original_%s' % field, getattr(self, field))
 
