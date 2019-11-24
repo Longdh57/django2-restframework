@@ -149,7 +149,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'sale_portal.middleware.RequestLogMiddleware',
-    # 'sale_portal.middleware.ExceptionLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'sale_portal.urls'

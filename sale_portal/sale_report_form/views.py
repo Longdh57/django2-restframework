@@ -20,6 +20,7 @@ from .models import SaleReport
 @login_required
 @permission_required('sale_report_form.sale_report_create', raise_exception=True)
 def store(request):
+    print("call")
     data_body = json.loads(request.body.decode('utf-8'))
 
     # required data fields from request
@@ -117,6 +118,7 @@ def store(request):
         sale_report.new_result = format_string(new_result, True)
         sale_report.new_note = format_string(new_note, True)
         sale_report.new_using_application = format_string(new_using_application, True)
+        #validate
         try:
             fv.validate_merchant_name(new_merchant_name, False, False, True)
             fv.validate_merchant_brand(new_merchant_brand, True, True, True)
