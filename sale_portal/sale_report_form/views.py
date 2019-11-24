@@ -123,13 +123,11 @@ def store(request):
             fv.validate_address(new_address, True, True, True)
             fv.validate_customer_name(new_customer_name, True, True, True)
             fv.validate_phone(new_phone, True, True, True)
+            fv.validate_in_string_list(['0', '1', '2', '3'],\
+                                       'new_result', new_result, False, False, True)
             fv.validate_note(new_note, True, True, True)
-            fv.validate_sales_software(new_using_application, True, True, True)
-            if new_result not in ['0', '1', '2', '3']:
-                return JsonResponse({
-                    'status': 'FAILURE',
-                    'error': 'new_result is incorrect',
-                }, status=400)
+            fv.validate_in_string_list(['iPos', 'Sapo', 'KiotViet', 'POS365', 'Cukcuk', 'Ocha', 'PM khác', 'Chưa sử dụng'], \
+                                       'new_using_application', new_using_application, True, True, True)
         except Exception as e:
             return JsonResponse({
                 'status': 'FAILURE',

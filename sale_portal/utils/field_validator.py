@@ -1,5 +1,8 @@
 import re
+
+
 vn_char='AaĂăÂâĐđEeÊêIiOoÔôƠơUuƯưYyÁáẮắẤấÉéẾếÍíÓóỐốỚớÚúỨứÝýÀàẰằẦầÈèỀềÌìÒòỒồỜờÙùỪừỲỳẢảẲẳẨẩẺẻỂểỈỉỎỏỔổỞởỦủỬửỶỷÃãẴẵẪẫẼẽỄễĨĩÕõỖỗỠỡŨũỮữỸỹẠạẶặẬậẸẹỆệỊịỌọỘộỢợỤụỰựỴỵ'
+
 
 def validate_string_field(name, input, allow_none=False, allow_blank=False, rase_exception=False):
     if input is None:
@@ -20,6 +23,21 @@ def validate_string_field(name, input, allow_none=False, allow_blank=False, rase
             else:
                 return False
     return 'continue'
+
+
+def validate_in_string_list(list, name, input, allow_none=False, allow_blank=False, rase_exception=False):
+    string_common_validate = validate_string_field(name,input, allow_none, allow_blank, rase_exception)
+    if not str(string_common_validate) == 'continue':
+        return string_common_validate
+
+    if input in list:
+        return True
+    else:
+        if rase_exception:
+            raise Exception(name+' is not correct')
+        else:
+            return False
+
 
 def validate_merchant_brand(input, allow_none=False, allow_blank=False, rase_exception=False):
     string_common_validate = validate_string_field('merchant_brand',input, allow_none, allow_blank, rase_exception)
@@ -101,19 +119,5 @@ def validate_note(input, allow_none=False, allow_blank=False, rase_exception=Fal
     else:
         if rase_exception:
             raise Exception('Note is over length')
-        else:
-            return False
-
-
-def validate_sales_software(input, allow_none=False, allow_blank=False, rase_exception=False):
-    string_common_validate = validate_string_field('Sales software', input, allow_none, allow_blank, rase_exception)
-    if not str(string_common_validate) == 'continue':
-        return string_common_validate
-
-    if input in ['iPos', 'Sapo', 'KiotViet', 'POS365', 'Cukcuk', 'Ocha', 'PM khác', 'Chưa sử dụng']:
-        return True
-    else:
-        if rase_exception:
-            raise Exception('Sales software is over length')
         else:
             return False
