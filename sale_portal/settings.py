@@ -144,7 +144,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS Django
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -241,6 +241,9 @@ STATICFILES_FINDERS = [
 # Media file (Images, CSV, ...)
 MEDIA_URL = os.environ.get('MEDIA_URL', '/')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+FS_IMAGE_UPLOADS = os.path.join(MEDIA_ROOT, 'images/')
+FS_IMAGE_URL = os.path.join(MEDIA_URL, 'images/')
 
 # Yêu cầu xác thực request
 REST_FRAMEWORK = {

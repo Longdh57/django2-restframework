@@ -1,12 +1,11 @@
 from django.conf.urls import url
 from django.conf import settings
 
-from .views import create, open_new
+from .views import store
 
 if settings.SALE_PORTAL_PROJECT == 'BACKEND':
     urlpatterns = [
-        url(r'^create/$', create, name='detail'),
-        url(r'^open-new/$', open_new, name='open_new'),
+        url(r'^store/$', store, name='store'),
     ]
 else:
     urlpatterns = [
