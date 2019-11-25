@@ -29,6 +29,7 @@ class TerminalViewSet(mixins.ListModelMixin,
         API get list Terminal \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - terminal_id -- text
+        - terminal_name -- text
         - merchant_id -- number
         - staff_id -- number
         - team_id -- number
