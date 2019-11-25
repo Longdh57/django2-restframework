@@ -10,5 +10,6 @@ deploy-test:
     - ls -la
   script:
     - mkdir test_gitlabci
+    - ls -la
   only:
     - master
