@@ -20,7 +20,7 @@ deploy:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - ssh $SEVER_IP@$SEVER_UNAME
+    - ssh root@45.77.246.200
     - ls -la
     - touch longtest.txt
   only:
