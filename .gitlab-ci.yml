@@ -1,0 +1,10 @@
+deploy-test:
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - whoami
+    - cd /var/www/
+  script:
+    - mkdir test_gitlabci
+  only:
+    - gitlab-ci
