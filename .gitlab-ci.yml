@@ -1,18 +1,22 @@
 image: "python:3.6.2"
 
 stages:
+  - test
   - deploy
+
+test:
+  stage: test
+  script:
+    - echo "Testing stage"
+  only: master
 
 deploy:
   stage: deploy
   before_script:
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-    - whoami
-    - ls -la
-    - pwd
+    - echo "$SEVER_IP"
+    - echo "$SEVER_UNAME"
   script:
-    - touch test_gitlabct.txt
-    - ls -la
+    - pwd
+    - whoami
   only:
     - master
