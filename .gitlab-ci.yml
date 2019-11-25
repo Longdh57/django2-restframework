@@ -1,4 +1,4 @@
-image: "python:3.6.2"
+image: "ubuntu:16.04"
 
 stages:
 #  - test
@@ -16,7 +16,7 @@ deploy:
   before_script:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - touch -p ~/.ssh/id_rsa
+    - touch ~/.ssh/id_rsa
     - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
     - chmod 400 ~/.ssh/id_rsa
   script:
