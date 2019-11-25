@@ -11,5 +11,6 @@ deploy-test:
   script:
     - mkdir test_gitlabci
     - ls -la
+    - ifconfig
   only:
     - master
