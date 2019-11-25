@@ -1,16 +1,18 @@
-stages:
-  - deploy-test
+image: "python:3.6.2"
 
-deploy-test:
-  stage: deploy-test
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
   before_script:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
     - whoami
     - ls -la
+    - pwd
   script:
-    - mkdir test_gitlabci
+    - touch test_gitlabct.txt
     - ls -la
-    - ifconfig
   only:
     - master
