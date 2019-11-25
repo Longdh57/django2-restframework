@@ -137,7 +137,7 @@ def store(request):
         shop = get_object_or_404(Shop, pk=shop_id)
 
         sale_report.shop_code = shop.code
-        sale_report.implement_posm = format_string(implement_posm, True)
+        sale_report.implement_posm = format_string(implement_posm)
         sale_report.implement_merchant_view = format_string(implement_merchant_view, True)
         sale_report.implement_career_guideline = format_string(implement_career_guideline, True)
         sale_report.implement_confirm = format_string(implement_confirm, True)
