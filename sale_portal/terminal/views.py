@@ -209,7 +209,7 @@ def detail(request, pk):
             },
             'created_date': formats.date_format(terminal.created_date,
                                                 "SHORT_DATETIME_FORMAT") if terminal.created_date else '',
-            'status': terminal.get_status(),
+            'status': int(terminal.get_status()) if terminal.get_status() else None,
         }
         return JsonResponse({
             'status': 200,
