@@ -1,4 +1,8 @@
+stages:
+  - deploy-test
+
 deploy-test:
+  stage: deploy-test
   before_script:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
@@ -7,4 +11,4 @@ deploy-test:
   script:
     - mkdir test_gitlabci
   only:
-    - gitlab-ci
+    - master
