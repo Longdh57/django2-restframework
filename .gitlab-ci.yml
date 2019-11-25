@@ -43,6 +43,6 @@ deploy:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - ssh root@45.77.246.200 "cd var/www/ && mkdir long_test && ls -la"
+    - ssh root@45.77.246.200 "cd /var/www/ && mkdir long_test && ls -la"
   only:
     - master
