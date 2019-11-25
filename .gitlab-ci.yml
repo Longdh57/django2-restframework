@@ -1,15 +1,7 @@
 image: "python:3.6.2"
 
 stages:
-  - test
   - deploy
-
-test:
-  stage: test
-  script:
-    - echo "Testing stage"
-  only:
-    - master
 
 deploy:
   stage: deploy
