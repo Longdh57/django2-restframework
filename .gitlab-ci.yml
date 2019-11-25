@@ -1,4 +1,4 @@
-image: "ubuntu:16.04"
+image: "python:3.6"
 
 stages:
 #  - test
@@ -19,6 +19,8 @@ deploy:
     - touch ~/.ssh/id_rsa
     - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
     - chmod 400 ~/.ssh/id_rsa
+    - cd ~/.ssh
+    - ls -la
   script:
     - ssh root@45.77.246.200
     - ls -la
