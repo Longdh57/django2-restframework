@@ -13,7 +13,7 @@ deploy:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - ssh $env:SEVER_UNAME@45.77.246.200 "systemctl stop saleportalv2
+    - ssh $SEVER_UNAME@45.77.246.200 "systemctl stop saleportalv2
       && cd /var/www/sale_portal_v2
       && git pull origin master
       && source .venv/bin/activate
