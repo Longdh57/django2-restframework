@@ -7,7 +7,7 @@ deploy-test:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
     - whoami
-    - cd /var/www/
+    - ls -la
   script:
     - mkdir test_gitlabci
   only:
