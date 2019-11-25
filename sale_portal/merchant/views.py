@@ -123,7 +123,7 @@ def detail(request, pk):
             },
             'created_date': formats.date_format(merchant.created_date,
                                                 "SHORT_DATETIME_FORMAT") if merchant.created_date else '',
-            'status': merchant.get_status(),
+            'status': int(merchant.get_status()) if merchant.get_status() else None,
             'merchant_cube': merchant.get_merchant_cube(),
         }
         return JsonResponse({
