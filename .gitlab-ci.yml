@@ -1,27 +1,27 @@
 image: "python:3.6.2"
 
 stages:
-  - test
+#  - test
   - deploy
 
-test:
-  stage: test
-  script:
-    - echo "Testing stage"
-  only:
-    - master
+#test:
+#  stage: test
+#  script:
+#    - echo "Testing stage"
+#  only:
+#    - master
 
 deploy:
   stage: deploy
   before_script:
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
     - mkdir -p ~/.ssh
-    - chmod 400 ~/.ssh
-    - cd ~/.ssh
-    - ls -la
+    - chmod 700 ~/.ssh
   script:
-    - pwd
-    - whoami
+    - ssh $SEVER_IP@$SEVER_UNAME
+    - ls -la
+    - touch longtest.txt
   only:
     - master
