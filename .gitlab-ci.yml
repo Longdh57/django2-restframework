@@ -1,33 +1,3 @@
-#image: ubuntu
-#
-#stages:
-##  - test
-#  - deploy
-#
-##test:
-##  stage: test
-##  script:
-##    - echo "Testing stage"
-##  only:
-##    - master
-#
-#deploy:
-#  stage: deploy
-#  before_script:
-#    - mkdir -p ~/.ssh
-#    - chmod 700 ~/.ssh
-#    - touch ~/.ssh/id_rsa
-#    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-#    - chmod 400 ~/.ssh/id_rsa
-#    - cd ~/.ssh
-#    - ls -la
-#  script:
-#    - ssh root@45.77.246.200
-#    - ls -la
-#    - touch longtest.txt
-#  only:
-#    - master
-
 image: ubuntu
 
 stages:
@@ -43,6 +13,11 @@ deploy:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - ssh root@45.77.246.200 "systemctl stop saleportalv2 && cd /var/www/sale_portal_v2 && git pull origin master && source .venv/bin/activate && python manage.py migrate && systemctl start saleportalv2"
+    - ssh $SEVER_IP@$SEVER_UNAME "systemctl stop saleportalv2
+      && cd /var/www/sale_portal_v2
+      && git pull origin master
+      && source .venv/bin/activate
+      && python manage.py migrate
+      && systemctl start saleportalv2"
   only:
     - master
