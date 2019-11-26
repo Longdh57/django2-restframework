@@ -17,17 +17,14 @@ from .serializers import MerchantSerializer
 from ..utils.field_formatter import format_string
 
 
-def index(request):
-    return TemplateResponse(request, 'merchant/index.html')
-
-
 class MerchantViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
     """
         API get list Merchant \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - merchant_code -- text
-        - staff_id -- number
+        - merchant_brand -- text
+        - merchant_name -- text
         - status -- number in {-1,1,2,3,4,5,6}
         - from_date -- dd/mm/yyyy
         - to_date -- dd/mm/yyyy
@@ -39,18 +36,24 @@ class MerchantViewSet(mixins.ListModelMixin,
         queryset = Merchant.objects.all()
 
         merchant_code = self.request.query_params.get('merchant_code', None)
-        staff_id = self.request.query_params.get('staff_id', None)
+        merchant_name = self.request.query_params.get('merchant_code', None)
+        merchant_brand = self.request.query_params.get('merchant_code', None)
+        # staff_id = self.request.query_params.get('staff_id', None)
         status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 
         if merchant_code is not None and merchant_code != '':
             merchant_code = format_string(merchant_code)
-            queryset = queryset.filter(
-                Q(merchant_code__icontains=merchant_code) | Q(merchant_name__icontains=merchant_code) | Q(
-                    merchant_brand__icontains=merchant_code))
-        if staff_id is not None and staff_id != '':
-            queryset = queryset.filter(staff=staff_id)
+            queryset = queryset.filter(merchant_code__icontains=merchant_code)
+        if merchant_name is not None and merchant_name != '':
+            merchant_name = format_string(merchant_name)
+            queryset = queryset.filter(merchant_name__icontains=merchant_name)
+        if merchant_brand is not None and merchant_brand != '':
+            merchant_brand = format_string(merchant_brand)
+            queryset = queryset.filter(merchant_brand__icontains=merchant_brand)
+        # if staff_id is not None and staff_id != '':
+        #     queryset = queryset.filter(staff=staff_id)
         if status is not None and status != '':
             queryset = queryset.filter(status=status)
         if from_date is not None and from_date != '':
@@ -67,13 +70,6 @@ class MerchantViewSet(mixins.ListModelMixin,
             API get detail Merchant
         """
         return detail(request, pk)
-
-
-def show(request, pk):
-    ctx = {
-        'pk': pk,
-    }
-    return TemplateResponse(request, 'merchant/show.html', ctx)
 
 
 @api_view(['GET'])
@@ -127,7 +123,7 @@ def detail(request, pk):
             },
             'created_date': formats.date_format(merchant.created_date,
                                                 "SHORT_DATETIME_FORMAT") if merchant.created_date else '',
-            'status': merchant.get_status(),
+            'status': int(merchant.get_status()) if merchant.get_status() else None,
             'merchant_cube': merchant.get_merchant_cube(),
         }
         return JsonResponse({
@@ -154,18 +150,8 @@ def list_status(request):
     }, status=200)
 
 
-def create(request):
-    # Trả về view tạo mới, ví dụ TemplateResponse(request, 'merchant/create.html')
-    pass
-
-
 def store(request):
     # API tạo mới
-    pass
-
-
-def edit(request, pk):
-    # Trả về view edit, ví dụ TemplateResponse(request, 'merchant/edit.html')
     pass
 
 

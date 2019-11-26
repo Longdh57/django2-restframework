@@ -29,6 +29,7 @@ class TerminalViewSet(mixins.ListModelMixin,
         API get list Terminal \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - terminal_id -- text
+        - terminal_name -- text
         - merchant_id -- number
         - staff_id -- number
         - team_id -- number
@@ -161,6 +162,8 @@ def detail(request, pk):
         shop = terminal.shop
         staff = shop.staff if shop else None
         team = staff.team if staff else None
+        staff_chain = shop.staff_of_chain if shop else None
+        team_chain = staff_chain.team if staff_chain else None
 
         data = {
             'terminal_id': terminal.terminal_id,
@@ -194,11 +197,19 @@ def detail(request, pk):
                 'team': {
                     'code': team.code if team else '',
                     'name': team.name if team else ''
+                },
+                'staff_chain': {
+                    'full_name': staff_chain.full_name if staff_chain else '',
+                    'email': staff_chain.email if staff_chain else ''
+                },
+                'team_chain': {
+                    'code': team_chain.code if team_chain else '',
+                    'name': team_chain.name if team_chain else ''
                 }
             },
             'created_date': formats.date_format(terminal.created_date,
                                                 "SHORT_DATETIME_FORMAT") if terminal.created_date else '',
-            'status': terminal.get_status(),
+            'status': int(terminal.get_status()) if terminal.get_status() else None,
         }
         return JsonResponse({
             'status': 200,

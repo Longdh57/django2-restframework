@@ -52,15 +52,6 @@ class StaffViewSet(mixins.ListModelMixin,
             'data': "get detail method"
         }, status=200)
 
-    def update(self, request, pk):
-        """
-            API update Staff
-        """
-        return JsonResponse({
-            'status': 200,
-            'data': "update method"
-        }, status=200)
-
 
 @api_view(['GET'])
 @login_required
