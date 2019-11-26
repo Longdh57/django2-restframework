@@ -13,8 +13,8 @@ class SaleReportTestCase(TestCase):
 
     def test_sale_report_for_open_new(self):
         client = APIClient()
-        # user = User.objects.get(username='dev')
-        client.force_authenticate(user=None)
+        user = User.objects.get(username='dev')
+        client.force_authenticate(user=user)
         response = client.post('/api/sale-report-form/store/',
                                json.dumps({
                                    "purpose": "0",
