@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',  # CORS Django
+    'django.contrib.postgres',
 
     # Rest framework
     'rest_framework',
@@ -136,7 +137,8 @@ INSTALLED_APPS = [
     'sale_portal.staff',
     'sale_portal.team',
     'sale_portal.terminal',
-    'sale_portal.user'
+    'sale_portal.user',
+    'sale_portal.common'
 ]
 
 MIDDLEWARE = [
