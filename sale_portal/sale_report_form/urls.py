@@ -3,6 +3,6 @@ from django.conf.urls import url
 from .views import store
 
 urlpatterns = [
-     url(r'^store/$', store, name='store'),
+    url(r'^store/$', store, name='store'),
 ]
 
