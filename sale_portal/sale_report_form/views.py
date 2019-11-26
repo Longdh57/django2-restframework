@@ -18,7 +18,6 @@ from sale_portal.user.models import User
 from .models import SaleReport
 
 
-
 @api_view(['POST'])
 @login_required
 @permission_required('sale_report_form.sale_report_create', raise_exception=True)
@@ -30,9 +29,9 @@ def store(request):
     is_draft = request.POST.get('is_draft', None)
     current_draft_id = request.POST.get('current_draft_id', None)
 
-    if purpose is None\
-            or longitude is None or longitude == '0'\
-            or latitude is None or latitude == '0'\
+    if purpose is None \
+            or longitude is None or longitude == '0' \
+            or latitude is None or latitude == '0' \
             or is_draft is None:
         return JsonResponse({
             'status': 'FAILURE',
@@ -96,25 +95,25 @@ def store(request):
 
     # ingest data to sale_report object
     purpose = format_string(purpose, True)
-    if purpose not in ['0','1','2']:
+    if purpose not in ['0', '1', '2']:
         return JsonResponse({
             'status': 'FAILURE',
             'error': 'Purpose is incorrect',
         }, status=400)
 
     if purpose == '0':
-        #validate
         try:
             fv.validate_merchant_name(format_string(new_merchant_name), False, False, True)
             fv.validate_merchant_brand(format_string(new_merchant_brand), True, True, True)
             fv.validate_address(format_string(new_address), True, True, True)
             fv.validate_customer_name(format_string(new_customer_name), True, True, True)
             fv.validate_phone(format_string(new_phone), True, True, True)
-            fv.validate_in_string_list(['0', '1', '2', '3'],\
+            fv.validate_in_string_list(['0', '1', '2', '3'], \
                                        'new_result', format_string(new_result), False, False, True)
             fv.validate_note(format_string(new_note), True, True, True)
-            fv.validate_in_string_list(['iPos', 'Sapo', 'KiotViet', 'POS365', 'Cukcuk', 'Ocha', 'PM khác', 'Chưa sử dụng'], \
-                                       'new_using_application', format_string(new_using_application), True, True, True)
+            fv.validate_in_string_list(
+                ['iPos', 'Sapo', 'KiotViet', 'POS365', 'Cukcuk', 'Ocha', 'PM khác', 'Chưa sử dụng'], \
+                'new_using_application', format_string(new_using_application), True, True, True)
 
             sale_report.new_merchant_name = format_string(new_merchant_name, True)
             sale_report.new_merchant_brand = format_string(new_merchant_brand, True)
@@ -127,15 +126,14 @@ def store(request):
         except Exception as e:
             return JsonResponse({
                 'status': 'FAILURE',
-                'error': 'Validate error: '+str(e),
+                'error': 'Validate error: ' + str(e),
             }, status=400)
 
     elif purpose == '1':
-        # save other data
         shop = get_object_or_404(Shop, pk=shop_id)
         sale_report.shop_code = shop.code
         try:
-            fv.validate_in_string_list(['0', '1', '2'],\
+            fv.validate_in_string_list(['0', '1', '2'], \
                                        'verify_shop', implement_confirm, False, False, True)
             sale_report.implement_posm = format_string(implement_posm, True)
             sale_report.implement_merchant_view = format_string(implement_merchant_view, True)
@@ -152,8 +150,8 @@ def store(request):
 
         # save image
         if not is_draft:
-            if image_outside is None or image_outside == ''\
-                    or image_inside is None or image_inside == ''\
+            if image_outside is None or image_outside == '' \
+                    or image_inside is None or image_inside == '' \
                     or image_store_cashier is None and image_store_cashier == '':
                 return JsonResponse({
                     'status': 'FAILURE',
@@ -209,14 +207,15 @@ def store(request):
                 }, status=500)
 
     else:
-        # save other data
         shop = get_object_or_404(Shop, pk=shop_id)
         sale_report.shop_code = shop.code
         try:
-            fv.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status', format_string(shop_status), False, False, True)
+            fv.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status', format_string(shop_status), False,
+                                       False, True)
             sale_report.shop_status = format_string(shop_status, True)
             if sale_report.shop_status == '2':
-                fv.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward', format_string(customer_care_cashier_reward), False,False, True)
+                fv.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
+                                           format_string(customer_care_cashier_reward), False, False, True)
                 fv.validate_transaction(format_string(customer_care_transaction), False, False, True)
                 sale_report.customer_care_cashier_reward = format_string(customer_care_cashier_reward, True)
                 sale_report.customer_care_transaction = format_string(customer_care_transaction, True)
@@ -230,8 +229,8 @@ def store(request):
             }, status=400)
         # save image
         if not is_draft and shop_status == '2':
-            if image_outside is None or image_outside == ''\
-                    or image_inside is None or image_inside == ''\
+            if image_outside is None or image_outside == '' \
+                    or image_inside is None or image_inside == '' \
                     or image_store_cashier is None and image_store_cashier == '':
                 return JsonResponse({
                     'status': 'FAILURE',
