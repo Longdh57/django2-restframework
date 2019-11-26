@@ -16,19 +16,19 @@ def list_shop_for_search(request):
         staff_id=1,
         name='conditional_escape(name)',
         code=1,
-        address='conditional_escape(address)',
+        address='test address',
         province_id=1,
         district_id=1,
         wards_id=1,
-        street='conditional_escape(street)',
+        street='test strees',
         description='conditional_escape(description)',
         created_by=request.user
     )
     shop.save()
-    Shop.objects.filter(pk=shop.id).update(
-        document=SearchVector(vn_unaccent('address'), weight='B') + SearchVector('code', weight='C') + SearchVector(
-            Subquery(Shop.objects.filter(pk=shop.id).values('merchant__merchant_brand')[:1]), weight='C')
-    )
+    # Shop.objects.filter(pk=shop.id).update(
+    #     document=SearchVector(vn_unaccent('address'), weight='B') + SearchVector('code', weight='C') + SearchVector(
+    #         Subquery(Shop.objects.filter(pk=shop.id).values('merchant__merchant_brand')[:1]), weight='C')
+    # )
     return JsonResponse({
         'status': 'SUCCESS',
         'data': shop.address,
