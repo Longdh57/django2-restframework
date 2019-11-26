@@ -34,7 +34,7 @@ def validate_in_string_list(list, name, input, allow_none=False, allow_blank=Fal
         return True
     else:
         if rase_exception:
-            raise Exception(name+' is not correct')
+            raise Exception(name+' is not correct.')
         else:
             return False
 
@@ -48,7 +48,7 @@ def validate_merchant_brand(input, allow_none=False, allow_blank=False, rase_exc
         return True
     else:
         if rase_exception:
-            raise Exception('Merchant brand has some invalid character or over length')
+            raise Exception('Merchant brand has some invalid character or over length.')
         else:
             return False
 
@@ -62,7 +62,7 @@ def validate_merchant_name(input, allow_none=False, allow_blank=False, rase_exce
         return True
     else:
         if rase_exception:
-            raise Exception('Merchant name is over length')
+            raise Exception('Merchant name is over length.')
         else:
             return False
 
@@ -76,7 +76,7 @@ def validate_address(input, allow_none=False, allow_blank=False, rase_exception=
         return True
     else:
         if rase_exception:
-            raise Exception('Address is is over length')
+            raise Exception('Address is is over length.')
         else:
             return False
 
@@ -90,7 +90,7 @@ def validate_customer_name(input, allow_none=False, allow_blank=False, rase_exce
         return True
     else:
         if rase_exception:
-            raise Exception('Customer name is over length or has invalid character')
+            raise Exception('Customer name is over length or has invalid character.')
         else:
             return False
 
@@ -104,13 +104,13 @@ def validate_phone(input, allow_none=False, allow_blank=False, rase_exception=Fa
         return True
     else:
         if rase_exception:
-            raise Exception('phone is invalid')
+            raise Exception('Phone is invalid.')
         else:
             return False
 
 
 def validate_note(input, allow_none=False, allow_blank=False, rase_exception=False):
-    string_common_validate = validate_string_field('Sale report note', input, allow_none, allow_blank, rase_exception)
+    string_common_validate = validate_string_field('Note', input, allow_none, allow_blank, rase_exception)
     if not str(string_common_validate) == 'continue':
         return string_common_validate
 
@@ -118,6 +118,18 @@ def validate_note(input, allow_none=False, allow_blank=False, rase_exception=Fal
         return True
     else:
         if rase_exception:
-            raise Exception('Note is over length')
+            raise Exception('Note is over length.')
+        else:
+            return False
+
+def validate_transaction(input, allow_none=False, allow_blank=False, rase_exception=False):
+    string_common_validate = validate_string_field('Note', input, allow_none, allow_blank, rase_exception)
+    if not str(string_common_validate) == 'continue':
+        return string_common_validate
+    if input.isdigit() :
+        return True
+    else:
+        if rase_exception:
+            raise Exception('Transaction is invalid.')
         else:
             return False
