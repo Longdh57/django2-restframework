@@ -33,5 +33,6 @@ def list_shop_for_search(request):
         merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
         data.append({'shop_info': code + ' - ' + address + ' - ' + merchant_brand})
     return JsonResponse({
+        'status': 200,
         'data': data
     }, status=200)
