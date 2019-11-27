@@ -1,8 +1,9 @@
 import logging
 
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.db import models
 from django.dispatch import receiver
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Func, Subquery
 from django.db.models.signals import post_save
 from django.contrib.postgres.fields import JSONField
 
@@ -43,7 +44,7 @@ class Shop(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='shops_created', null=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='shops_updated', null=True)
-
+    document = SearchVectorField(null=True)
     objects = ShopQuerySet.as_manager()
 
     class Meta:
@@ -100,6 +101,13 @@ def create_code(sender, instance, created, *args, **kwargs):
         instance.save()
         return
 
+@receiver(post_save, sender=Shop)
+def create_or_update_document(sender, instance, created, *args, **kwargs):
+    Shop.objects.filter(pk=instance.id).update(
+        document=SearchVector(vn_unaccent('address'), weight='C') + SearchVector('code', weight='B') + SearchVector(
+            Subquery(Shop.objects.filter(pk=instance.id).values('merchant__merchant_brand')[:1]), weight='B')
+    )
+    return
 
 class ShopLog(models.Model):
     old_data = JSONField(blank=True, default=dict)
@@ -115,3 +123,7 @@ class ShopLog(models.Model):
 
     def get_new_data(self):
         return self.new_data
+
+
+class vn_unaccent(Func):
+    function = 'vn_unaccent'

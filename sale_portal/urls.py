@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from rest_framework_swagger.views import get_swagger_view
 
 from sale_portal.user.urls import url_login_patterns as login_urls
 from sale_portal.merchant.urls import urlpatterns as merchant_urls
@@ -9,7 +10,7 @@ from sale_portal.terminal.urls import urlpatterns as terminal_urls
 from sale_portal.staff.urls import urlpatterns as staff_urls
 from sale_portal.sale_report_form.urls import urlpatterns as sale_report_form_urls
 from sale_portal.team.urls import urlpatterns as team_urls
-from rest_framework_swagger.views import get_swagger_view
+from sale_portal.shop.urls import urlpatterns as shop_urls
 
 schema_view = get_swagger_view(title='Sale_Portal API')
 
@@ -20,6 +21,7 @@ api_urlpatterns = [
     url(r'^staffs/', include((staff_urls, 'staff'), namespace='staff')),
     url(r'^teams/', include((team_urls, 'team'), namespace='team')),
     url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
+    url(r'^shop/', include((shop_urls, 'shop'), namespace='shop')),
 ]
 
 urlpatterns = [
