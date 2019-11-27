@@ -12,25 +12,33 @@ from sale_portal.shop.models import Shop, vn_unaccent
 @api_view(['GET'])
 @login_required
 def list_shop_for_search(request):
-    name = request.GET.get('name', None)
-    queryset = Shop.objects.all()
-    if name is not None and name != '':
-        name_en = unidecode(name).lower()
+    # name = request.GET.get('name', None)
+    # queryset = Shop.objects.all()
+    # if name is not None and name != '':
+    #     name_en = unidecode(name).lower()
+    #
+    #     search_query = SearchQuery(name_en)
+    #     queryset = queryset.filter(
+    #         Q(document=search_query) | Q(code__icontains=name) | Q(merchant__merchant_brand__icontains=name))
+    #
+    #     queryset = queryset.annotate(
+    #         rank=SearchRank(F('document'), search_query)
+    #     ).order_by(
+    #         '-rank'
+    #     )
+    #
+    # queryset = queryset[0:10]
+    # data = [
+    #     {'address': shop.address}
+    #     for shop in queryset]
+    # return JsonResponse({
+    #     'data': data
+    # }, status=200)
+    shop = Shop.objects.get(id=3)
+    shop.address = "edited"
+    shop.save()
 
-        search_query = SearchQuery(name_en)
-        queryset = queryset.filter(
-            Q(document=search_query) | Q(code__icontains=name) | Q(merchant__merchant_brand__icontains=name))
-
-        queryset = queryset.annotate(
-            rank=SearchRank(F('document'), search_query)
-        ).order_by(
-            '-rank'
-        )
-
-    queryset = queryset[0:10]
-    data = [
-        {'address': shop.address}
-        for shop in queryset]
     return JsonResponse({
-        'data': data
+        'data': 'data'
     }, status=200)
+

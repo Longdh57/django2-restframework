@@ -103,12 +103,11 @@ def create_code(sender, instance, created, *args, **kwargs):
 
 @receiver(post_save, sender=Shop)
 def create_document(sender, instance, created, *args, **kwargs):
-    if created:
-        Shop.objects.filter(pk=instance.id).update(
-            document=SearchVector(vn_unaccent('address'), weight='B') + SearchVector('code', weight='C') + SearchVector(
-                Subquery(Shop.objects.filter(pk=instance.id).values('merchant__merchant_brand')[:1]), weight='C')
-        )
-        return
+    Shop.objects.filter(pk=instance.id).update(
+        document=SearchVector(vn_unaccent('address'), weight='B') + SearchVector('code', weight='C') + SearchVector(
+            Subquery(Shop.objects.filter(pk=instance.id).values('merchant__merchant_brand')[:1]), weight='C')
+    )
+    return
 
 class ShopLog(models.Model):
     old_data = JSONField(blank=True, default=dict)
