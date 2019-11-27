@@ -12,6 +12,9 @@ from sale_portal.shop.models import Shop, vn_unaccent
 @api_view(['GET'])
 @login_required
 def list_shop_for_search(request):
+    """
+        API để search full text search không dấu  các shop dựa trên địa chỉ, shop_code hoặc merchant brand, param là name
+    """
     name = request.GET.get('name', None)
     queryset = Shop.objects.all()
     if name is not None and name != '':
