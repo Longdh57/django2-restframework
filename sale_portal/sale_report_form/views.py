@@ -1,21 +1,67 @@
 import datetime
 from datetime import date
+from datetime import datetime as dt_datetime
 import time
 import os
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404
-from django.utils.html import conditional_escape
 from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
+from rest_framework import viewsets
 from rest_framework.decorators import api_view
 
+from sale_portal.staff.models import Staff
 from ..utils.field_formatter import format_string
 import sale_portal.utils.field_validator as fv
 from sale_portal.shop.models import Shop
-from sale_portal.user.models import User
 from .models import SaleReport
+from .serializers import SaleReportSerializer
+from sale_portal.user.models import User
+from sale_portal.team.models import Team
+
+
+class SaleReportViewSet(viewsets.ModelViewSet):
+    serializer_class = SaleReportSerializer
+
+    def get_queryset(self):
+        purpose = self.request.query_params.get('purpose', None)
+        shop_id = self.request.query_params.get('shop_id', None)
+        user = self.request.query_params.get('user', None)
+        team_id = self.request.query_params.get('team_id', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
+
+        queryset = SaleReport.objects.filter(is_draft=False)
+
+        if purpose is not None and purpose != '':
+            queryset = queryset.filter(purpose=purpose)
+
+        if shop_id is not None and shop_id != '':
+            shop_id = format_string(shop_id)
+            queryset = queryset.filter(shop_code=shop_id)
+
+        if user is not None and user != '':
+            user = format_string(user)
+            users = User.objects.filter(email__icontains=user)
+            queryset = queryset.filter(created_by__in=users)
+
+        if team_id is not None and team_id != '':
+            staffs = Staff.objects.all().filter(team_id=team_id)
+            staff_emails = [x.email for x in staffs]
+            users = User.objects.filter(email__in=staff_emails)
+            queryset = queryset.filter(created_by__in=users)
+
+        if from_date is not None and from_date != '':
+            queryset = queryset.filter(
+                created_date__gte=dt_datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+
+        if to_date is not None and to_date != '':
+            queryset = queryset.filter(
+                created_date__lte=(dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
+
+        return queryset
 
 
 @api_view(['POST'])
@@ -34,8 +80,8 @@ def store(request):
             or latitude is None or latitude == '0' \
             or is_draft is None:
         return JsonResponse({
-            'status': 'FAILURE',
-            'error': 'Some data fields such as purpose, longitude, latitude, is_draft are required',
+            'status': 400,
+            'message': 'Some data fields such as purpose, longitude, latitude, is_draft are required',
         }, status=400)
 
     # Create or find sale_report object if has a draft version
@@ -52,8 +98,8 @@ def store(request):
         sale_report = SaleReport()
     elif sale_report.created_date.date() != date.today():
         return JsonResponse({
-            'status': 'FAILURE',
-            'error': 'Only allow access to drafts created on today',
+            'status': 400,
+            'message': 'Only allow access to drafts created on today',
         }, status=400)
 
     # open_new_shop purpose data from request
@@ -97,8 +143,8 @@ def store(request):
     purpose = format_string(purpose, True)
     if purpose not in ['0', '1', '2']:
         return JsonResponse({
-            'status': 'FAILURE',
-            'error': 'Purpose is incorrect',
+            'status': 400,
+            'message': 'Purpose is incorrect',
         }, status=400)
 
     if purpose == '0':
@@ -125,8 +171,8 @@ def store(request):
             sale_report.new_using_application = format_string(new_using_application, True)
         except Exception as e:
             return JsonResponse({
-                'status': 'FAILURE',
-                'error': 'Validate error: ' + str(e),
+                'status': 400,
+                'message': 'Validate error: ' + str(e),
             }, status=400)
 
     elif purpose == '1':
@@ -144,8 +190,8 @@ def store(request):
                 sale_report.implement_new_address = format_string(implement_new_address, True)
         except Exception as e:
             return JsonResponse({
-                'status': 'FAILURE',
-                'error': 'Validate error: ' + str(e),
+                'status': 400,
+                'message': 'Validate error: ' + str(e),
             }, status=400)
 
         # save image
@@ -154,8 +200,8 @@ def store(request):
                     or image_inside is None or image_inside == '' \
                     or image_store_cashier is None and image_store_cashier == '':
                 return JsonResponse({
-                    'status': 'FAILURE',
-                    'error': 'image_outside, image_inside, image_store_cashier are required',
+                    'status': 400,
+                    'message': 'image_outside, image_inside, image_store_cashier are required',
                 }, status=400)
             try:
                 pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
@@ -163,8 +209,8 @@ def store(request):
                 image_outside_filename, image_outside_file_extension = os.path.splitext(image_outside.name)
                 if image_outside_file_extension not in ['.png', '.jpg']:
                     return JsonResponse({
-                        'status': 'FAILURE',
-                        'error': 'file_extension is invalid',
+                        'status': 400,
+                        'message': 'file_extension is invalid',
                     }, status=400)
                 image_outside_filename = image_outside_filename[:100] if len(
                     image_outside_filename) > 100 else image_outside_filename
@@ -175,8 +221,8 @@ def store(request):
                 image_inside_filename, image_inside_file_extension = os.path.splitext(image_inside.name)
                 if image_inside_file_extension not in ['.png', '.jpg']:
                     return JsonResponse({
-                        'status': 'FAILURE',
-                        'error': 'file_extension is invalid',
+                        'status': 400,
+                        'message': 'file_extension is invalid',
                     }, status=400)
                 image_inside_filename = image_inside_filename[:100] if len(
                     image_inside_filename) > 100 else image_inside_filename
@@ -188,8 +234,8 @@ def store(request):
                     image_store_cashier.name)
                 if image_store_cashier_file_extension not in ['.png', '.jpg']:
                     return JsonResponse({
-                        'status': 'FAILURE',
-                        'error': 'file_extension is invalid',
+                        'status': 400,
+                        'message': 'file_extension is invalid',
                     }, status=400)
                 image_store_cashier_filename = image_store_cashier_filename[:100] if len(
                     image_store_cashier_filename) > 100 else image_store_cashier_filename
@@ -202,8 +248,8 @@ def store(request):
                 sale_report.image_store_cashier = image_store_cashier_url if image_store_cashier_url is not None else None
             except Exception as e:
                 return JsonResponse({
-                    'status': 'FAILURE',
-                    'error': 'Save file error: ' + str(e),
+                    'status': 500,
+                    'message': 'Save file error: ' + str(e),
                 }, status=500)
 
     else:
@@ -224,8 +270,8 @@ def store(request):
                 sale_report.cessation_of_business_note = format_string(cessation_of_business_note, True)
         except Exception as e:
             return JsonResponse({
-                'status': 'FAILURE',
-                'error': 'Validate error: ' + str(e),
+                'status': 400,
+                'message': 'Validate error: ' + str(e),
             }, status=400)
         # save image
         if not is_draft and shop_status == '2':
@@ -233,8 +279,8 @@ def store(request):
                     or image_inside is None or image_inside == '' \
                     or image_store_cashier is None and image_store_cashier == '':
                 return JsonResponse({
-                    'status': 'FAILURE',
-                    'error': 'image_outside, image_inside, image_store_cashier are required',
+                    'status': 400,
+                    'message': 'image_outside, image_inside, image_store_cashier are required',
                 }, status=400)
             try:
                 pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
@@ -242,8 +288,8 @@ def store(request):
                 image_outside_filename, image_outside_file_extension = os.path.splitext(image_outside.name)
                 if image_outside_file_extension not in ['.png', '.jpg']:
                     return JsonResponse({
-                        'status': 'FAILURE',
-                        'error': 'file_extension is invalid',
+                        'status': 400,
+                        'message': 'file_extension is invalid',
                     }, status=400)
                 image_outside_filename = image_outside_filename[:100] if len(
                     image_outside_filename) > 100 else image_outside_filename
@@ -254,8 +300,8 @@ def store(request):
                 image_inside_filename, image_inside_file_extension = os.path.splitext(image_inside.name)
                 if image_inside_file_extension not in ['.png', '.jpg']:
                     return JsonResponse({
-                        'status': 'FAILURE',
-                        'error': 'file_extension is invalid',
+                        'status': 400,
+                        'message': 'file_extension is invalid',
                     }, status=400)
                 image_inside_filename = image_inside_filename[:100] if len(
                     image_inside_filename) > 100 else image_inside_filename
@@ -267,8 +313,8 @@ def store(request):
                     image_store_cashier.name)
                 if image_store_cashier_file_extension not in ['.png', '.jpg']:
                     return JsonResponse({
-                        'status': 'FAILURE',
-                        'error': 'file_extension is invalid',
+                        'status': 400,
+                        'message': 'file_extension is invalid',
                     }, status=400)
                 image_store_cashier_filename = image_store_cashier_filename[:100] if len(
                     image_store_cashier_filename) > 100 else image_store_cashier_filename
@@ -281,15 +327,15 @@ def store(request):
                 sale_report.image_store_cashier = image_store_cashier_url if image_store_cashier_url is not None else None
             except Exception as e:
                 return JsonResponse({
-                    'status': 'FAILURE',
-                    'error': 'Save file error: ' + str(e),
+                    'status': 500,
+                    'message': 'Save file error: ' + str(e),
                 }, status=500)
 
         if not is_draft and shop_status != '2':
             if cessation_of_business_image is None or cessation_of_business_image == '':
                 return JsonResponse({
-                    'status': 'FAILURE',
-                    'error': 'cessation_of_business_image is required',
+                    'status': 400,
+                    'message': 'cessation_of_business_image is required',
                 }, status=400)
             try:
                 pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
@@ -297,8 +343,8 @@ def store(request):
                     cessation_of_business_image.name)
                 if cessation_of_business_file_extension not in ['.png', '.jpg']:
                     return JsonResponse({
-                        'status': 'FAILURE',
-                        'error': 'file_extension is invalid',
+                        'status': 400,
+                        'message': 'file_extension is invalid',
                     }, status=400)
                 cessation_of_business_filename = cessation_of_business_filename[:100] if len(
                     cessation_of_business_filename) > 100 else cessation_of_business_filename
@@ -310,8 +356,8 @@ def store(request):
                 sale_report.cessation_of_business_image = cessation_of_business_image if cessation_of_business_image_url is not None else None
             except Exception as e:
                 return JsonResponse({
-                    'status': 'FAILURE',
-                    'error': 'Save file error: ' + str(e),
+                    'status': 500,
+                    'message': 'Save file error: ' + str(e),
                 }, status=500)
 
     sale_report.purpose = purpose
@@ -322,6 +368,6 @@ def store(request):
     sale_report.is_draft = is_draft
     sale_report.save()
     return JsonResponse({
-        'status': 'SUCCESS',
+        'status': 200,
         'data': 'Created',
     }, status=200)
