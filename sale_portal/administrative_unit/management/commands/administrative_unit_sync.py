@@ -1,3 +1,5 @@
+import logging
+
 from django.core.management.base import BaseCommand
 from django.db import connection, connections
 from itertools import islice
@@ -11,7 +13,7 @@ class Command(BaseCommand):
 
     def truncate_table(self, db_name='qr_province'):
         cursor = connection.cursor()
-        cursor.execute('TRUNCATE TABLE ' + db_name + '  RESTART IDENTITY')
+        cursor.execute('TRUNCATE TABLE ' + db_name + '  RESTART IDENTITY CASCADE')
         return
 
     def get_query(self, db_name='qr_province', limit=1000, offset=0):
@@ -55,6 +57,7 @@ class Command(BaseCommand):
                     offset = offset + limit
                 self.stdout.write(self.style.SUCCESS('Finish qr_province synchronize processing!'))
             else:
+                logging.error('Administrative unit sync: Count qr_province = 0.Force stop qr_province synchronize')
                 cron_update(cronjob, description='Count qr_province = 0.Force stop qr_province synchronize')
                 self.stdout.write(self.style.ERROR('Count qr_province = 0.Force stop qr_province synchronize!'))
 
@@ -84,6 +87,7 @@ class Command(BaseCommand):
                     offset = offset + limit
                 self.stdout.write(self.style.SUCCESS('Finish qr_district synchronize processing!'))
             else:
+                logging.error('Administrative unit sync: Count qr_district = 0.Force stop qr_district synchronize')
                 cron_update(cronjob, description='Count qr_district = 0.Force stop qr_district synchronize')
                 self.stdout.write(self.style.ERROR('Count qr_district = 0.Force stop qr_district synchronize!'))
 
@@ -115,10 +119,12 @@ class Command(BaseCommand):
                     offset = offset + limit
                 self.stdout.write(self.style.ERROR('Finish qr_wards synchronize processing!'))
             else:
+                logging.error('Administrative unit sync: Count qr_wards = 0.Force stop qr_wards synchronize')
                 cron_update(cronjob, description='Count qr_wards = 0.Force stop qr_wards synchronize')
                 self.stdout.write(self.style.ERROR('Count qr_wards = 0.Force stop qr_wards synchronize!'))
 
             cron_update(cronjob, status=1)
 
         except Exception as e:
+            logging.error('Administrative unit sync: %s', e)
             cron_update(cronjob, status=2, description=str(e))
