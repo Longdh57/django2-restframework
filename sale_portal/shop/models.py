@@ -47,8 +47,6 @@ class Shop(models.Model):
     document = SearchVectorField(null=True)
     longitude = models.FloatField(null=True)
     latitude = models.FloatField(null=True)
-    geo_check = models.IntegerField(default=0)
-    geo_generate = models.IntegerField(default=0)
     objects = ShopQuerySet.as_manager()
 
     class Meta:

@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.db.models.functions import Lower
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -63,7 +64,10 @@ def list_recommend_shops(request, pk):
 
     nearly_shops = []
     if current_shop.street != '' and current_shop.street is not None:
-        for shop in Shop.objects.filter(street=current_shop.street).exclude(pk=pk):
+        for shop in Shop.objects.annotate(street_lower=Lower('street')).filter(
+                street_lower=str(current_shop.street).lower(),
+                wards=current_shop.wards
+        ).exclude(pk=pk):
             shop_shop_cube = ShopCube.objects.filter(shop_id=pk).first()
             if shop_shop_cube is not None:
                 shop_number_of_tran = shop_shop_cube.number_of_tran_30d \
