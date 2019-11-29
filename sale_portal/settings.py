@@ -41,7 +41,7 @@ if not os.path.exists('log'):
 
 logging.config.dictConfig({
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'json': {
             'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)s %(thread)s %(message)s',
