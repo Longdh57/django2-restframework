@@ -45,6 +45,10 @@ class Shop(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='shops_created', null=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='shops_updated', null=True)
     document = SearchVectorField(null=True)
+    longitude = models.FloatField(null=True)
+    latitude = models.FloatField(null=True)
+    geo_check = models.IntegerField(default=0)
+    geo_generate = models.IntegerField(default=0)
     objects = ShopQuerySet.as_manager()
 
     class Meta:
