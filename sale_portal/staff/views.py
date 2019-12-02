@@ -65,9 +65,18 @@ def list_staffs(request):
     queryset = Staff.objects.values('id', 'email', 'full_name')
 
     email = request.GET.get('email', None)
+    team_id = request.GET.get('team_id', None)
+    status = request.GET.get('status', None)
+    is_free = request.GET.get('is_free', None)
 
     if email is not None and email != '':
         queryset = queryset.filter(Q(email__icontains=email) | Q(full_name__icontains=email))
+    if status is not None and status != '':
+        queryset = queryset.filter(status=status)
+    if is_free is not None and is_free == 'true':
+        queryset = queryset.filter(team=None)
+    if team_id is not None and team_id != '':
+        queryset = queryset.filter(team_id=team_id)
 
     queryset = queryset.order_by('email')[0:settings.PAGINATE_BY]
 
