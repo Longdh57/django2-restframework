@@ -125,7 +125,7 @@ class TeamViewSet(mixins.ListModelMixin,
             if name is None or name == '':
                 return JsonResponse({
                     'status': 400,
-                    'message': 'name invalid'
+                    'message': 'Invalid body (name Invalid)'
                 }, status=400)
 
             if type is None and type == '' or not (isinstance(type, int) and 0 <= type <= 2):
