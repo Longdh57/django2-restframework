@@ -4,12 +4,13 @@ import datetime
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
-from sale_portal.team import TeamLogType
+from sale_portal.team import TeamType, TeamLogType
 
 
 class Team(models.Model):
     name = models.CharField(max_length=255, null=False)
     code = models.CharField(max_length=20, unique=True, null=True)
+    type = models.IntegerField(choices=TeamType.CHOICES, default=0)
     description = models.TextField(null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
