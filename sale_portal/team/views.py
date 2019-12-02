@@ -40,18 +40,29 @@ class TeamViewSet(mixins.ListModelMixin,
         """
         try:
             body = json.loads(request.body)
-            name = code = description = None
+            name = code = description = type = None
             if 'name' in body:
                 name = body['name']
             if 'code' in body:
                 code = body['code']
+            if 'type' in body:
+                type = body['type']
             if 'description' in body:
                 description = body['description']
+
+            if type is not None and type != '':
+                if not (isinstance(type, int) and 0 <= type <= 2):
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (type Invalid)'
+                    }, status=400)
+            else:
+                type = 0
 
             if name is None or name == '' or code is None or code == '':
                 return JsonResponse({
                     'status': 400,
-                    'message': 'Invalid body (name or code invalid)'
+                    'message': 'Invalid body (name or code Invalid)'
                 }, status=400)
 
             name = format_string(name)
@@ -66,6 +77,7 @@ class TeamViewSet(mixins.ListModelMixin,
             team = Team(
                 code=code.upper(),
                 name=name,
+                type=type,
                 description=description
             )
             team.save()
@@ -102,9 +114,11 @@ class TeamViewSet(mixins.ListModelMixin,
                     'message': 'Team not found'
                 }, status=404)
             body = json.loads(request.body)
-            name = description = None
+            name = description = type = None
             if 'name' in body:
                 name = body['name']
+            if 'type' in body:
+                type = body['type']
             if 'description' in body:
                 description = body['description']
 
@@ -112,6 +126,12 @@ class TeamViewSet(mixins.ListModelMixin,
                 return JsonResponse({
                     'status': 400,
                     'message': 'name invalid'
+                }, status=400)
+
+            if type is None and type == '' or not (isinstance(type, int) and 0 <= type <= 2):
+                return JsonResponse({
+                    'status': 400,
+                    'message': 'Invalid body (type Invalid)'
                 }, status=400)
 
             name = format_string(name)
@@ -124,6 +144,7 @@ class TeamViewSet(mixins.ListModelMixin,
 
             team.update(
                 name=name,
+                type=type,
                 description=description
             )
 
