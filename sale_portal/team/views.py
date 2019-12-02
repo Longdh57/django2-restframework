@@ -4,9 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.conf import settings
+from django.utils import formats
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
+from sale_portal.team import TeamType
 from .models import Team
 from .serializers import TeamSerializer
 from ..utils.field_formatter import format_string
@@ -97,9 +99,38 @@ class TeamViewSet(mixins.ListModelMixin,
         """
             API get detail Team
         """
+        team = Team.objects.filter(pk=pk).first()
+        if team is None:
+            return JsonResponse({
+                'status': 404,
+                'message': 'Team not found'
+            }, status=404)
+
+        members = []
+        staffs = team.staff_set.all()
+
+        for staff in staffs:
+            member = {
+                'staff_code': staff.staff_code,
+                'full_name': staff.full_name,
+                'email': staff.email,
+                'staff_code': staff.staff_code,
+            }
+            members.append(member)
+
+        data = {
+            'name': team.name,
+            'code': team.code,
+            'type': TeamType.CHOICES[team.type][1],
+            'description': team.description,
+            'members': members,
+            'created_date': formats.date_format(team.created_date,
+                                                "SHORT_DATETIME_FORMAT") if team.created_date else '',
+        }
+
         return JsonResponse({
             'status': 200,
-            'data': "get detail method"
+            'data': data
         }, status=200)
 
     def update(self, request, pk):

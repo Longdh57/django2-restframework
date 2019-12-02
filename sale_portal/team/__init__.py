@@ -4,9 +4,9 @@ class TeamType:
     TEAM_SCC = 2
 
     CHOICES = [
-        (TEAM_SALE, 'Team sale'),
-        (TEAM_CHAIN, 'Team chain'),
-        (TEAM_SCC, 'Team scc')
+        (TEAM_SALE, 'Team Sale'),
+        (TEAM_CHAIN, 'Team Chuỗi'),
+        (TEAM_SCC, 'Team Trực Tiếp')
     ]
 
 
