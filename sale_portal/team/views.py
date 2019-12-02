@@ -57,16 +57,14 @@ class TeamViewSet(mixins.ListModelMixin,
             name = format_string(name)
             code = format_string(code)
 
-            team = Team.objects.filter(Q(name=name) | Q(code=code)).first()
-
-            if team is not None:
+            if Team.objects.filter(Q(name__iexact=name) | Q(code__iexact=code)):
                 return JsonResponse({
                     'status': 400,
                     'message': 'name or code be used by other Team'
                 }, status=400)
 
             team = Team(
-                code=code,
+                code=code.upper(),
                 name=name,
                 description=description
             )
@@ -97,40 +95,34 @@ class TeamViewSet(mixins.ListModelMixin,
             API update Team
         """
         try:
-            team = Team.objects.filter(pk=pk).first()
-            if team is None:
+            team = Team.objects.filter(pk=pk)
+            if not team:
                 return JsonResponse({
                     'status': 404,
                     'message': 'Team not found'
                 }, status=404)
             body = json.loads(request.body)
-            name = code = description = None
+            name = description = None
             if 'name' in body:
                 name = body['name']
-            if 'code' in body:
-                code = body['code']
             if 'description' in body:
                 description = body['description']
 
-            if name is None or name == '' or code is None or code == '':
+            if name is None or name == '':
                 return JsonResponse({
                     'status': 400,
-                    'message': 'Invalid body (name or code invalid)'
+                    'message': 'name invalid'
                 }, status=400)
 
             name = format_string(name)
-            code = format_string(code)
 
-            Team.objects.filter(Q(name=name) | Q(code=code)).count()
-
-            if Team.objects.filter(Q(name=name) | Q(code=code)).count() > 0:
+            if Team.objects.filter(name__iexact=name).exclude(pk=pk):
                 return JsonResponse({
                     'status': 400,
-                    'message': 'name or code be used by other Team'
+                    'message': 'name being used by other Team'
                 }, status=400)
 
             team.update(
-                code=code,
                 name=name,
                 description=description
             )
