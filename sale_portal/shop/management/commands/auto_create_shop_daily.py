@@ -61,6 +61,9 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Finish Auto create new shop from terminal daily processing!'))
 
+            desc.update(total_shop_created=total_row)
+            cron_update(cronjob, description=desc)
+
         except Exception as e:
             logging.ERROR("Exception auto_create_shop_daily: {}".format(e))
             desc.update(error_log=str(e))
