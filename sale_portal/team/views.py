@@ -183,6 +183,7 @@ class TeamViewSet(mixins.ListModelMixin,
 
         for staff in staffs:
             member = {
+                'id': staff.id,
                 'staff_code': staff.staff_code,
                 'full_name': staff.full_name,
                 'email': staff.email,
