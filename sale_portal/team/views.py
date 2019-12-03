@@ -279,7 +279,8 @@ class TeamViewSet(mixins.ListModelMixin,
                 staff=None
             )
             staffs.update(
-                team=None
+                team=None,
+                role=None
             )
             team.delete()
             return JsonResponse({
