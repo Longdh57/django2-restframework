@@ -1,11 +1,13 @@
+import logging
+
 from django.db import models
 from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
 
 from sale_portal.merchant import MerchantLogType
-from ..staff.models import Staff
-from ..shop_cube.models import ShopCube
-from ..qr_status.models import QrStatus
+from sale_portal.shop_cube.models import ShopCube
+from sale_portal.qr_status.models import QrStatus
+from sale_portal.staff.models import Staff, QrStaff
 
 
 class QrMerchant(models.Model):
@@ -133,7 +135,13 @@ class Merchant(models.Model):
         return
 
     def get_staff(self):
-        return Staff.objects.filter(pk=self.staff).first()
+        try:
+            qr_staff = QrStaff.objects.filter(staff_id=self.staff).first()
+            staff = Staff.objects.filter(email=qr_staff.email).first()
+            return staff
+        except Exception as e:
+            logging.ERROR("Exception merchant model get_staff: {}".format(e))
+            return None
 
     def get_type(self):
         return QrTypeMerchant.objects.filter(id=self.merchant_type).first()

@@ -1,26 +1,23 @@
 import logging
+
 from django.db.models import Q
 from datetime import datetime
-
-from django.template.response import TemplateResponse
 from django.utils import formats
-from django.http import JsonResponse
-
 from django.conf import settings
-from rest_framework.decorators import api_view
+from django.http import JsonResponse
+from django.utils.html import conditional_escape
 from django.contrib.auth.decorators import login_required
 
 from rest_framework import viewsets, mixins
-from .serializers import TerminalSerializer
+from rest_framework.decorators import api_view
+
 from .models import Terminal
-from ..utils.field_formatter import format_string
 from ..shop.models import Shop
 from ..staff.models import Staff
+from sale_portal.team import TeamType
+from .serializers import TerminalSerializer
+from ..utils.field_formatter import format_string
 from ..qr_status.views import get_terminal_status_list
-
-
-def index(request):
-    return TemplateResponse(request, 'terminal/index.html')
 
 
 class TerminalViewSet(mixins.ListModelMixin,
@@ -119,7 +116,6 @@ class TerminalViewSet(mixins.ListModelMixin,
 @api_view(['GET'])
 @login_required
 def list_terminals(request):
-
     """
         API get list Terminal to select \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
@@ -232,4 +228,76 @@ def list_status(request):
     return JsonResponse({
         'status': 200,
         'data': get_terminal_status_list()
+    }, status=200)
+
+
+@api_view(['POST'])
+@login_required
+def create_shop_from_terminal(request):
+    """
+        API create shop from Terminal \n
+        Parameters for this api : Required
+        - terminal_id -- number
+        - address -- text
+        - street -- text
+    """
+    shop_store(request)
+
+
+@login_required
+def shop_store(request):
+    if request.method == 'POST':
+        terminal_id = request.POST.get('terminal_id', None)
+        address = request.POST.get('address', None)
+        street = request.POST.get('street', None)
+        auto_create = request.POST.get('auto_create', None)
+
+        terminal = Terminal.objects.get(pk=int(terminal_id))
+
+    elif request.method == 'OTHER':
+        terminal = request.terminal
+        address = request.address
+        street = request.street
+
+    else:
+        return JsonResponse({
+            'status': 501,
+            'data': {}
+        }, status=501)
+
+    staff = None
+    staff_of_chain = None
+    merchant = terminal.merchant
+    if merchant is not None:
+        staff = merchant.get_staff()
+        if staff is not None:
+            team = staff.team
+            if team is not None and team.type != TeamType.TEAM_SALE:
+                staff_of_chain = merchant.get_staff()
+
+    shop = Shop(
+        merchant=terminal.merchant,
+        staff=staff if (staff is not None) else None,
+        staff_of_chain=staff_of_chain if (staff_of_chain is not None) else None,
+        name=conditional_escape(terminal.terminal_name),
+        address=conditional_escape(address),
+        province_id=terminal.get_province().id if (terminal.get_province() is not None) else None,
+        district_id=terminal.get_district().id if (terminal.get_district() is not None) else None,
+        wards_id=terminal.get_wards().id if (terminal.get_wards() is not None) else None,
+        street=conditional_escape(street),
+        created_by=request.user
+    )
+    shop.save()
+
+    terminal.shop = shop
+    terminal.save()
+
+    if request.method == 'OTHER':
+        return True
+
+    return JsonResponse({
+        'status': 200,
+        'data': {
+            'shop_id': shop.pk
+        }
     }, status=200)

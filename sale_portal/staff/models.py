@@ -45,7 +45,7 @@ class Staff(models.Model):
     staff_code = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_staff.staff_code')
     nick_name = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_staff.nick_name')
     full_name = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_staff.full_name')
-    email = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_staff.email')
+    email = models.CharField(max_length=200, null=True, unique=True, help_text='Equivalent with qr_staff.email')
     mobile = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_staff.mobile')
     department_code = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_staff.department_code')
     status = models.IntegerField(default=1, help_text='Equivalent with qr_staff.status')

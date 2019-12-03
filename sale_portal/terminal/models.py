@@ -181,13 +181,25 @@ class Terminal(models.Model):
         return self.shop.staff.team if self.shop and self.shop.staff else None
 
     def get_province(self):
-        return QrProvince.objects.filter(province_code=self.province_code).first()
+        try:
+            qr_province = QrProvince.objects.filter(province_code=self.province_code).first()
+        except QrProvince.DoesNotExist:
+            qr_province = None
+        return qr_province
 
     def get_district(self):
-        return QrDistrict.objects.filter(district_code=self.district_code).first()
+        try:
+            qr_district = QrDistrict.objects.filter(district_code=self.district_code).first()
+        except QrDistrict.DoesNotExist:
+            qr_district = None
+        return qr_district
 
     def get_wards(self):
-        return QrWards.objects.filter(wards_code=self.wards_code).first()
+        try:
+            qr_wards = QrWards.objects.filter(wards_code=self.wards_code).first()
+        except QrWards.DoesNotExist:
+            qr_wards = None
+        return qr_wards
 
 
 class TerminalLog(models.Model):
