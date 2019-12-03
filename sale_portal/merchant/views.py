@@ -36,8 +36,8 @@ class MerchantViewSet(mixins.ListModelMixin,
         queryset = Merchant.objects.all()
 
         merchant_code = self.request.query_params.get('merchant_code', None)
-        merchant_name = self.request.query_params.get('merchant_code', None)
-        merchant_brand = self.request.query_params.get('merchant_code', None)
+        merchant_name = self.request.query_params.get('merchant_name', None)
+        merchant_brand = self.request.query_params.get('merchant_brand', None)
         # staff_id = self.request.query_params.get('staff_id', None)
         status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
