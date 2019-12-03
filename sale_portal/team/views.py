@@ -114,7 +114,8 @@ class TeamViewSet(mixins.ListModelMixin,
                 'staff_code': staff.staff_code,
                 'full_name': staff.full_name,
                 'email': staff.email,
-                'staff_code': staff.staff_code,
+                'status': staff.status,
+                'role': staff.role.code if staff.role else ''
             }
             members.append(member)
 
