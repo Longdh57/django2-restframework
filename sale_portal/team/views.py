@@ -13,6 +13,7 @@ from .models import Team
 from .serializers import TeamSerializer
 from ..utils.field_formatter import format_string
 from ..shop.models import Shop
+from ..staff.models import Staff, StaffTeamRole
 
 
 class TeamViewSet(mixins.ListModelMixin,
@@ -42,7 +43,7 @@ class TeamViewSet(mixins.ListModelMixin,
         """
         try:
             body = json.loads(request.body)
-            name = code = description = type = None
+            name = code = description = type = staffs = None
             if 'name' in body:
                 name = body['name']
             if 'code' in body:
@@ -51,6 +52,14 @@ class TeamViewSet(mixins.ListModelMixin,
                 type = body['type']
             if 'description' in body:
                 description = body['description']
+            if 'staff_ids' in body:
+                staffs = body['staff_ids']
+
+            if staffs is not None and staffs != '' and not isinstance(staffs, list):
+                return JsonResponse({
+                    'status': 400,
+                    'message': 'Invalid body (staffs Invalid)'
+                }, status=400)
 
             if type is not None and type != '':
                 if not (isinstance(type, int) and 0 <= type <= 2):
@@ -76,6 +85,44 @@ class TeamViewSet(mixins.ListModelMixin,
                     'message': 'name or code be used by other Team'
                 }, status=400)
 
+            staff_ids = []
+            team_lead_id = None
+            had_leader = False
+            for staff in staffs:
+                if not isinstance(staff['id'], int):
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (staff_id Invalid)'
+                    }, status=400)
+                staff_ids.append(staff['id'])
+                if staff['role'] == 'STAFF':
+                    continue
+                elif staff['role'] == 'TEAM LEAD':
+                    if had_leader:
+                        return JsonResponse({
+                            'status': 400,
+                            'message': 'Team chỉ được phép có 1 leader'
+                        }, status=400)
+                    had_leader = True
+                    team_lead_id = staff['id']
+                else:
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (staff_role Invalid)'
+                    }, status=400)
+
+            staff_have_teams = Staff.objects.filter(pk__in=staff_ids, team__isnull=False)
+
+            if staff_have_teams:
+                staff_emails = ''
+                for staff in staff_have_teams:
+                    staff_emails += staff.email + ', '
+                staff_emails = staff_emails[:-2]
+                return JsonResponse({
+                    'status': 400,
+                    'message': 'Các nhân viên: ' + staff_emails + ' đang thuộc team khác'
+                }, status=400)
+
             team = Team(
                 code=code.upper(),
                 name=name,
@@ -83,6 +130,19 @@ class TeamViewSet(mixins.ListModelMixin,
                 description=description
             )
             team.save()
+
+            role_staff = StaffTeamRole.objects.filter(code='STAFF').first()
+            Staff.objects.filter(pk__in=staff_ids).exclude(pk=team_lead_id).update(
+                team=team,
+                role=role_staff
+            )
+
+            if team_lead_id is not None:
+                role_leader = StaffTeamRole.objects.filter(code='TEAM LEAD').first()
+                Staff.objects.filter(pk=team_lead_id).update(
+                    team=team,
+                    role=role_leader
+                )
 
             return JsonResponse({
                 'status': 200,
