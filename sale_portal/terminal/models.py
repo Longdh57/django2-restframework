@@ -123,6 +123,7 @@ class Terminal(models.Model):
 
     class Meta:
         db_table = 'terminal'
+        ordering = ['-created_date']
         default_permissions = ()
 
     def __str__(self):

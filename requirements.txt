@@ -13,4 +13,6 @@ pytz==2019.3
 sqlparse==0.3.0
 structlog==19.2.0
 python-json-logger==0.1.11
+tablib==0.14.0
 Unidecode==1.1.1
+XlsxWriter==1.2.6
