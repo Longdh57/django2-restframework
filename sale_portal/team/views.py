@@ -52,8 +52,8 @@ class TeamViewSet(mixins.ListModelMixin,
                 type = body['type']
             if 'description' in body:
                 description = body['description']
-            if 'staff_ids' in body:
-                staffs = body['staff_ids']
+            if 'staffs' in body:
+                staffs = body['staffs']
 
             if staffs is not None and staffs != '' and not isinstance(staffs, list):
                 return JsonResponse({
@@ -219,13 +219,24 @@ class TeamViewSet(mixins.ListModelMixin,
                     'message': 'Team not found'
                 }, status=404)
             body = json.loads(request.body)
-            name = description = type = None
+            name = description = type = staffs = None
             if 'name' in body:
                 name = body['name']
             if 'type' in body:
                 type = body['type']
             if 'description' in body:
                 description = body['description']
+            if 'staffs' in body:
+                staffs = body['staffs']
+
+            if staffs is not None and staffs != '':
+                if not isinstance(staffs, list):
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (staffs Invalid)'
+                    }, status=400)
+            else:
+                staffs = []
 
             if name is None or name == '':
                 return JsonResponse({
@@ -246,6 +257,61 @@ class TeamViewSet(mixins.ListModelMixin,
                     'status': 400,
                     'message': 'name being used by other Team'
                 }, status=400)
+
+            old_staffs = Staff.objects.filter(team=team)
+            new_staffs = []
+            remove_staffs = []
+            no_change_staffs = []
+            update_role_staffs = []
+            count_leader = 0
+            # for old_staffs
+            staff_ids = []
+            team_lead_id = None
+            had_leader = False
+            for staff in staffs:
+                if not isinstance(staff['id'], int):
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (staff_id Invalid)'
+                    }, status=400)
+                staff_ids.append(staff['id'])
+                if staff['role'] == 'STAFF':
+                    continue
+                elif staff['role'] == 'TEAM LEAD':
+                    if had_leader:
+                        return JsonResponse({
+                            'status': 400,
+                            'message': 'Team chỉ được phép có 1 leader'
+                        }, status=400)
+                    had_leader = True
+                    team_lead_id = staff['id']
+                else:
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (staff_role Invalid)'
+                    }, status=400)
+
+                if staff_ids:
+                    print("staff_ids không rỗng")
+                    if len(staff_ids) != Staff.objects.filter(pk__in=staff_ids).count():
+                        return JsonResponse({
+                            'status': 400,
+                            'message': 'Invalid body (Staff not found)'
+                        }, status=400)
+                else:
+                    print("staff_ids rỗng")
+
+                staff_have_teams = Staff.objects.filter(pk__in=staff_ids, team__isnull=False)
+
+                if staff_have_teams:
+                    staff_emails = ''
+                    for staff in staff_have_teams:
+                        staff_emails += staff.email + ', '
+                    staff_emails = staff_emails[:-2]
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Các nhân viên: ' + staff_emails + ' đang thuộc team khác'
+                    }, status=400)
 
             team.update(
                 name=name,

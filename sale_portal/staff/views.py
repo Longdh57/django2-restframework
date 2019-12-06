@@ -7,10 +7,11 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
-from .models import Staff
+from .models import Staff, StaffTeamRole
 from .serializers import StaffSerializer
 from ..utils.field_formatter import format_string
-from  ..team.models import Team
+from ..team.models import Team
+from ..shop.models import Shop
 
 
 class StaffViewSet(mixins.ListModelMixin,
@@ -101,7 +102,7 @@ def change_staff_team(request):
     """
     try:
         body = json.loads(request.body)
-        staff_id = team_id  = None
+        staff_id = team_id = None
         if 'staff_id' in body:
             staff_id = body['staff_id']
         if 'team_id' in body:
@@ -126,6 +127,8 @@ def change_staff_team(request):
                 'message': 'Team not found'
             }, status=404)
 
+        role = StaffTeamRole.objects.filter(code='STAFF').first()
+
         if request.method == 'POST':
             if staff.team is not None:
                 message = 'Staff đã thuộc team này từ trước'
@@ -136,9 +139,9 @@ def change_staff_team(request):
                     'message': message
                 }, status=400)
             else:
-                staff.update(
-                    team=team
-                )
+                staff.team = team
+                staff.role = role
+                staff.save()
 
         if request.method == 'PUT':
             if staff.team is None or staff.team.id == team.id:
@@ -150,8 +153,11 @@ def change_staff_team(request):
                     'message': message
                 }, status=400)
             else:
-                staff.update(
-                    team=team
+                staff.team = team
+                staff.role = role
+                staff.save()
+                Shop.objects.filter(staff=staff).update(
+                    staff=None
                 )
 
         if request.method == 'DELETE':
@@ -164,8 +170,11 @@ def change_staff_team(request):
                     'message': message
                 }, status=400)
             else:
-                staff.update(
-                    team=None
+                staff.team = None
+                staff.role = None
+                staff.save()
+                Shop.objects.filter(staff=staff).update(
+                    staff=None
                 )
 
         return JsonResponse({
