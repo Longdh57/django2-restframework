@@ -491,6 +491,6 @@ class SaleReportViewSet(viewsets.ModelViewSet):
         }
 
         return JsonResponse({
-            'status': True,
+            'status': 200,
             'data': data
         })
