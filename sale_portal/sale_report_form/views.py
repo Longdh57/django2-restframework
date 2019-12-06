@@ -436,3 +436,61 @@ class SaleReportViewSet(viewsets.ModelViewSet):
             'status': 200,
             'data': 'Created',
         }, status=200)
+
+    def retrieve(self, request, pk):
+        """
+            API get detail Sale_report
+        """
+        sale_report = get_object_or_404(SaleReport, pk=pk)
+        if sale_report.shop_code is not None and sale_report.shop_code != '':
+            shop = get_object_or_404(Shop, code=sale_report.shop_code)
+
+        data = {
+            'purpose': sale_report.purpose,
+            'longitude': sale_report.longitude,
+            'latitude': sale_report.latitude,
+            'sale': {
+                'email': sale_report.created_by.email
+            },
+            'new': {
+                'new_merchant_name': sale_report.new_merchant_name,
+                'new_merchant_brand': sale_report.new_merchant_brand,
+                'new_address': sale_report.new_address,
+                'new_customer_name': sale_report.new_customer_name,
+                'new_phone': sale_report.new_phone,
+                'new_result': sale_report.new_result,
+                'new_using_application': sale_report.new_using_application,
+                'new_note': sale_report.new_note
+            },
+            'shop': {
+                'shop_id': shop.id if sale_report.shop_code else 0,
+                'shop_address': shop.address if sale_report.shop_code else '',
+                'shop_code': sale_report.shop_code if sale_report.shop_code else '',
+                'shop_name': shop.name if sale_report.shop_code else ''
+            },
+            'shop_status': sale_report.shop_status,
+            'image_outside': sale_report.image_outside.url if sale_report.image_outside else '',
+            'image_inside': sale_report.image_inside.url if sale_report.image_inside else '',
+            'image_store_cashier': sale_report.image_store_cashier.url if sale_report.image_store_cashier else '',
+
+            # nghỉ kinh doanh
+            'cessation_of_business_note': sale_report.cessation_of_business_note,
+            'cessation_of_business_image': sale_report.cessation_of_business_image.url if sale_report.cessation_of_business_image else '',
+
+            # chăm sóc
+            'customer_care_posm': sale_report.customer_care_posm,
+            'customer_care_cashier_reward': sale_report.customer_care_cashier_reward,
+            'customer_care_transaction': sale_report.customer_care_transaction,
+
+            # triển khai
+            'implement_posm': sale_report.implement_posm,
+            'implement_merchant_view': sale_report.implement_merchant_view,
+            'implement_career_guideline': sale_report.implement_career_guideline,
+            'implement_confirm': sale_report.implement_confirm,
+            'implement_new_address': sale_report.implement_new_address
+        }
+
+        return JsonResponse({
+            'status': True,
+            'data': data
+        })
