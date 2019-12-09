@@ -4,6 +4,7 @@ import time
 
 request_logger = logging.getLogger('request')
 
+
 def RequestLogMiddleware(get_response):
     log_data= {}
 
