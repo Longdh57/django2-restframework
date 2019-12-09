@@ -127,7 +127,7 @@ def change_staff_team(request):
                 'message': 'Team not found'
             }, status=404)
 
-        role = StaffTeamRole.objects.filter(code='STAFF').first()
+        role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
 
         if request.method == 'POST':
             if staff.team is not None:
