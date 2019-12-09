@@ -1,5 +1,4 @@
-image:
-  - ubuntu
+image: ubuntu
 
 stages:
   - deploy
