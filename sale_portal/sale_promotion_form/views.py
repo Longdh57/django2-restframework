@@ -65,9 +65,9 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
             API get detail SalePromotion
         """
-        sale_promotion = SalePromotion.objects.filter(pk=pk)
+        sale_promotion = SalePromotion.objects.filter(pk=pk).first()
 
-        if not sale_promotion:
+        if sale_promotion is None:
             return JsonResponse({
                 'status': 404,
                 'message': 'SalePromotion not found'
@@ -102,8 +102,8 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
             API update SalePromotion
         """
-        sale_promotion = SalePromotion.objects.filter(pk=pk)
-        if not sale_promotion:
+        sale_promotion = SalePromotion.objects.filter(pk=pk).first()
+        if sale_promotion is None:
             return JsonResponse({
                 'status': 404,
                 'message': 'Sale Promotion not found'
@@ -111,11 +111,19 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         image = request.FILES['image_file'] if 'image_file' in request.FILES else None
         sub_image = request.FILES['sub_image_file'] if 'sub_image_file' in request.FILES else None
-        status = request.POST.get('status', None)
-        tentcard_ctkm = request.POST.get('tentcard', None)
-        wobbler_ctkm = request.POST.get('wobbler', None)
+        status = request.data['status'] if 'status' in request.data else None
+        tentcard_ctkm = request.data['tentcard_ctkm'] if 'tentcard_ctkm' in request.data else None
+        wobbler_ctkm = request.data['wobbler_ctkm'] if 'wobbler_ctkm' in request.data else None
 
-        if status is None or not (isinstance(type, int) and 0 <= type <= 3):
+        try:
+            status = int(status) if status else None
+        except ValueError:
+            return JsonResponse({
+                'status': 400,
+                'message': 'Invalid body (status Invalid)'
+            }, status=400)
+
+        if status is None or not 0 <= status <= 3:
             return JsonResponse({
                 'status': 400,
                 'message': 'Invalid body (status Invalid)'
