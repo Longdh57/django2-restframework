@@ -97,7 +97,7 @@ class TeamViewSet(mixins.ListModelMixin,
                             'message': 'Invalid body (staff_id Invalid)'
                         }, status=400)
                     staff_ids.append(staff['id'])
-                    if staff['role'] == 'TEAM LEAD':
+                    if staff['role'] == 'TEAM_MANAGEMENT':
                         if had_leader:
                             return JsonResponse({
                                 'status': 400,
@@ -105,7 +105,7 @@ class TeamViewSet(mixins.ListModelMixin,
                             }, status=400)
                         had_leader = True
                         team_lead_id = staff['id']
-                    elif staff['role'] != 'STAFF':
+                    elif staff['role'] != 'TEAM_STAFF':
                         return JsonResponse({
                             'status': 400,
                             'message': 'Invalid body (staff_role Invalid)'
@@ -139,14 +139,14 @@ class TeamViewSet(mixins.ListModelMixin,
             team.save()
 
             if staffs is not None and staffs != '':
-                role_staff = StaffTeamRole.objects.filter(code='STAFF').first()
+                role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
                 Staff.objects.filter(pk__in=staff_ids).exclude(pk=team_lead_id).update(
                     team=team,
                     role=role_staff
                 )
 
                 if team_lead_id is not None:
-                    role_leader = StaffTeamRole.objects.filter(code='TEAM LEAD').first()
+                    role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
                     Staff.objects.filter(pk=team_lead_id).update(
                         team=team,
                         role=role_leader
@@ -257,8 +257,8 @@ class TeamViewSet(mixins.ListModelMixin,
             staff_ids = []
             had_leader = False
 
-            role_staff = StaffTeamRole.objects.filter(code='STAFF').first()
-            role_leader = StaffTeamRole.objects.filter(code='TEAM LEAD').first()
+            role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
+            role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
 
             with transaction.atomic():
                 for st in staffs:
@@ -268,12 +268,12 @@ class TeamViewSet(mixins.ListModelMixin,
 
                     staff_ids.append(st['id'])
 
-                    if st['role'] == 'TEAM LEAD':
+                    if st['role'] == 'TEAM_MANAGEMENT':
                         if had_leader:
                             raise Exception('Team chỉ được phép có 1 leader')
                         had_leader = True
                         is_leader = True
-                    elif st['role'] != 'STAFF':
+                    elif st['role'] != 'TEAM_STAFF':
                         raise Exception('Invalid body (staff_role Invalid)')
 
                     staff = Staff.objects.filter(pk=st['id']).first()

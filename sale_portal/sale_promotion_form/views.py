@@ -65,9 +65,9 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
             API get detail SalePromotion
         """
-        sale_promotion = SalePromotion.objects.filter(pk=pk)
+        sale_promotion = SalePromotion.objects.filter(pk=pk).first()
 
-        if not sale_promotion:
+        if sale_promotion is None:
             return JsonResponse({
                 'status': 404,
                 'message': 'SalePromotion not found'
@@ -102,8 +102,8 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
             API update SalePromotion
         """
-        sale_promotion = SalePromotion.objects.filter(pk=pk)
-        if not sale_promotion:
+        sale_promotion = SalePromotion.objects.filter(pk=pk).first()
+        if sale_promotion is None:
             return JsonResponse({
                 'status': 404,
                 'message': 'Sale Promotion not found'
@@ -111,11 +111,19 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         image = request.FILES['image_file'] if 'image_file' in request.FILES else None
         sub_image = request.FILES['sub_image_file'] if 'sub_image_file' in request.FILES else None
-        status = request.POST.get('status', None)
-        tentcard_ctkm = request.POST.get('tentcard', None)
-        wobbler_ctkm = request.POST.get('wobbler', None)
+        status = request.data['status'] if 'status' in request.data else None
+        tentcard_ctkm = request.data['tentcard_ctkm'] if 'tentcard_ctkm' in request.data else None
+        wobbler_ctkm = request.data['wobbler_ctkm'] if 'wobbler_ctkm' in request.data else None
 
-        if status is None or not (isinstance(type, int) and 0 <= type <= 3):
+        try:
+            status = int(status) if status else None
+        except ValueError:
+            return JsonResponse({
+                'status': 400,
+                'message': 'Invalid body (status Invalid)'
+            }, status=400)
+
+        if status is None or not 0 <= status <= 3:
             return JsonResponse({
                 'status': 400,
                 'message': 'Invalid body (status Invalid)'
@@ -193,7 +201,7 @@ def import_view(request):
                 'message': 'Invalid body (title_code be used by other PromotionTitle)'
             }, status=400)
         promotion_title = SalePromotionTitle(
-            code=title_code,
+            code=title_code.upper(),
             description=title_description
         )
         if is_submit:
@@ -231,17 +239,26 @@ def import_view(request):
             data['update_status'] = result
             data_error.append(data)
 
-    return JsonResponse({
-        'status': 200,
-        'data': {
-            'total_row': total_row,
-            'row_create': row_create,
-            'row_no_change': row_no_change,
-            'row_update': row_update,
-            'row_error': row_error,
-            'path_data_error': render_excel_import_error(request.user, data_error)
-        }
-    }, status=200)
+    if is_submit:
+        return JsonResponse(
+            {
+                'status': 200,
+                'data': "Cập nhật thành công " + str(row_create + row_update) + "/" + str(total_row) + " bản ghi",
+            },
+            status=200
+        )
+    else:
+        return JsonResponse({
+            'status': 200,
+            'data': {
+                'total_row': total_row,
+                'row_create': row_create,
+                'row_no_change': row_no_change,
+                'row_update': row_update,
+                'row_error': row_error,
+                'path_data_error': render_excel_import_error(request.user, data_error)
+            }
+        }, status=200)
 
 
 def import_view_update_action(data, is_submit=False, promotion_title=None):
@@ -251,16 +268,16 @@ def import_view_update_action(data, is_submit=False, promotion_title=None):
         return 'shop_code: shop_code trống - Lỗi dữ liệu'
     if data['staff_email'] is None or str(data['staff_email']) == '':
         return 'Sale: Sale trống - Lỗi dữ liệu'
-    terminal = Terminal.objects.filter(terminal_id=data['terminal_id'])
-    if not terminal:
+    terminal = Terminal.objects.filter(terminal_id=data['terminal_id']).first()
+    if terminal is None:
         return 'Terminal_ID: Không tìm thấy Terminal'
-    shop = Shop.objects.filter(code=data['shop_code'])
-    if not shop:
+    shop = Shop.objects.filter(code=data['shop_code']).first()
+    if shop is None:
         return 'shop_code: Không tìm thấy Shop'
-    if terminal.shop is not shop:
+    if terminal.shop != shop:
         return 'Terminal-Shop: Terminal không được gán với Shop'
-    staff = Staff.objects.filter(email=data['staff_email'])
-    if not staff:
+    staff = Staff.objects.filter(email=data['staff_email']).first()
+    if staff is None:
         return 'Sale: Không tìm thấy Sale'
 
     if isinstance(data['contact_phone_number'], float):
