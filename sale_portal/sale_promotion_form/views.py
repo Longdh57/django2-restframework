@@ -274,7 +274,7 @@ def import_view_update_action(data, is_submit=False, promotion_title=None):
     shop = Shop.objects.filter(code=data['shop_code']).first()
     if shop is None:
         return 'shop_code: Không tìm thấy Shop'
-    if terminal.shop is None or terminal.shop.id != shop.id:
+    if terminal.shop != shop:
         return 'Terminal-Shop: Terminal không được gán với Shop'
     staff = Staff.objects.filter(email=data['staff_email']).first()
     if staff is None:
