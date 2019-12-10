@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 from django.contrib.auth.decorators import login_required
@@ -22,6 +23,8 @@ class StaffViewSet(mixins.ListModelMixin,
         - staff_code -- text
         - full_name -- text
         - status -- number in {-1,1}
+        - from_date -- dd/mm/yyyy
+        - to_date -- dd/mm/yyyy
     """
     serializer_class = StaffSerializer
 
@@ -32,6 +35,8 @@ class StaffViewSet(mixins.ListModelMixin,
         staff_code = self.request.query_params.get('staff_code', None)
         full_name = self.request.query_params.get('full_name', None)
         status = self.request.query_params.get('status', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
 
         if staff_code is not None and staff_code != '':
             staff_code = format_string(staff_code)
@@ -41,6 +46,12 @@ class StaffViewSet(mixins.ListModelMixin,
             queryset = queryset.filter(Q(full_name__icontains=full_name) | Q(email__icontains=full_name))
         if status is not None and status != '':
             queryset = queryset.filter(status=(1 if status == '1' else -1))
+        if from_date is not None and from_date != '':
+            queryset = queryset.filter(
+                created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+        if to_date is not None and to_date != '':
+            queryset = queryset.filter(
+                created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
         return queryset
 
