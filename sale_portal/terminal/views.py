@@ -49,9 +49,9 @@ class TerminalViewSet(mixins.ListModelMixin,
         staff_id = self.request.query_params.get('staff_id', None)
         team_id = self.request.query_params.get('team_id', None)
         status = self.request.query_params.get('status', None)
-        province_code = self.request.query_params.get('province_id', None)
-        district_code = self.request.query_params.get('district_id', None)
-        ward_code = self.request.query_params.get('ward_id', None)
+        province_code = self.request.query_params.get('province_code', None)
+        district_code = self.request.query_params.get('district_code', None)
+        ward_code = self.request.query_params.get('ward_code', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 

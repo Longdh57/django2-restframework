@@ -72,6 +72,9 @@ def list_staffs(request):
         API get list Staff to select \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - email -- text
+        - team_id -- number
+        - status -- number in {-1,1}
+        - is_free -- true/false
     """
 
     queryset = Staff.objects.values('id', 'email', 'full_name')
@@ -105,10 +108,10 @@ def list_staffs(request):
 def change_staff_team(request):
     """
         API update team for Staff (POST: create, PUT: update, DELETE: delete) \n
-        Request body for this api : Không được bỏ trống
-        - { \n
-            'staff_id' : 4, \n
-            'team_id' : 6 \n
+        Request body for this api : Không được bỏ trống \n
+            {
+                'staff_id' : 4,
+                'team_id' : 6
             }
     """
     try:

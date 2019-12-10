@@ -29,7 +29,6 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - team_id -- integer
         - staff_id -- integer
         - status -- number in {0, 1, 2, 3}
-        Có thể bỏ trống
     """
     serializer_class = SalePromotionSerializer
 
@@ -100,7 +99,13 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def update(self, request, pk):
         """
-            API update SalePromotion
+            API update SalePromotion \n
+            Request body for this api : Định dạng form-data \n
+                "tentcard_ctkm": true/false,
+                "wobbler_ctkm": true/false,
+                "status": 2 (status in {0,1,2,3} ),
+                "image_file": file_image_upload,
+                "sub_image_file": file_sub_image_upload \n
         """
         sale_promotion = SalePromotion.objects.filter(pk=pk).first()
         if sale_promotion is None:
@@ -168,7 +173,13 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 @login_required
 def import_view(request):
     """
-        API import SalePromotion
+        API import SalePromotion \n
+        Request body for this api : Định dạng form-data \n
+            "promotion_file": file_excel_upload,
+            "title_id": 2,
+            "title_code": "title_code",
+            "title_description": "title_description",
+            "is_submit": true/false \n
     """
     dataset = Dataset()
 

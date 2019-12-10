@@ -38,7 +38,6 @@ class MerchantViewSet(mixins.ListModelMixin,
         merchant_code = self.request.query_params.get('merchant_code', None)
         merchant_name = self.request.query_params.get('merchant_name', None)
         merchant_brand = self.request.query_params.get('merchant_brand', None)
-        # staff_id = self.request.query_params.get('staff_id', None)
         status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
@@ -52,8 +51,6 @@ class MerchantViewSet(mixins.ListModelMixin,
         if merchant_brand is not None and merchant_brand != '':
             merchant_brand = format_string(merchant_brand)
             queryset = queryset.filter(merchant_brand__icontains=merchant_brand)
-        # if staff_id is not None and staff_id != '':
-        #     queryset = queryset.filter(staff=staff_id)
         if status is not None and status != '':
             queryset = queryset.filter(status=status)
         if from_date is not None and from_date != '':
