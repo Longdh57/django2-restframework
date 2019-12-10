@@ -52,8 +52,6 @@ class MerchantViewSet(mixins.ListModelMixin,
         if merchant_brand is not None and merchant_brand != '':
             merchant_brand = format_string(merchant_brand)
             queryset = queryset.filter(merchant_brand__icontains=merchant_brand)
-        # if staff_id is not None and staff_id != '':
-        #     queryset = queryset.filter(staff=staff_id)
         if status is not None and status != '':
             queryset = queryset.filter(status=status)
         if from_date is not None and from_date != '':
