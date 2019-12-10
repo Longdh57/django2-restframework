@@ -7,15 +7,6 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.django_db
-class TestClass:
-    pytestmark = pytest.mark.django_db
-
-    def test_staff(self):
-        staff = Staff.objects.get(pk=1210)
-        assert staff.email == 'duynt@vnpay.vn'
-
-
-@pytest.mark.django_db
 class TestStaffTeamRoleClass:
     pytestmark = pytest.mark.django_db
 
