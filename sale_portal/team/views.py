@@ -241,8 +241,8 @@ class TeamViewSet(mixins.ListModelMixin,
                 }
         """
         try:
-            team = Team.objects.filter(pk=pk)
-            if not team:
+            team = Team.objects.filter(pk=pk).first()
+            if team is None:
                 return JsonResponse({
                     'status': 404,
                     'message': 'Team not found'
@@ -287,43 +287,64 @@ class TeamViewSet(mixins.ListModelMixin,
                     'message': 'name being used by other Team'
                 }, status=400)
 
-            staff_ids = []
-            had_leader = False
-
             role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
             role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
+            staff_ids = []
+            had_leader = False
+            new_staff_ids = []
+            new_leader_id = None
+            update_to_staff_id = None
+            update_to_leader_id = None
+            for st in staffs:
+                is_leader = False
+                if not isinstance(st['id'], int):
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (staff_id Invalid)'
+                    }, status=400)
+
+                staff_ids.append(st['id'])
+
+                if st['role'] == 'TEAM_MANAGEMENT':
+                    if had_leader:
+                        return JsonResponse({
+                            'status': 400,
+                            'message': 'Team chỉ được phép có 1 leader'
+                        }, status=400)
+                    had_leader = True
+                    is_leader = True
+                elif st['role'] != 'TEAM_STAFF':
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Invalid body (staff_role Invalid)'
+                    }, status=400)
+
+                staff = Staff.objects.filter(pk=st['id']).first()
+                if staff is None:
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'staff_id ' + st['id'] + ' not found'
+                    }, status=400)
+                if staff.team is None:
+                    if is_leader:
+                        new_leader_id = st['id']
+                    else:
+                        new_staff_ids.append(st['id'])
+                elif staff.team == team:
+                    if staff.role is None or staff.role.code != st['role']:
+                        if is_leader:
+                            update_to_leader_id = st['id']
+                        else:
+                            update_to_staff_id = st['id']
+                else:
+                    return JsonResponse({
+                        'status': 400,
+                        'message': 'Nhân viên ' + staff.email + ' đang thuộc team khác'
+                    }, status=400)
+
+            staffs_remove = Staff.objects.filter(team=team).exclude(pk__in=staff_ids)
 
             with transaction.atomic():
-                for st in staffs:
-                    is_leader = False
-                    if not isinstance(st['id'], int):
-                        raise Exception('Invalid body (staff_id Invalid)')
-
-                    staff_ids.append(st['id'])
-
-                    if st['role'] == 'TEAM_MANAGEMENT':
-                        if had_leader:
-                            raise Exception('Team chỉ được phép có 1 leader')
-                        had_leader = True
-                        is_leader = True
-                    elif st['role'] != 'TEAM_STAFF':
-                        raise Exception('Invalid body (staff_role Invalid)')
-
-                    staff = Staff.objects.filter(pk=st['id']).first()
-                    if staff is None:
-                        raise Exception('staff_id ' + st['id'] + ' not found')
-                    if staff.team is None:
-                        staff.team = team
-                        staff.role = role_leader if is_leader else role_staff
-                        staff.save()
-                    elif staff.team == team:
-                        if staff.role is None or staff.role.code != st['role']:
-                            staff.role = role_leader if is_leader else role_staff
-                            staff.save()
-                    else:
-                        raise Exception('Nhân viên ' + staff.email + ' đang thuộc team khác')
-
-                staffs_remove = Staff.objects.filter(team=team).exclude(pk__in=staff_ids)
                 if staffs_remove:
                     Shop.objects.filter(staff__in=staffs_remove).update(
                         staff=None
@@ -332,12 +353,30 @@ class TeamViewSet(mixins.ListModelMixin,
                         team=None,
                         role=None
                     )
+                if new_staff_ids:
+                    Staff.objects.filter(pk__in=new_staff_ids).update(
+                        team=team,
+                        role=role_staff
+                    )
+                if new_leader_id is not None:
+                    Staff.objects.filter(pk=new_leader_id).update(
+                        team=team,
+                        role=role_leader
+                    )
 
-                team.update(
-                    name=name,
-                    type=type,
-                    description=description
-                )
+                if update_to_staff_id is not None:
+                    Staff.objects.filter(pk=update_to_staff_id).update(
+                        role=role_staff
+                    )
+                if update_to_leader_id is not None:
+                    Staff.objects.filter(pk=update_to_leader_id).update(
+                        role=role_leader
+                    )
+
+                team.name = name
+                team.type = type
+                team.description = description
+                team.save()
 
             return JsonResponse({
                 'status': 200,
