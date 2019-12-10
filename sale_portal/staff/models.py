@@ -57,6 +57,7 @@ class Staff(models.Model):
 
     class Meta:
         db_table = 'staff'
+        ordering = ['-created_date']
         default_permissions = ()
 
     def __str__(self):
