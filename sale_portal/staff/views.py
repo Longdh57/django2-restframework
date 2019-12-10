@@ -109,9 +109,9 @@ def change_staff_team(request):
     """
         API update team for Staff (POST: create, PUT: update, DELETE: delete) \n
         Request body for this api : Không được bỏ trống \n
-            { \n
-                'staff_id' : 4, \n
-                'team_id' : 6 \n
+            {
+                'staff_id' : 4,
+                'team_id' : 6
             }
     """
     try:

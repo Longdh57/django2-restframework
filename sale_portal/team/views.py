@@ -42,21 +42,21 @@ class TeamViewSet(mixins.ListModelMixin,
         """
             API create team \n
             Request body for this api : Không được bỏ trống \n
-                { \n
-                    "code": "team_code", \n
-                    "name": "team name", \n
-                    "type": 2, (type in {0,1,2} )\n
-                    "description": "description", \n
-                    "staffs": [ \n
-                        { \n
-                            "id": 11732, \n
-                            "role": "TEAM_STAFF" \n
-                        }, \n
-                        { \n
-                            "id": 351, \n
-                            "role": "TEAM_MANAGEMENT" \n
-                        } \n
-                    ] \n
+                {
+                    "code": "team_code",
+                    "name": "team name",
+                    "type": 2, (type in {0,1,2} )
+                    "description": "description",
+                    "staffs": [
+                        {
+                            "id": 11732,
+                            "role": "TEAM_STAFF"
+                        },
+                        {
+                            "id": 351,
+                            "role": "TEAM_MANAGEMENT"
+                        }
+                    ]
                 }
         """
         try:
@@ -224,20 +224,20 @@ class TeamViewSet(mixins.ListModelMixin,
         """
             API update Team \n
             Request body for this api : Không được bỏ trống \n
-                { \n
-                    "name": "team name", \n
-                    "type": 2, (type in {0,1,2} )\n
-                    "description": "description", \n
-                    "staffs": [ \n
-                        { \n
-                            "id": 11732, \n
-                            "role": "TEAM_STAFF" \n
-                        }, \n
-                        { \n
-                            "id": 351, \n
-                            "role": "TEAM_MANAGEMENT" \n
-                        } \n
-                    ] \n
+                {
+                    "name": "team name",
+                    "type": 2, (type in {0,1,2} )
+                    "description": "description",
+                    "staffs": [
+                        {
+                            "id": 11732,
+                            "role": "TEAM_STAFF"
+                        },
+                        {
+                            "id": 351,
+                            "role": "TEAM_MANAGEMENT"
+                        }
+                    ]
                 }
         """
         try:
