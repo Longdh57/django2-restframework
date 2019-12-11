@@ -8,3 +8,13 @@ class StaffLogType:
         (DELETED, 'Deleted from qr_terminal table'),
         (UPDATED, 'Updated from qr_terminal table'),
     ]
+
+
+class StaffStatus:
+    ACTIVATE = 1
+    DISABLE = -1
+
+    CHOICES = [
+        (ACTIVATE, 'Đang hoạt động'),
+        (DISABLE, 'Đã hủy'),
+    ]

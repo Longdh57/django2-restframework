@@ -1,20 +1,22 @@
 import json
 import logging
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
+
 from django.db.models import Q
-from django.db import transaction
 from django.conf import settings
 from django.utils import formats
-from rest_framework.decorators import api_view
+from django.db import transaction
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 
 from sale_portal.team import TeamType
-from .models import Team
-from .serializers import TeamSerializer
-from ..utils.field_formatter import format_string
-from ..shop.models import Shop
-from ..staff.models import Staff, StaffTeamRole
+from sale_portal.team.models import Team
+from sale_portal.shop.models import Shop
+from sale_portal.team.serializers import TeamSerializer
+from sale_portal.staff.models import Staff, StaffTeamRole
+from sale_portal.utils.field_formatter import format_string
 
 
 class TeamViewSet(mixins.ListModelMixin,

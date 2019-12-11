@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404
 from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.staff.models import Staff
@@ -22,7 +22,8 @@ from sale_portal.user.models import User
 from sale_portal.team.models import Team
 
 
-class SaleReportViewSet(viewsets.ModelViewSet):
+class SaleReportViewSet(mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
     serializer_class = SaleReportSerializer
 
     def get_queryset(self):
