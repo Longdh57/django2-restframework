@@ -11,5 +11,5 @@ class TestStaffTeamRoleClass:
     pytestmark = pytest.mark.django_db
 
     def test_create_staff_team_role(self):
-        role = mixer.blend(StaffTeamRole, code='TEAM_MANAGER')
-        assert role.code == 'TEAM_MANAGER'
+        role = mixer.blend(StaffTeamRole, code='AREA_MANAGER')
+        assert role.code == 'AREA_MANAGER'
