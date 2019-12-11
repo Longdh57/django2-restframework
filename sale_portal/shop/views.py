@@ -2,6 +2,7 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.db.models.functions import Lower
+from django.db import connection
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -173,11 +174,29 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 shop_have_terminals = Terminal.objects.filter(shop__isnull=False).values('shop')
                 queryset = queryset.exclude(shop_have_terminals)
             elif status == '2':
-                shop_dup = Shop.objects.filter(merchant__isnull=False).values('merchant', 'wards').order_by()\
-                    .annotate(Count('wards'), count_merchants=Count('merchant')).filter(count_merchants__gte=2)
-                print(len(shop_dup))
-                queryset = queryset.extra(where=['(merchant_id,wards_id) in %s'], params=shop_dup.values('merchant', 'wards').all())
-                pass
+                dup_ids = []
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        select s.id
+                        from shop s
+                              INNER JOIN (select
+                                      merchant_id,
+                                      wards_id
+                                    from shop
+                                    where merchant_id is not null
+                                    group by merchant_id, wards_id
+                                    having count(merchant_id) > 1) dup
+                                ON dup.merchant_id = s.merchant_id and dup.wards_id = s.wards_id
+                        where s.activated = 1
+                    """)
+                    columns = [col[0] for col in cursor.description]
+                    data_cursor = [
+                        dict(zip(columns, row))
+                        for row in cursor.fetchall()
+                    ]
+                for dup in data_cursor:
+                    dup_ids.append(dup['id'])
+                queryset = queryset.filter(pk__in=dup_ids)
             elif status == '3':
                 queryset = queryset.filter(activated=ShopActivateType.DISABLE)
             elif status == '4':
