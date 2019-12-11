@@ -1,18 +1,21 @@
 import json
 import logging
+
 from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django.db.models import Q
+from django.utils import formats
 from django.conf import settings
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
-from .models import Staff, StaffTeamRole
-from .serializers import StaffSerializer
-from ..utils.field_formatter import format_string
-from ..team.models import Team
-from ..shop.models import Shop
+from sale_portal.team.models import Team
+from sale_portal.shop.models import Shop
+from sale_portal.staff.models import Staff, StaffTeamRole
+from sale_portal.staff.serializers import StaffSerializer
+from sale_portal.utils.field_formatter import format_string
 
 
 class StaffViewSet(mixins.ListModelMixin,
@@ -59,9 +62,41 @@ class StaffViewSet(mixins.ListModelMixin,
         """
             API get detail Staff
         """
+        team, role = None, None
+
+        staff = Staff.objects.filter(pk=pk).first()
+        if staff is None:
+            return JsonResponse({
+                'status': 404,
+                'message': 'Staff not found'
+            }, status=404)
+
+        if staff.team is not None:
+            team = {
+                "name": staff.team.name,
+                "code": staff.team.code,
+                "created_date": formats.date_format(staff.team.created_date,
+                                                "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
+            }
+
+        if staff.role is not None:
+            role = staff.role.code
+
+        data = {
+            'full_name': staff.full_name,
+            'code': staff.staff_code,
+            'email': staff.email,
+            'mobile': staff.mobile,
+            'status': staff.status,
+            'team': team,
+            'role': role,
+            'created_date': formats.date_format(staff.created_date,
+                                                "SHORT_DATETIME_FORMAT") if staff.created_date else '',
+        }
+
         return JsonResponse({
             'status': 200,
-            'data': "get detail method"
+            'data': data
         }, status=200)
 
 
