@@ -212,10 +212,3 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
         return queryset
-
-    def retrieve(self, request, pk):
-        """
-            API get detail Merchant
-        """
-        # return detail(request, pk)
-        return "ok"
