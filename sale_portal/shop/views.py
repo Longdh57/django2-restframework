@@ -176,7 +176,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 shop_dup = Shop.objects.filter(merchant__isnull=False).values('merchant', 'wards').order_by()\
                     .annotate(Count('wards'), count_merchants=Count('merchant')).filter(count_merchants__gte=2)
                 print(len(shop_dup))
-                # queryset = queryset.annotate(t=FilteredRelation( wards__in=Subquery(shop_dup.values('wards')))
+                queryset = queryset.extra(where=['(merchant_id,wards_id) in %s'], params=shop_dup.values('merchant', 'wards').all())
                 pass
             elif status == '3':
                 queryset = queryset.filter(activated=ShopActivateType.DISABLE)
