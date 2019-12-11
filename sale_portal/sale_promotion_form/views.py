@@ -1,4 +1,5 @@
 import logging
+import json
 import time
 import datetime
 from rest_framework import viewsets, mixins
@@ -183,13 +184,27 @@ def import_view(request):
     """
     dataset = Dataset()
 
-    title_id = request.POST.get('title_id', None)
-    title_code = request.POST.get('title_code', None)
-    title_description = request.POST.get('title_description', None)
-
     promotion_file = request.FILES['promotion_file']
+    data = request.POST.get('data', None)
+    if data is None:
+        return JsonResponse({
+            'status': 400,
+            'message': 'Invalid body (cannot read data)'
+        }, status=400)
+    try:
+        data_json = json.loads(data)
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            'status': 400,
+            'message': 'Invalid body (cannot convert data)'
+        }, status=400)
 
-    is_submit = request.POST.get('is_submit', None)
+    title_id = data_json['title_id']
+    title_code = data_json['title_code']
+    title_description = data_json['title_description']
+    is_submit = data_json['is_submit']
+
     is_submit = True if is_submit == 'true' else False
 
     if title_id is not None and title_id != '':
