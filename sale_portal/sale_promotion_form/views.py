@@ -117,9 +117,23 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         image = request.FILES['image_file'] if 'image_file' in request.FILES else None
         sub_image = request.FILES['sub_image_file'] if 'sub_image_file' in request.FILES else None
-        status = request.data['status'] if 'status' in request.data else None
-        tentcard_ctkm = request.data['tentcard_ctkm'] if 'tentcard_ctkm' in request.data else None
-        wobbler_ctkm = request.data['wobbler_ctkm'] if 'wobbler_ctkm' in request.data else None
+        data = request.POST.get('data', None)
+        if data is None:
+            return JsonResponse({
+                'status': 400,
+                'message': 'Invalid body (cannot read data)'
+            }, status=400)
+        try:
+            data_json = json.loads(data)
+        except Exception as e:
+            logging.error(e)
+            return JsonResponse({
+                'status': 400,
+                'message': 'Invalid body (cannot convert data)'
+            }, status=400)
+        status = data_json['status']
+        tentcard_ctkm = data_json['tentcard_ctkm']
+        wobbler_ctkm = data_json['wobbler_ctkm']
 
         try:
             status = int(status) if status else None
@@ -194,7 +208,7 @@ def import_view(request):
     try:
         data_json = json.loads(data)
     except Exception as e:
-        print(e)
+        logging.error(e)
         return JsonResponse({
             'status': 400,
             'message': 'Invalid body (cannot convert data)'
