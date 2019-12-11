@@ -1,4 +1,5 @@
 import datetime
+import json
 from datetime import date
 from datetime import datetime as dt_datetime
 import time
@@ -129,6 +130,22 @@ class SaleReportViewSet(viewsets.ModelViewSet):
             Chú ý: nếu là bản nháp ko cần upload ảnh
 
         """
+
+        # Data nhận dưới dạng form data, sau đó convert ra json rồi xử lý
+        # data = request.POST.get('data', None)
+        # print(data)
+        # datajson = json.loads(data)
+        # print(datajson)
+        #
+        # purpose = datajson['purpose']
+        # print(purpose)
+        # longitude = datajson['longitude']
+        # print(longitude)
+        # latitude = datajson['latitude']
+        # print(latitude)
+        # is_draft = datajson['is_draft']
+        # print(is_draft)
+
         # required data fields from request
         purpose = request.POST.get('purpose', None)
         longitude = request.POST.get('longitude', None)
