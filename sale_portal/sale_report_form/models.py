@@ -44,7 +44,6 @@ class SaleReport(models.Model):
 
     # Noi dung Cham soc, Trien Khai
     shop_code = models.CharField(max_length=100, help_text='Relative with shop.code', null=True, blank=True)
-    shop_status = models.IntegerField(choices=SaleReportFormShopStatus.CHOICES, default=0, null=True, blank=True)
     image_outside = models.ImageField(
         upload_to='sale_report_form',
         help_text='Noi dung Cham soc - KQ cham soc, Noi dung Trien khai - image_outside',
@@ -61,6 +60,14 @@ class SaleReport(models.Model):
         blank=True
     )
 
+    # Noi dung Trien khai
+    implement_posm = models.TextField(help_text='Noi dung Trien khai - POSM', null=True)
+    implement_merchant_view = models.TextField(help_text='Noi dung Trien khai - merchant_view', null=True)
+    implement_career_guideline = models.TextField(help_text='Noi dung Trien khai - career_guideline', null=True)
+    implement_confirm = models.IntegerField(choices=SaleReportFormShopConfirm.CHOICES, null=True, blank=True,
+                                            help_text='Noi dung xac nhan cua hang')
+    implement_new_address = models.TextField(help_text='Noi dung chuyen den dia chi moi', null=True)
+
     # Noi dung Cham soc - Cua hang nghi kinh doanh
     cessation_of_business_note = models.TextField(
         help_text='Noi dung Cham soc - Cua hang nghi kinh doanh - note',
@@ -73,6 +80,7 @@ class SaleReport(models.Model):
     )
 
     # Noi dung Cham soc - Ket qua cham soc
+    shop_status = models.IntegerField(choices=SaleReportFormShopStatus.CHOICES, default=0, null=True, blank=True)
     customer_care_posm = models.TextField(help_text='Noi dung Cham soc - KQ cham soc - POSM', null=True)
     customer_care_cashier_reward = models.IntegerField(
         choices=SaleReportFormCashierReward.CHOICES,
@@ -87,14 +95,6 @@ class SaleReport(models.Model):
         blank=True,
         help_text='Noi dung Cham soc - KQ cham soc - care_transaction'
     )
-
-    # Noi dung Trien khai
-    implement_posm = models.TextField(help_text='Noi dung Trien khai - POSM', null=True)
-    implement_merchant_view = models.TextField(help_text='Noi dung Trien khai - merchant_view', null=True)
-    implement_career_guideline = models.TextField(help_text='Noi dung Trien khai - career_guideline', null=True)
-    implement_confirm = models.IntegerField(choices=SaleReportFormShopConfirm.CHOICES, null=True, blank=True,
-                                            help_text='Noi dung xac nhan cua hang')
-    implement_new_address = models.TextField(help_text='Noi dung chuyen den dia chi moi', null=True)
 
     # Bản nháp hay bản chính thức
     is_draft = models.BooleanField(default=True)
