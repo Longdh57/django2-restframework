@@ -18,3 +18,13 @@ class StaffStatus:
         (ACTIVATE, 'Đang hoạt động'),
         (DISABLE, 'Đã hủy'),
     ]
+
+
+class StaffTeamRoleType:
+    TEAM_STAFF = 0
+    TEAM_MANAGEMENT = 1
+
+    CHOICES = [
+        (TEAM_STAFF, 'TEAM_STAFF'),
+        (TEAM_MANAGEMENT, 'TEAM_MANAGEMENT'),
+    ]

@@ -47,7 +47,7 @@ def list_shop_for_search(request):
         code = shop.code if shop.code is not None else 'N/A'
         address = shop.address if shop.address is not None else 'N/A'
         merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
-        data.append({'shop_info': code + ' - ' + address + ' - ' + merchant_brand})
+        data.append({'id': shop.id, 'shop_info': code + ' - ' + merchant_brand + ' - ' + address})
     return JsonResponse({
         'status': 200,
         'data': data
