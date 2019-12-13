@@ -18,7 +18,6 @@ class StaffSerializer(serializers.ModelSerializer):
         return staff.team.code if staff.team else ''
 
     def get_role(self, staff):
-        print(staff.role.id if staff.role else 'sdfa')
         return StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]\
             if staff.role and staff.role.code == 'TEAM_MANAGEMENT'\
             else StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_STAFF][1]
