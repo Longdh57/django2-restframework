@@ -77,7 +77,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             HelpText - (* là bắt buộc) code - dataType - List giá trị (là {} nếu không có) - Ví dụ   \n
 
             Các trường bắt buộc cho tất cả loại báo cáo   \n
-                Mục đích - *purpose - int - [0: 'Mở mới', 1: 'Triển khai', 2: 'Chăm sóc'] - purpose: 0  \n
+                Mục đích - *purpose - string(10) - ['0': 'Mở mới', '1': 'Triển khai', '2': 'Chăm sóc'] - purpose: '0'  \n
                 LON - *longitude - float - {} - longitude: 105.8226176   \n
                 LAT - *latitude - float - {} - latitude :101.5656   \n
                 Bản nháp hay chính thức - *is_draft - boolean - {} - is_draft: true   \n
