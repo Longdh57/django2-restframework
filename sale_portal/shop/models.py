@@ -12,6 +12,7 @@ from sale_portal.staff.models import Staff
 from sale_portal.merchant.models import Merchant
 from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
 from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
+from ..shop_cube.models import ShopCube
 
 
 class ShopQuerySet(models.QuerySet):
@@ -95,6 +96,13 @@ class Shop(models.Model):
         except Exception as e:
             logging.error('Save shop exception: %s', e)
         super(Shop, self).save(*args, **kwargs)
+
+    def get_shop_cube(self):
+        try:
+            shop_cube = ShopCube.objects.filter(shop_id=self.pk).order_by('-report_date').first()
+        except ShopCube.DoesNotExist:
+            shop_cube = None
+        return shop_cube
 
 
 @receiver(post_save, sender=Shop)
