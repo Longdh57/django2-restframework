@@ -28,3 +28,15 @@ class StaffTeamRoleType:
         (TEAM_STAFF, 'TEAM_STAFF'),
         (TEAM_MANAGEMENT, 'TEAM_MANAGEMENT'),
     ]
+
+
+class StaffTeamLogType:
+    JOIN_TEAM = 0
+    OUT_TEAM = 1
+    UPDATE_ROLE = 2
+
+    CHOICES = [
+        (JOIN_TEAM, 'JOIN_TEAM'),
+        (OUT_TEAM, 'OUT_TEAM'),
+        (UPDATE_ROLE, 'UPDATE_ROLE'),
+    ]
