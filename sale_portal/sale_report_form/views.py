@@ -1,26 +1,27 @@
-import datetime
-import json
-from datetime import date
-from datetime import datetime as dt_datetime
-import time
 import os
+import time
+import json
+import datetime
 
+from datetime import date
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
+from django.http import JsonResponse
+from datetime import datetime as dt_datetime
 from django.shortcuts import get_object_or_404
 from django.core.files.storage import FileSystemStorage
-from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required, permission_required
+
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
-from sale_portal.staff.models import Staff
-from ..utils.field_formatter import format_string
-import sale_portal.utils.field_validator as fv
-from sale_portal.shop.models import Shop
-from .models import SaleReport
-from .serializers import SaleReportSerializer
 from sale_portal.user.models import User
+from sale_portal.shop.models import Shop
 from sale_portal.team.models import Team
+from sale_portal.staff.models import Staff
+from sale_portal.utils import field_validator
+from sale_portal.sale_report_form.models import SaleReport
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.sale_report_form.serializers import SaleReportSerializer
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -203,19 +204,19 @@ class SaleReportViewSet(mixins.ListModelMixin,
             new_using_application = datajson.get('new_using_software')
 
             try:
-                fv.validate_merchant_name(
+                field_validator.validate_merchant_name(
                     format_string(new_merchant_name), allow_none=False, allow_blank=False, rase_exception=True)
-                fv.validate_merchant_brand(
+                field_validator.validate_merchant_brand(
                     format_string(new_merchant_brand), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_address(
+                field_validator.validate_address(
                     format_string(new_address), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_customer_name(
+                field_validator.validate_customer_name(
                     format_string(new_customer_name), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_phone(
+                field_validator.validate_phone(
                     format_string(new_phone), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_note(
+                field_validator.validate_note(
                     format_string(new_note), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_in_string_list([
+                field_validator.validate_in_string_list([
                     'iPos',
                     'Sapo',
                     'KiotViet',
@@ -257,7 +258,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             sale_report.shop_code = shop.code
 
             try:
-                fv.validate_in_string_list([0, 1, 2], \
+                field_validator.validate_in_string_list([0, 1, 2], \
                                            'verify_shop', implement_confirm, False, False, True)
                 if implement_merchant_view is None:
                     raise Exception('implement_merchant_view is required')
@@ -266,7 +267,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 sale_report.implement_career_guideline = format_string(implement_career_guideline, True)
                 sale_report.implement_confirm = format_string(implement_confirm, True)
                 if implement_confirm == '1':
-                    fv.validate_address(format_string(implement_new_address), False, False, True)
+                    field_validator.validate_address(format_string(implement_new_address), False, False, True)
                     sale_report.implement_new_address = format_string(implement_new_address, True)
             except Exception as e:
                 return JsonResponse({
@@ -336,18 +337,18 @@ class SaleReportViewSet(mixins.ListModelMixin,
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
             try:
-                fv.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status', format_string(shop_status),
+                field_validator.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status', format_string(shop_status),
                                            False,
                                            False, True)
                 sale_report.shop_status = format_string(shop_status, True)
                 if sale_report.shop_status == '2':
-                    fv.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
+                    field_validator.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
                                                format_string(customer_care_cashier_reward), False, False, True)
-                    fv.validate_transaction(format_string(customer_care_transaction), False, False, True)
+                    field_validator.validate_transaction(format_string(customer_care_transaction), False, False, True)
                     sale_report.customer_care_cashier_reward = format_string(customer_care_cashier_reward, True)
                     sale_report.customer_care_transaction = format_string(customer_care_transaction, True)
                 else:
-                    fv.validate_note(format_string(cessation_of_business_note), False, False, True)
+                    field_validator.validate_note(format_string(cessation_of_business_note), False, False, True)
                     sale_report.cessation_of_business_note = format_string(cessation_of_business_note, True)
             except Exception as e:
                 return JsonResponse({
