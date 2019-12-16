@@ -122,6 +122,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
         # Data nhận dưới dạng form data, sau đó convert ra json rồi xử lý
         data = request.POST.get('data', None)
         datajson = json.loads(data)
+        print(data)
 
         purpose = datajson.get('purpose')
         longitude = datajson.get('longitude')
@@ -253,7 +254,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
 
             try:
                 field_validator.validate_in_string_list(['0', '1', '2'], \
-                                                        'verify_shop', implement_confirm, False, False, True)
+                                                        'verify_shop', str(implement_confirm), False, False, True)
                 if implement_merchant_view is None:
                     raise Exception('implement_merchant_view is required')
                 sale_report.implement_posm = format_string(implement_posm, True)
@@ -307,13 +308,13 @@ class SaleReportViewSet(mixins.ListModelMixin,
             sale_report.shop_code = shop.code
             try:
                 field_validator.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status',
-                                                        format_string(shop_status),
+                                                        format_string(str(shop_status)),
                                                         False,
                                                         False, True)
                 sale_report.shop_status = format_string(shop_status, True)
                 if sale_report.shop_status == '2':
                     field_validator.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
-                                                            format_string(customer_care_cashier_reward), False, False,
+                                                            format_string(str(customer_care_cashier_reward)), False, False,
                                                             True)
                     field_validator.validate_transaction(format_string(customer_care_transaction), False, False, True)
                     sale_report.customer_care_cashier_reward = format_string(customer_care_cashier_reward, True)
