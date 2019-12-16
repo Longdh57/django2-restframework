@@ -122,7 +122,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
         # Data nhận dưới dạng form data, sau đó convert ra json rồi xử lý
         data = request.POST.get('data', None)
         datajson = json.loads(data)
-        print(data)
 
         purpose = datajson.get('purpose')
         longitude = datajson.get('longitude')
