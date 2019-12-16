@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 
 from sale_portal.team.models import Team
-from sale_portal.staff import StaffLogType
+from sale_portal.staff import StaffLogType, StaffTeamLogType, StaffTeamRoleType
 
 
 class StaffTeamRole(models.Model):
@@ -105,3 +105,17 @@ class StaffLog(models.Model):
 
     def get_new_data(self):
         return self.new_data
+
+
+class StaffTeamLog(models.Model):
+    staff_id = models.IntegerField(null=False)
+    team_id = models.IntegerField(null=False)
+    team_code = models.CharField(max_length=20, null=True)
+    type = models.IntegerField(choices=StaffTeamLogType.CHOICES, null=True)
+    role = models.IntegerField(choices=StaffTeamRoleType.CHOICES, null=True)
+    description = models.TextField(null=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'staff_team_log'
+        default_permissions = ()

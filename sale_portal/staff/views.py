@@ -13,7 +13,7 @@ from rest_framework import viewsets, mixins
 
 from sale_portal.team.models import Team
 from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff, StaffTeamRole
+from sale_portal.staff.models import Staff, StaffTeamRole, StaffTeamLog
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
 
@@ -243,3 +243,18 @@ def change_staff_team(request):
             'status': 500,
             'data': 'Internal sever error'
         }, status=500)
+
+
+def write_staff_team_log(staff_ids, team, type, role, description):
+    try:
+        if isinstance(staff_ids, list):
+            staff_teams = []
+            for staff_id in staff_ids:
+                staff_teams.append(StaffTeamLog(staff_id=staff_id, team_id=team.id, team_code=team.code,
+                                                type=type, role=role, description=description))
+            StaffTeamLog.objects.bulk_create(staff_teams)
+        else:
+            StaffTeamLog.objects.create(staff_id=staff_ids, team_id=team.id, team_code=team.code,
+                                        type=type, role=role, description=description)
+    except Exception as e:
+        logging.error(e)
