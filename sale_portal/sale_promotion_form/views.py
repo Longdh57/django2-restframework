@@ -1,4 +1,5 @@
 import logging
+import json
 import time
 import datetime
 from rest_framework import viewsets, mixins
@@ -116,9 +117,23 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         image = request.FILES['image_file'] if 'image_file' in request.FILES else None
         sub_image = request.FILES['sub_image_file'] if 'sub_image_file' in request.FILES else None
-        status = request.data['status'] if 'status' in request.data else None
-        tentcard_ctkm = request.data['tentcard_ctkm'] if 'tentcard_ctkm' in request.data else None
-        wobbler_ctkm = request.data['wobbler_ctkm'] if 'wobbler_ctkm' in request.data else None
+        data = request.POST.get('data', None)
+        if data is None:
+            return JsonResponse({
+                'status': 400,
+                'message': 'Invalid body (cannot read data)'
+            }, status=400)
+        try:
+            data_json = json.loads(data)
+        except Exception as e:
+            logging.error(e)
+            return JsonResponse({
+                'status': 400,
+                'message': 'Invalid body (cannot convert data)'
+            }, status=400)
+        status = data_json['status'] if 'status' in data_json else None
+        tentcard_ctkm = data_json['tentcard_ctkm'] if 'tentcard_ctkm' in data_json else None
+        wobbler_ctkm = data_json['wobbler_ctkm'] if 'wobbler_ctkm' in data_json else None
 
         try:
             status = int(status) if status else None
@@ -183,13 +198,27 @@ def import_view(request):
     """
     dataset = Dataset()
 
-    title_id = request.POST.get('title_id', None)
-    title_code = request.POST.get('title_code', None)
-    title_description = request.POST.get('title_description', None)
-
     promotion_file = request.FILES['promotion_file']
+    data = request.POST.get('data', None)
+    if data is None:
+        return JsonResponse({
+            'status': 400,
+            'message': 'Invalid body (cannot read data)'
+        }, status=400)
+    try:
+        data_json = json.loads(data)
+    except Exception as e:
+        logging.error(e)
+        return JsonResponse({
+            'status': 400,
+            'message': 'Invalid body (cannot convert data)'
+        }, status=400)
 
-    is_submit = request.POST.get('is_submit', None)
+    title_id = data_json['title_id'] if 'title_id' in data_json else None
+    title_code = data_json['title_code'] if 'title_code' in data_json else None
+    title_description = data_json['title_description'] if 'title_description' in data_json else None
+    is_submit = data_json['is_submit'] if 'is_submit' in data_json else None
+
     is_submit = True if is_submit == 'true' else False
 
     if title_id is not None and title_id != '':

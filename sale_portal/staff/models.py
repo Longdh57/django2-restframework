@@ -84,9 +84,37 @@ class Staff(models.Model):
 
     def save(self, *args, **kwargs):
         try:
+            if kwargs.get('log_type') and kwargs.get('old_team_id') is None and kwargs.get('old_team_code') is None:
+                StaffLog.objects.create(
+                    staff_id=kwargs.get('staff_id'),
+                    team_id=kwargs.get('team_id'),
+                    team_code=kwargs.get('team_code'),
+                    role_id=kwargs.get('role_id'),
+                    type=kwargs.get('log_type'),
+                    description=kwargs.get('description'),
+                )
+
+            if kwargs.get('log_type') and kwargs.get('old_team_id') and kwargs.get('old_team_code'):
+                StaffLog.objects.create(
+                    staff_id=kwargs.get('staff_id'),
+                    team_id=kwargs.get('old_team_id'),
+                    team_code=kwargs.get('old_team_code'),
+                    role_id=kwargs.get('role_id'),
+                    type=StaffLogType.OUT_TEAM,
+                    description=kwargs.get('description'),
+                )
+                StaffLog.objects.create(
+                    staff_id=kwargs.get('staff_id'),
+                    team_id=kwargs.get('team_id'),
+                    team_code=kwargs.get('team_code'),
+                    role_id=kwargs.get('role_id'),
+                    type=StaffLogType.JOIN_TEAM,
+                    description=kwargs.get('description'),
+                )
+
             old_data, new_data, type = self.compare()
-            if type == StaffLogType.UPDATED:
-                    StaffLog.objects.create(old_data=old_data, new_data=new_data, staff_id=self.id, type=type)
+            if kwargs.get('log_type') is None and type == StaffLogType.UPDATED:
+                StaffLog.objects.create(old_data=old_data, new_data=new_data, staff_id=self.id, type=type)
         except Exception as e:
             logging.error('Staff_log exception: %s', e)
         super(Staff, self).save(*args, **kwargs)
@@ -97,6 +125,10 @@ class StaffLog(models.Model):
     new_data = JSONField(blank=True, default=dict)
     type = models.IntegerField(choices=StaffLogType.CHOICES)
     staff_id = models.IntegerField(blank=True, null=True)
+    team_id = models.IntegerField(blank=True, null=True)
+    team_code = models.CharField(max_length=20, blank=True, null=True)
+    role_id = models.IntegerField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:

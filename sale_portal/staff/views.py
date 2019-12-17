@@ -13,9 +13,9 @@ from rest_framework import viewsets, mixins
 
 from sale_portal.team.models import Team
 from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff, StaffTeamRole
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.staff.models import Staff, StaffLogType, StaffTeamRole
 
 
 class StaffViewSet(mixins.ListModelMixin,
@@ -24,6 +24,7 @@ class StaffViewSet(mixins.ListModelMixin,
         API get list Staff \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - staff_code -- text
+        - team_id -- number
         - full_name -- text
         - status -- number in {-1,1}
         - from_date -- dd/mm/yyyy
@@ -36,6 +37,7 @@ class StaffViewSet(mixins.ListModelMixin,
         queryset = Staff.objects.all()
 
         staff_code = self.request.query_params.get('staff_code', None)
+        team_id = self.request.query_params.get('team_id', None)
         full_name = self.request.query_params.get('full_name', None)
         status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
@@ -44,6 +46,11 @@ class StaffViewSet(mixins.ListModelMixin,
         if staff_code is not None and staff_code != '':
             staff_code = format_string(staff_code)
             queryset = queryset.filter(staff_code__icontains=staff_code)
+        if team_id is not None and team_id != '':
+            if team_id == '0':
+                queryset = queryset.filter(team__isnull=True)
+            else:
+                queryset = queryset.filter(team_id=team_id)
         if full_name is not None and full_name != '':
             full_name = format_string(full_name)
             queryset = queryset.filter(Q(full_name__icontains=full_name) | Q(email__icontains=full_name))
@@ -76,7 +83,7 @@ class StaffViewSet(mixins.ListModelMixin,
                 "name": staff.team.name,
                 "code": staff.team.code,
                 "created_date": formats.date_format(staff.team.created_date,
-                                                "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
+                                                    "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
             }
 
         if staff.role is not None:
@@ -151,11 +158,9 @@ def change_staff_team(request):
     """
     try:
         body = json.loads(request.body)
-        staff_id = team_id = None
-        if 'staff_id' in body:
-            staff_id = body['staff_id']
-        if 'team_id' in body:
-            team_id = body['team_id']
+
+        staff_id = body.get('staff_id')
+        team_id = body.get('team_id')
 
         if staff_id is None or staff_id == '' or team_id is None or team_id == '':
             return JsonResponse({
@@ -163,13 +168,14 @@ def change_staff_team(request):
                 'message': 'Invalid body'
             }, status=400)
 
-        staff = Staff.objects.filter(pk=staff_id).first()
+        staff = Staff.objects.get(pk=staff_id)
         if staff is None:
             return JsonResponse({
                 'status': 404,
                 'message': 'Staff not found'
             }, status=404)
-        team = Team.objects.filter(pk=team_id).first()
+
+        team = Team.objects.get(pk=team_id)
         if team is None:
             return JsonResponse({
                 'status': 404,
@@ -177,7 +183,7 @@ def change_staff_team(request):
             }, status=404)
 
         role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
-
+        # gan staff vao team moi
         if request.method == 'POST':
             if staff.team is not None:
                 message = 'Staff đã thuộc team này từ trước'
@@ -190,8 +196,15 @@ def change_staff_team(request):
             else:
                 staff.team = team
                 staff.role = role
-                staff.save()
-
+                staff.save(
+                    staff_id=staff.id,
+                    team_id=team.id,
+                    team_code=team.code,
+                    role_id=role.id,
+                    log_type=StaffLogType.JOIN_TEAM,
+                    description='Change_staff_team: add new team'
+                )
+        # Thay doi team cho staff da duoc gan team
         if request.method == 'PUT':
             if staff.team is None or staff.team.id == team.id:
                 message = 'Staff đã thuộc team này từ trước'
@@ -202,9 +215,20 @@ def change_staff_team(request):
                     'message': message
                 }, status=400)
             else:
+                old_team = staff.team
+
                 staff.team = team
                 staff.role = role
-                staff.save()
+                staff.save(
+                    staff_id=staff.id,
+                    old_team_id=old_team.id,
+                    old_team_code=old_team.code,
+                    team_id=team.id,
+                    team_code=team.code,
+                    role_id=role.id,
+                    log_type=StaffLogType.OUT_TEAM,
+                    description='Change_staff_team: out and join other team'
+                )
                 Shop.objects.filter(staff=staff).update(
                     staff=None
                 )
@@ -221,7 +245,14 @@ def change_staff_team(request):
             else:
                 staff.team = None
                 staff.role = None
-                staff.save()
+                staff.save(
+                    staff_id=staff.id,
+                    team_id=team.id,
+                    team_code=team.code,
+                    role_id=role.id,
+                    log_type=StaffLogType.OUT_TEAM,
+                    description='Change_staff_team: out team'
+                )
                 Shop.objects.filter(staff=staff).update(
                     staff=None
                 )

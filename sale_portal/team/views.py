@@ -15,8 +15,8 @@ from sale_portal.team import TeamType
 from sale_portal.team.models import Team
 from sale_portal.shop.models import Shop
 from sale_portal.team.serializers import TeamSerializer
-from sale_portal.staff.models import Staff, StaffTeamRole
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
 
 
 class TeamViewSet(mixins.ListModelMixin,
@@ -45,8 +45,8 @@ class TeamViewSet(mixins.ListModelMixin,
             API create team \n
             Request body for this api : Không được bỏ trống \n
                 {
-                    "code": "team_code",
-                    "name": "team name",
+                    "code": "DN1",
+                    "name": "Team Da Nang",
                     "type": 2, (type in {0,1,2} )
                     "description": "description",
                     "staffs": [
@@ -63,17 +63,12 @@ class TeamViewSet(mixins.ListModelMixin,
         """
         try:
             body = json.loads(request.body)
-            name = code = description = type = staffs = None
-            if 'name' in body:
-                name = body['name']
-            if 'code' in body:
-                code = body['code']
-            if 'type' in body:
-                type = body['type']
-            if 'description' in body:
-                description = body['description']
-            if 'staffs' in body:
-                staffs = body['staffs']
+
+            name = body.get('name')
+            code = body.get('code')
+            type = body.get('type')
+            description = body.get('description')
+            staffs = body.get('staffs')
 
             if staffs is not None and staffs != '' and not isinstance(staffs, list):
                 return JsonResponse({
@@ -105,10 +100,11 @@ class TeamViewSet(mixins.ListModelMixin,
                     'message': 'name or code be used by other Team'
                 }, status=400)
 
+            # validate staff_list
+            staff_ids = []
+            team_lead_id = None
+            had_leader = False
             if staffs is not None and staffs != '':
-                staff_ids = []
-                team_lead_id = None
-                had_leader = False
                 for staff in staffs:
                     if not isinstance(staff['id'], int):
                         return JsonResponse({
@@ -163,12 +159,31 @@ class TeamViewSet(mixins.ListModelMixin,
                     team=team,
                     role=role_staff
                 )
+                if team_lead_id in staff_ids:
+                    staff_ids.remove(team_lead_id)
+                    self.create_staff_log(
+                        staff_ids=staff_ids,
+                        team=team,
+                        type=StaffLogType.JOIN_TEAM,
+                        role_id=role_staff.id,
+                        description='Create new team: add staff'
+                    )
 
                 if team_lead_id is not None:
                     role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
-                    Staff.objects.filter(pk=team_lead_id).update(
+                    staff = Staff.objects.get(pk=team_lead_id).update(
                         team=team,
                         role=role_leader
+                    )
+                    staff.team = team
+                    staff.role = role_leader.id
+                    staff.save(
+                        staff_id=staff.id,
+                        team_id=team.id,
+                        team_code=team.code,
+                        role_id=role_leader.id,
+                        log_type=StaffLogType.JOIN_TEAM,
+                        description='Create new team: add management'
                     )
 
             return JsonResponse({
@@ -250,15 +265,11 @@ class TeamViewSet(mixins.ListModelMixin,
                     'message': 'Team not found'
                 }, status=404)
             body = json.loads(request.body)
-            name = description = type = staffs = None
-            if 'name' in body:
-                name = body['name']
-            if 'type' in body:
-                type = body['type']
-            if 'description' in body:
-                description = body['description']
-            if 'staffs' in body:
-                staffs = body['staffs']
+
+            name = body.get('name')
+            type = body.get('type')
+            description = body.get('description')
+            staffs = body.get('staffs')
 
             if staffs is not None and staffs != '':
                 if not isinstance(staffs, list):
@@ -345,6 +356,10 @@ class TeamViewSet(mixins.ListModelMixin,
                     }, status=400)
 
             staffs_remove = Staff.objects.filter(team=team).exclude(pk__in=staff_ids)
+            remove_ids = []
+            if staffs_remove:
+                for id in staffs_remove.values('id'):
+                    remove_ids.append(id['id'])
 
             with transaction.atomic():
                 if staffs_remove:
@@ -355,24 +370,62 @@ class TeamViewSet(mixins.ListModelMixin,
                         team=None,
                         role=None
                     )
+                    self.create_staff_log(
+                        staff_ids=remove_ids,
+                        team=team,
+                        type=StaffLogType.OUT_TEAM,
+                        role_id=role_staff.id,
+                        description='Update team: remove staff from team'
+                    )
+
                 if new_staff_ids:
                     Staff.objects.filter(pk__in=new_staff_ids).update(
                         team=team,
                         role=role_staff
                     )
-                if new_leader_id is not None:
-                    Staff.objects.filter(pk=new_leader_id).update(
+                    self.create_staff_log(
+                        staff_ids=remove_ids,
                         team=team,
-                        role=role_leader
+                        type=StaffLogType.JOIN_TEAM,
+                        role_id=role_staff.id,
+                        description='Update team: add new staff'
+                    )
+
+                if new_leader_id is not None:
+                    staff = Staff.objects.get(pk=new_leader_id)
+                    staff.team = team
+                    staff.role = role_leader
+                    staff.save(
+                        staff_id=new_leader_id,
+                        team_id=team.id,
+                        team_code=team.code,
+                        role_id=role_leader.id,
+                        log_type=StaffLogType.JOIN_TEAM,
+                        description='Update team: add new management'
                     )
 
                 if update_to_staff_id is not None:
-                    Staff.objects.filter(pk=update_to_staff_id).update(
-                        role=role_staff
+                    staff = Staff.objects.get(pk=update_to_staff_id)
+                    staff.role = role_staff
+                    staff.save(
+                        staff_id=update_to_staff_id,
+                        team_id=team.id,
+                        team_code=team.code,
+                        role_id=role_staff.id,
+                        log_type=StaffLogType.UPDATE_ROLE,
+                        description='Update team: promote to staff'
                     )
+
                 if update_to_leader_id is not None:
-                    Staff.objects.filter(pk=update_to_leader_id).update(
-                        role=role_leader
+                    staff = Staff.objects.filter(pk=update_to_leader_id)
+                    staff.role = role_leader
+                    staff.save(
+                        staff_id=update_to_leader_id,
+                        team_id=team.id,
+                        team_code=team.code,
+                        role_id=role_leader.id,
+                        log_type=StaffLogType.UPDATE_ROLE,
+                        description='Update team: promote to management'
                     )
 
                 team.name = name
@@ -403,24 +456,57 @@ class TeamViewSet(mixins.ListModelMixin,
                     'message': 'Team not found'
                 }, status=404)
             staffs = team.staff_set.all()
+            remove_ids = []
+            for id in staffs.values('id'):
+                remove_ids.append(id['id'])
+
             Shop.objects.filter(staff__in=staffs).update(
                 staff=None
             )
+
             staffs.update(
                 team=None,
                 role=None
             )
+
+            self.create_staff_log(
+                staff_ids=remove_ids,
+                team=team,
+                type=StaffLogType.OUT_TEAM,
+                role_id=None,
+                description='Delete team'
+            )
+
             team.delete()
+
             return JsonResponse({
                 'status': 200,
                 'data': 'success'
             }, status=200)
+
         except Exception as e:
             logging.error('Delete team exception: %s', e)
             return JsonResponse({
                 'status': 500,
                 'data': 'Internal sever error'
             }, status=500)
+
+    def create_staff_log(self, staff_ids, team, type, role_id, description):
+        try:
+            staff_logs = []
+
+            for staff_id in staff_ids:
+                staff_logs.append(StaffLog(
+                    staff_id=staff_id,
+                    team_id=team.id,
+                    team_code=team.code,
+                    type=type,
+                    role=role_id,
+                    description=description)
+                )
+            StaffLog.objects.bulk_create(staff_logs)
+        except Exception as e:
+            logging.error(e)
 
 
 @api_view(['GET'])

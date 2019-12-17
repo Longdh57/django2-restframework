@@ -1,25 +1,22 @@
 import datetime
+import json
+import time
 from datetime import date
 from datetime import datetime as dt_datetime
-import time
-import os
 
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import get_object_or_404
 from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import api_view
 
-from sale_portal.staff.models import Staff
-from ..utils.field_formatter import format_string
-import sale_portal.utils.field_validator as fv
+from sale_portal.sale_report_form.models import SaleReport
+from sale_portal.sale_report_form.serializers import SaleReportSerializer
 from sale_portal.shop.models import Shop
-from .models import SaleReport
-from .serializers import SaleReportSerializer
+from sale_portal.staff.models import Staff
 from sale_portal.user.models import User
-from sale_portal.team.models import Team
+from sale_portal.utils import field_validator
+from sale_portal.utils.field_formatter import format_string
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -73,69 +70,64 @@ class SaleReportViewSet(mixins.ListModelMixin,
         """
             API create SaleReport   \n
 
+            HelpText - (* là bắt buộc) code - dataType - List giá trị (là {} nếu không có) - Ví dụ   \n
+
             Các trường bắt buộc cho tất cả loại báo cáo   \n
-                purpose:2   \n
-                longitude:100.15526   \n
-                latitude:101.5656   \n
-                is_draft:true   \n
+                Mục đích - *purpose - string(10) - ['0': 'Mở mới', '1': 'Triển khai', '2': 'Chăm sóc'] - purpose: '0'  \n
+                LON - *longitude - float - {} - longitude: 105.8226176   \n
+                LAT - *latitude - float - {} - latitude :101.5656   \n
+                Bản nháp hay chính thức - *is_draft - boolean - {} - is_draft: true   \n
 
             Nếu đang tạo báo cáo trên bản nháp đã có thì cần truyền id bản nháp lên   \n
-                current_draft_id:1   \n
+                ID bản nháp - current_draft_id - int - {} - current_draft_id: 10   \n
 
             Các trường cho báo cáo mở mới   \n
-            Trường bắt buộc:   \n
-                new_merchant_name:test new_merchant_name   \n
-                new_result:0   \n
-            Các trường khác:   \n
-                new_merchant_brand:merchant brand   \n
-                new_address:test new_address   \n
-                new_customer_name:test dnew customer name   \n
-                new_phone:+8412345678   \n
-                new_note:note   \n
-                new_using_application:iPos   \n
+                Tên merchant - *new_merchant_name - string(255) - {} - new_merchant_name: 'HotPot Story'   \n
+                Thương hiệu - new_merchant_brand - string(255) - {} - new_merchant_brand: 'RedSun'    \n
+                Địa chỉ - new_address - text - {} - new_address: '36 Hoàng Cầu'   \n
+                Tên người liên hệ - new_customer_name - string(255) - {} - new_customer_name: 'Nguyễn Thị Thùy'   \n
+                SĐT liên hệ - new_phone - string(100) - {} - new_phone: '012345678'   \n
+                Kết quả mở mới - *new_result - int - [0: 'Dong y, da ky duoc HD', 1: 'Dong y, chua ky duoc HD', 2: 'Can xem xet them', 3: 'Tu choi hop tac'] - new_result: 0   \n
+                MC đang sử dụng PM bán hàng - new_using_application - string(100) - ['iPos', 'Sapo', 'KiotViet', 'POS365', 'Cukcuk', 'Ocha', 'PM khác', 'Chưa sử dụng'] - new_using_application: 'iPos'   \n
+                Ghi chú - new_note - text - {} - new_note: 'Đây là ghi chú test xxxx'   \n
 
-            Các trường cho báo cáo triển khai   \n
-            Trường bắt buộc   \n
-                shop_id:1   \n
-                verify_shop:1   \n
-                implement_merchant_view:Web, App   \n
-                image_outside:image   \n
-                image_inside:image   \n
-                image_store_cashier:image   \n
-            Nếu verify_shop:1 bắt buộc   \n
-                new_address_input:Hà Nội   \n
-            Các trường khác   \n
-                implement_career_guideline:Cửa hàng trưởng, Thu ngân   \n
-                implement_posm:[{"standeeQr":"2","stickerDoor":"4","stickerTable":"4","guide":"4","wobbler":"4","poster":"3","standeeCtkm":"4","tentcard":"4"}]   \n
+            Các trường dùng chung cho báo cáo triển khai & chăm sóc   \n
+                Cửa hàng - *shop_id - int - {} - shop_id: 47215  \n
+                HA nghiệm thu (Ngoài CH) - *image_outside - binary - {} - image_outside: (binary)   \n
+                HA nghiệm thu (Trong CH) - *image_inside - binary - {} - image_inside: (binary)   \n
+                HA nghiệm thu (Quầy thu ngân) - *image_store_cashier - binary - {} - image_store_cashier: (binary)   \n
 
             Các trường cho tạo báo cáo triển khai   \n
-            Bắt buộc   \n
-                 shop_id:1   \n
-                 shop_status:2   \n
-            Nếu shop_status:2   \n
-            Cần các trường   \n
-            Bắt buộc   \n
-                image_outside:image   \n
-                image_inside:image   \n
-                image_store_cashier:image   \n
-                customer_care_transaction:142   \n
-                customer_care_cashier_reward:1   \n
-            Các trường khác   \n
-                implement_posm:[{"standeeQr":"2","stickerDoor":"4","stickerTable":"4","guide":"4","wobbler":"4","poster":"3","standeeCtkm":"4","tentcard":"4"}]   \n
-            Các shop_status còn lại thì   \n
-            Cần các trường   \n
-            Bắt buộc   \n
-                cessation_of_business_note:abc   \n
-                cessation_of_business_image:image   \n
-            Chú ý: nếu là bản nháp ko cần upload ảnh
+                Xác thực shop - *implement_confirm - int - [0, 1, 2] - implement_confirm: 1   \n
+                Bộ posm triển khai bao gồm - implement_posm - text - {} - implement_posm:[{"standeeQr":"2","stickerDoor":"4","stickerTable":"4","guide":"4","wobbler":"4","poster":"3","standeeCtkm":"4","tentcard":"4"}]   \n
+                Merchant view cho Terminal gồm - *implement_merchant_view - array() - [1: 'web', 2: 'app', 3: 'other'] - implement_merchant_view: [2, 3]   \n
+                Đã hướng dẫn nghiệp vụ cho - *implement_career_guideline - array() - [0: 'Thu ngân', 1: 'Cửa hàng trưởng'] - implement_career_guideline: [0, 1]   \n
+            Nếu Triển khai - implement_confirm = 1 thì nhập thêm trường   \n
+                Địa chỉ mới - *implement_new_address - text - {} - implement_new_address: '34 Phùng Hưng'   \n
+
+            Các trường cho tạo báo cáo chăm sóc   \n
+                Tình trạng cửa hàng - *shop_status - int - [0: 'Da nghi kinh doanh/ khong co cua hang thuc te', 1: 'Muon thanh ly QR', 2: 'Dang hoat dong', 3: 'Không hợp tác', 4: 'Da chuyen dia diem'] - shop_status: 2  \n
+            Nếu shop_status <> 2 không upload 3 ảnh nhưng thêm 2 trường sau  \n
+                Mô tả - *cessation_of_business_note - text - {} - cessation_of_business_note: 'Không tìm được cửa hàng để chăm sóc'   \n
+                Ảnh nghiệm thu - *cessation_of_business_image - binary - {} - cessation_of_business_image: (binary)   \n
+            Nếu shop_status = 2 cần upload 3 ảnh & thêm các trường dưới  \n
+                Bộ posm triển khai bao gồm: (note: 8 mục, bỏ cái 'Hàng 9' đi) - customer_care_posm - text - {} - customer_care_posm:[{"standeeQr":"2","stickerDoor":"4","stickerTable":"4","guide":"4","wobbler":"4","poster":"3","standeeCtkm":"4","tentcard":"4"}]   \n
+                Ký HĐ thưởng thu ngân không - *customer_care_cashier_reward - int - [0: 'Không', 1: 'Có'] - customer_care_cashier_reward: 0   \n
+                Số giao dịch phát sinh trong thời gian chăm sóc - *customer_care_transaction - int - {} - customer_care_transaction: 4   \n
+
+            Chú ý: nếu là bản nháp ko cần upload ảnh - Không push ảnh lên server   \n
 
         """
-        # required data fields from request
-        purpose = request.POST.get('purpose', None)
-        longitude = request.POST.get('longitude', None)
-        latitude = request.POST.get('latitude', None)
-        is_draft = request.POST.get('is_draft', None)
-        current_draft_id = request.POST.get('current_draft_id', None)
+
+        # Data nhận dưới dạng form data, sau đó convert ra json rồi xử lý
+        data = request.POST.get('data', None)
+        datajson = json.loads(data)
+
+        purpose = datajson.get('purpose')
+        longitude = datajson.get('longitude')
+        latitude = datajson.get('latitude')
+        is_draft = datajson.get('is_draft')
+        current_draft_id = datajson.get('current_draft_id')
 
         if purpose is None \
                 or longitude is None or longitude == '0' \
@@ -164,37 +156,21 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 'message': 'Only allow access to drafts created on today',
             }, status=400)
 
-        # open_new_shop purpose data from request
-        new_merchant_name = request.POST.get('new_merchant_name', None)
-        new_merchant_brand = request.POST.get('new_merchant_brand', True)
-        new_address = request.POST.get('new_address', None)
-        new_customer_name = request.POST.get('new_customer_name', None)
-        new_phone = request.POST.get('new_phone', None)
-        new_result = request.POST.get('new_result', None)
-        new_note = request.POST.get('new_note', None)
-        new_using_application = request.POST.get('new_using_application', None)
-
         # other purpose data from request
-        shop_id = request.POST.get('shop_id', None)
-        shop_status = request.POST.get('shop_status', None)
+        shop_id = datajson.get('shop_id')
+        shop_status = datajson.get('shop_status')
         image_outside = request.FILES['image_outside'] if 'image_outside' in request.FILES else None
         image_inside = request.FILES['image_inside'] if 'image_inside' in request.FILES else None
-        image_store_cashier = request.FILES[
-            'image_store_cashier'] if 'image_store_cashier' in request.FILES else None
+        image_store_cashier = \
+            request.FILES['image_shop_cashier'] if 'image_shop_cashier' in request.FILES else None
 
-        cessation_of_business_note = request.POST.get('cessation_of_business_note', None)
+        cessation_of_business_note = datajson.get('cessation_of_business_note')
         cessation_of_business_image = request.FILES[
             'cessation_of_business_image'] if 'cessation_of_business_image' in request.FILES else None
 
-        customer_care_posm = request.POST.get('customer_care_posm', None)
-        customer_care_cashier_reward = request.POST.get('customer_care_cashier_reward', None)
-        customer_care_transaction = request.POST.get('customer_care_transaction', None)
-
-        implement_posm = request.POST.get('implement_posm', None)
-        implement_merchant_view = request.POST.get('implement_merchant_view')
-        implement_career_guideline = request.POST.get('implement_career_guideline')
-        implement_confirm = request.POST.get('verify_shop')
-        implement_new_address = request.POST.get('new_address_input')
+        customer_care_posm = datajson.get('customer_care_posm')
+        customer_care_cashier_reward = datajson.get('customer_care_cashier_reward')
+        customer_care_transaction = datajson.get('customer_care_transaction')
 
         # for upload images
         fs = FileSystemStorage(
@@ -211,25 +187,46 @@ class SaleReportViewSet(mixins.ListModelMixin,
             }, status=400)
 
         if purpose == '0':
+            # open_new_shop purpose data from request
+            new_merchant_name = datajson.get('new_merchant_name')
+            new_merchant_brand = datajson.get('new_merchant_brand')
+            new_address = datajson.get('new_address')
+            new_customer_name = datajson.get('new_customer_name')
+            new_phone = datajson.get('new_phone')
+            new_result = datajson.get('new_result')
+            new_note = datajson.get('new_note')
+            new_using_application = datajson.get('new_using_software')
+
             try:
-                fv.validate_merchant_name(format_string(new_merchant_name), False, False, True)
-                fv.validate_merchant_brand(format_string(new_merchant_brand), True, True, True)
-                fv.validate_address(format_string(new_address), True, True, True)
-                fv.validate_customer_name(format_string(new_customer_name), True, True, True)
-                fv.validate_phone(format_string(new_phone), True, True, True)
-                fv.validate_in_string_list(['0', '1', '2', '3'], \
-                                           'new_result', format_string(new_result), False, False, True)
-                fv.validate_note(format_string(new_note), True, True, True)
-                fv.validate_in_string_list(
-                    ['iPos', 'Sapo', 'KiotViet', 'POS365', 'Cukcuk', 'Ocha', 'PM khác', 'Chưa sử dụng'], \
-                    'new_using_application', format_string(new_using_application), True, True, True)
+                field_validator.validate_merchant_name(
+                    format_string(new_merchant_name), allow_none=False, allow_blank=False, rase_exception=True)
+                field_validator.validate_merchant_brand(
+                    format_string(new_merchant_brand), allow_none=True, allow_blank=True, rase_exception=True)
+                field_validator.validate_address(
+                    format_string(new_address), allow_none=True, allow_blank=True, rase_exception=True)
+                field_validator.validate_customer_name(
+                    format_string(new_customer_name), allow_none=True, allow_blank=True, rase_exception=True)
+                field_validator.validate_phone(
+                    format_string(new_phone), allow_none=True, allow_blank=True, rase_exception=True)
+                field_validator.validate_note(
+                    format_string(new_note), allow_none=True, allow_blank=True, rase_exception=True)
+                field_validator.validate_in_string_list([
+                    'iPos',
+                    'Sapo',
+                    'KiotViet',
+                    'POS365',
+                    'Cukcuk',
+                    'Ocha',
+                    'PM khác',
+                    'Chưa sử dụng'
+                ], 'new_using_application', format_string(new_using_application), True, True, True)
 
                 sale_report.new_merchant_name = format_string(new_merchant_name, True)
                 sale_report.new_merchant_brand = format_string(new_merchant_brand, True)
                 sale_report.new_address = format_string(new_address, True)
                 sale_report.new_customer_name = format_string(new_customer_name, True)
                 sale_report.new_phone = format_string(new_phone, True)
-                sale_report.new_result = format_string(new_result, True)
+                sale_report.new_result = new_result
                 sale_report.new_note = format_string(new_note, True)
                 sale_report.new_using_application = format_string(new_using_application, True)
             except Exception as e:
@@ -239,11 +236,24 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 }, status=400)
 
         elif purpose == '1':
+            shop_id = datajson.get('shop_id')
+            shop_status = datajson.get('verify_shop')
+            image_outside = request.FILES['image_outside'] if 'image_outside' in request.FILES else None
+            image_inside = request.FILES['image_inside'] if 'image_inside' in request.FILES else None
+            image_store_cashier = \
+                request.FILES['image_shop_cashier'] if 'image_shop_cashier' in request.FILES else None
+            implement_posm = datajson.get('implement_posm')
+            implement_merchant_view = datajson.get('implement_merchant_view')
+            implement_career_guideline = datajson.get('implement_career_guideline')
+            implement_confirm = datajson.get('verify_shop')
+            implement_new_address = datajson.get('new_address_input')
+
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
+
             try:
-                fv.validate_in_string_list(['0', '1', '2'], \
-                                           'verify_shop', implement_confirm, False, False, True)
+                field_validator.validate_in_string_list(['0', '1', '2'], \
+                                                        'verify_shop', str(implement_confirm), False, False, True)
                 if implement_merchant_view is None:
                     raise Exception('implement_merchant_view is required')
                 sale_report.implement_posm = format_string(implement_posm, True)
@@ -251,7 +261,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 sale_report.implement_career_guideline = format_string(implement_career_guideline, True)
                 sale_report.implement_confirm = format_string(implement_confirm, True)
                 if implement_confirm == '1':
-                    fv.validate_address(format_string(implement_new_address), False, False, True)
+                    field_validator.validate_address(format_string(implement_new_address), False, False, True)
                     sale_report.implement_new_address = format_string(implement_new_address, True)
             except Exception as e:
                 return JsonResponse({
@@ -271,40 +281,15 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 try:
                     pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
 
-                    image_outside_filename, image_outside_file_extension = os.path.splitext(image_outside.name)
-                    if image_outside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_outside_filename = image_outside_filename[:100] if len(
-                        image_outside_filename) > 100 else image_outside_filename
-                    image_outside_filename = 'image_outside__' + pre_fix + image_outside_filename + '.jpg'
+                    image_outside_filename = 'image_outside__' + pre_fix + '.jpg'
                     image_outside_filename = fs.save(image_outside_filename, image_outside)
                     image_outside_url = fs.url(image_outside_filename)
 
-                    image_inside_filename, image_inside_file_extension = os.path.splitext(image_inside.name)
-                    if image_inside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_inside_filename = image_inside_filename[:100] if len(
-                        image_inside_filename) > 100 else image_inside_filename
-                    image_inside_filename = 'image_inside__' + pre_fix + image_inside_filename + '.jpg'
+                    image_inside_filename = 'image_inside__' + pre_fix + '.jpg'
                     image_inside_filename = fs.save(image_inside_filename, image_inside)
                     image_inside_url = fs.url(image_inside_filename)
 
-                    image_store_cashier_filename, image_store_cashier_file_extension = os.path.splitext(
-                        image_store_cashier.name)
-                    if image_store_cashier_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_store_cashier_filename = image_store_cashier_filename[:100] if len(
-                        image_store_cashier_filename) > 100 else image_store_cashier_filename
-                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + image_store_cashier_filename + '.jpg'
+                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + '.jpg'
                     image_store_cashier_filename = fs.save(image_store_cashier_filename, image_store_cashier)
                     image_store_cashier_url = fs.url(image_store_cashier_filename)
 
@@ -321,18 +306,20 @@ class SaleReportViewSet(mixins.ListModelMixin,
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
             try:
-                fv.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status', format_string(shop_status),
-                                           False,
-                                           False, True)
+                field_validator.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status',
+                                                        format_string(str(shop_status)),
+                                                        False,
+                                                        False, True)
                 sale_report.shop_status = format_string(shop_status, True)
                 if sale_report.shop_status == '2':
-                    fv.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
-                                               format_string(customer_care_cashier_reward), False, False, True)
-                    fv.validate_transaction(format_string(customer_care_transaction), False, False, True)
+                    field_validator.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
+                                                            format_string(str(customer_care_cashier_reward)), False, False,
+                                                            True)
+                    field_validator.validate_transaction(format_string(customer_care_transaction), False, False, True)
                     sale_report.customer_care_cashier_reward = format_string(customer_care_cashier_reward, True)
                     sale_report.customer_care_transaction = format_string(customer_care_transaction, True)
                 else:
-                    fv.validate_note(format_string(cessation_of_business_note), False, False, True)
+                    field_validator.validate_note(format_string(cessation_of_business_note), False, False, True)
                     sale_report.cessation_of_business_note = format_string(cessation_of_business_note, True)
             except Exception as e:
                 return JsonResponse({
@@ -351,40 +338,15 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 try:
                     pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
 
-                    image_outside_filename, image_outside_file_extension = os.path.splitext(image_outside.name)
-                    if image_outside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_outside_filename = image_outside_filename[:100] if len(
-                        image_outside_filename) > 100 else image_outside_filename
-                    image_outside_filename = 'image_outside__' + pre_fix + image_outside_filename + '.jpg'
+                    image_outside_filename = 'image_outside__' + pre_fix + '.jpg'
                     image_outside_filename = fs.save(image_outside_filename, image_outside)
                     image_outside_url = fs.url(image_outside_filename)
 
-                    image_inside_filename, image_inside_file_extension = os.path.splitext(image_inside.name)
-                    if image_inside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_inside_filename = image_inside_filename[:100] if len(
-                        image_inside_filename) > 100 else image_inside_filename
-                    image_inside_filename = 'image_inside__' + pre_fix + image_inside_filename + '.jpg'
+                    image_inside_filename = 'image_inside__' + pre_fix + '.jpg'
                     image_inside_filename = fs.save(image_inside_filename, image_inside)
                     image_inside_url = fs.url(image_inside_filename)
 
-                    image_store_cashier_filename, image_store_cashier_file_extension = os.path.splitext(
-                        image_store_cashier.name)
-                    if image_store_cashier_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_store_cashier_filename = image_store_cashier_filename[:100] if len(
-                        image_store_cashier_filename) > 100 else image_store_cashier_filename
-                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + image_store_cashier_filename + '.jpg'
+                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + '.jpg'
                     image_store_cashier_filename = fs.save(image_store_cashier_filename, image_store_cashier)
                     image_store_cashier_url = fs.url(image_store_cashier_filename)
 
@@ -405,16 +367,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     }, status=400)
                 try:
                     pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
-                    cessation_of_business_filename, cessation_of_business_file_extension = os.path.splitext(
-                        cessation_of_business_image.name)
-                    if cessation_of_business_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    cessation_of_business_filename = cessation_of_business_filename[:100] if len(
-                        cessation_of_business_filename) > 100 else cessation_of_business_filename
-                    cessation_of_business_filename = 'cessation_of_business_image__' + pre_fix + cessation_of_business_filename + '.jpg'
+
+                    cessation_of_business_filename = 'cessation_of_business_image__' + pre_fix + '.jpg'
                     cessation_of_business_image_filename = fs.save(cessation_of_business_filename,
                                                                    cessation_of_business_image)
                     cessation_of_business_image_url = fs.url(cessation_of_business_image_filename)
@@ -432,7 +386,15 @@ class SaleReportViewSet(mixins.ListModelMixin,
         sale_report.created_by = request.user
         sale_report.updated_by = request.user
         sale_report.is_draft = is_draft
-        sale_report.save()
+
+        try:
+            sale_report.save()
+        except Exception as e:
+            return JsonResponse({
+                'status': 400,
+                'message': 'Save sale_report_form error: ' + str(e),
+            }, status=400)
+
         return JsonResponse({
             'status': 200,
             'data': 'Created',

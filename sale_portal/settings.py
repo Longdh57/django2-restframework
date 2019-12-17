@@ -17,9 +17,6 @@ load_dotenv(os.path.join(BASE_DIR, '.env'), override=True, verbose=True)
 logging.basicConfig(filename=os.environ.get('LOGGING_FILE', 'system.log'), level=logging.DEBUG,
                     format='[%(asctime)s] - [%(levelname)s] - %(message)s')
 
-runserver.default_port = "9001"
-print('START SALE PORTAL BACKEND...')
-
 
 def get_list(text):
     return [item.strip() for item in text.split(',')]
@@ -97,6 +94,10 @@ configure(
         processors.format_exc_info,
         stdlib.render_to_log_kwargs]
 )
+
+runserver.default_port = os.environ.get('RUNSERVER_DEFAULT_PORT', '9001')
+print('START SALE PORTAL BACKEND...')
+
 SECRET_KEY = os.environ.get('SECRET_KEY', '')
 
 DEBUG = get_bool_from_env('DEBUG', True)
