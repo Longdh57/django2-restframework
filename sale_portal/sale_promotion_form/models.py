@@ -51,7 +51,8 @@ class SalePromotion(models.Model):
     class Meta:
         db_table = 'sale_promotion_form'
         ordering = ['-id']
-        default_permissions = (
+        default_permissions = ()
+        permissions = (
             ('sale_promotion_list_data', 'Can get sale_promotion list data'),
             ('sale_promotion_detail', 'Can get sale_promotion detail'),
             ('sale_promotion_import', 'Can import sale_promotion'),

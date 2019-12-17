@@ -18,7 +18,8 @@ class Team(models.Model):
     class Meta:
         db_table = 'team'
         ordering = ['-created_date']
-        default_permissions = (
+        default_permissions = ()
+        permissions = (
             ('team_list_data', 'Can get team list data'),
             ('team_list_search', 'Can get team list search'),
             ('team_detail', 'Can get team detail'),

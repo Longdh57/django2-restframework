@@ -107,7 +107,9 @@ def create_account_group(request):
                 'status': 400,
                 'message': 'Group_name have been used'
             }, status=400)
-        group = Group.objects.create(name=group_name, permissions=group_permissions)
+        group = Group.objects.create(name=group_name)
+        group.permissions.set(group_permissions)
+        group.save()
 
         return JsonResponse({
             'status': 200,

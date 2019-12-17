@@ -54,7 +54,8 @@ class Shop(models.Model):
     class Meta:
         db_table = 'shop'
         ordering = ('-created_date',)
-        default_permissions = (
+        default_permissions = ()
+        permissions = (
             ('shop_list_data', 'Can get shop list data'),
             ('shop_list_search', 'Can get shop list search'),
             ('shop_detail', 'Can get shop detail'),

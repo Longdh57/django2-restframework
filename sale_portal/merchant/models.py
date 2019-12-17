@@ -112,7 +112,8 @@ class Merchant(models.Model):
     class Meta:
         db_table = 'merchant'
         ordering = ['-created_date']
-        default_permissions = (
+        default_permissions = ()
+        permissions = (
             ('merchant_list_data', 'Can get merchant list data'),
             ('merchant_list_search', 'Can get merchant list search'),
             ('merchant_detail', 'Can get merchant detail'),

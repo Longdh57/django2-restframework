@@ -58,7 +58,8 @@ class Staff(models.Model):
     class Meta:
         db_table = 'staff'
         ordering = ['-created_date']
-        default_permissions = (
+        default_permissions = ()
+        permissions = (
             ('staff_list_data', 'Can get staff list data'),
             ('staff_list_search', 'Can get staff list search'),
             ('staff_detail', 'Can get staff detail'),

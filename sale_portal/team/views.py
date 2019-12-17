@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils import formats
 from django.db import transaction
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
@@ -514,6 +514,7 @@ class TeamViewSet(mixins.ListModelMixin,
 
 @api_view(['GET'])
 @login_required
+@permission_required('team.team_import', raise_exception=True)
 def list_teams(request):
     """
         API get list Team to select \n

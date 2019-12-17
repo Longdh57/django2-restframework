@@ -124,7 +124,8 @@ class Terminal(models.Model):
     class Meta:
         db_table = 'terminal'
         ordering = ['-created_date']
-        default_permissions = (
+        default_permissions = ()
+        permissions = (
             ('terminal_list_data', 'Can get terminal list data'),
             ('terminal_list_search', 'Can get terminal list search'),
             ('terminal_detail', 'Can get terminal detail'),
