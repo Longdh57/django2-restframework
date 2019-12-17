@@ -1,26 +1,22 @@
 import datetime
 import json
+import time
 from datetime import date
 from datetime import datetime as dt_datetime
-import time
-import os
 
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import get_object_or_404
 from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import api_view
 
-from sale_portal.staff.models import Staff
-from ..utils.field_formatter import format_string
-import sale_portal.utils.field_validator as fv
+from sale_portal.sale_report_form.models import SaleReport
+from sale_portal.sale_report_form.serializers import SaleReportSerializer
 from sale_portal.shop.models import Shop
-from .models import SaleReport
-from .serializers import SaleReportSerializer
+from sale_portal.staff.models import Staff
 from sale_portal.user.models import User
-from sale_portal.team.models import Team
+from sale_portal.utils import field_validator
+from sale_portal.utils.field_formatter import format_string
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -125,7 +121,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
 
         # Data nhận dưới dạng form data, sau đó convert ra json rồi xử lý
         data = request.POST.get('data', None)
-        print("Data: {}".format(data))
         datajson = json.loads(data)
 
         purpose = datajson.get('purpose')
@@ -203,19 +198,19 @@ class SaleReportViewSet(mixins.ListModelMixin,
             new_using_application = datajson.get('new_using_software')
 
             try:
-                fv.validate_merchant_name(
+                field_validator.validate_merchant_name(
                     format_string(new_merchant_name), allow_none=False, allow_blank=False, rase_exception=True)
-                fv.validate_merchant_brand(
+                field_validator.validate_merchant_brand(
                     format_string(new_merchant_brand), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_address(
+                field_validator.validate_address(
                     format_string(new_address), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_customer_name(
+                field_validator.validate_customer_name(
                     format_string(new_customer_name), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_phone(
+                field_validator.validate_phone(
                     format_string(new_phone), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_note(
+                field_validator.validate_note(
                     format_string(new_note), allow_none=True, allow_blank=True, rase_exception=True)
-                fv.validate_in_string_list([
+                field_validator.validate_in_string_list([
                     'iPos',
                     'Sapo',
                     'KiotViet',
@@ -257,8 +252,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
             sale_report.shop_code = shop.code
 
             try:
-                fv.validate_in_string_list([0, 1, 2], \
-                                           'verify_shop', implement_confirm, False, False, True)
+                field_validator.validate_in_string_list(['0', '1', '2'], \
+                                                        'verify_shop', str(implement_confirm), False, False, True)
                 if implement_merchant_view is None:
                     raise Exception('implement_merchant_view is required')
                 sale_report.implement_posm = format_string(implement_posm, True)
@@ -266,7 +261,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 sale_report.implement_career_guideline = format_string(implement_career_guideline, True)
                 sale_report.implement_confirm = format_string(implement_confirm, True)
                 if implement_confirm == '1':
-                    fv.validate_address(format_string(implement_new_address), False, False, True)
+                    field_validator.validate_address(format_string(implement_new_address), False, False, True)
                     sale_report.implement_new_address = format_string(implement_new_address, True)
             except Exception as e:
                 return JsonResponse({
@@ -286,40 +281,15 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 try:
                     pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
 
-                    image_outside_filename, image_outside_file_extension = os.path.splitext(image_outside.name)
-                    if image_outside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_outside_filename = image_outside_filename[:100] if len(
-                        image_outside_filename) > 100 else image_outside_filename
-                    image_outside_filename = 'image_outside__' + pre_fix + image_outside_filename + '.jpg'
+                    image_outside_filename = 'image_outside__' + pre_fix + '.jpg'
                     image_outside_filename = fs.save(image_outside_filename, image_outside)
                     image_outside_url = fs.url(image_outside_filename)
 
-                    image_inside_filename, image_inside_file_extension = os.path.splitext(image_inside.name)
-                    if image_inside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_inside_filename = image_inside_filename[:100] if len(
-                        image_inside_filename) > 100 else image_inside_filename
-                    image_inside_filename = 'image_inside__' + pre_fix + image_inside_filename + '.jpg'
+                    image_inside_filename = 'image_inside__' + pre_fix + '.jpg'
                     image_inside_filename = fs.save(image_inside_filename, image_inside)
                     image_inside_url = fs.url(image_inside_filename)
 
-                    image_store_cashier_filename, image_store_cashier_file_extension = os.path.splitext(
-                        image_store_cashier.name)
-                    if image_store_cashier_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_store_cashier_filename = image_store_cashier_filename[:100] if len(
-                        image_store_cashier_filename) > 100 else image_store_cashier_filename
-                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + image_store_cashier_filename + '.jpg'
+                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + '.jpg'
                     image_store_cashier_filename = fs.save(image_store_cashier_filename, image_store_cashier)
                     image_store_cashier_url = fs.url(image_store_cashier_filename)
 
@@ -336,18 +306,20 @@ class SaleReportViewSet(mixins.ListModelMixin,
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
             try:
-                fv.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status', format_string(shop_status),
-                                           False,
-                                           False, True)
+                field_validator.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status',
+                                                        format_string(str(shop_status)),
+                                                        False,
+                                                        False, True)
                 sale_report.shop_status = format_string(shop_status, True)
                 if sale_report.shop_status == '2':
-                    fv.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
-                                               format_string(customer_care_cashier_reward), False, False, True)
-                    fv.validate_transaction(format_string(customer_care_transaction), False, False, True)
+                    field_validator.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
+                                                            format_string(str(customer_care_cashier_reward)), False, False,
+                                                            True)
+                    field_validator.validate_transaction(format_string(customer_care_transaction), False, False, True)
                     sale_report.customer_care_cashier_reward = format_string(customer_care_cashier_reward, True)
                     sale_report.customer_care_transaction = format_string(customer_care_transaction, True)
                 else:
-                    fv.validate_note(format_string(cessation_of_business_note), False, False, True)
+                    field_validator.validate_note(format_string(cessation_of_business_note), False, False, True)
                     sale_report.cessation_of_business_note = format_string(cessation_of_business_note, True)
             except Exception as e:
                 return JsonResponse({
@@ -366,40 +338,15 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 try:
                     pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
 
-                    image_outside_filename, image_outside_file_extension = os.path.splitext(image_outside.name)
-                    if image_outside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_outside_filename = image_outside_filename[:100] if len(
-                        image_outside_filename) > 100 else image_outside_filename
-                    image_outside_filename = 'image_outside__' + pre_fix + image_outside_filename + '.jpg'
+                    image_outside_filename = 'image_outside__' + pre_fix + '.jpg'
                     image_outside_filename = fs.save(image_outside_filename, image_outside)
                     image_outside_url = fs.url(image_outside_filename)
 
-                    image_inside_filename, image_inside_file_extension = os.path.splitext(image_inside.name)
-                    if image_inside_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_inside_filename = image_inside_filename[:100] if len(
-                        image_inside_filename) > 100 else image_inside_filename
-                    image_inside_filename = 'image_inside__' + pre_fix + image_inside_filename + '.jpg'
+                    image_inside_filename = 'image_inside__' + pre_fix + '.jpg'
                     image_inside_filename = fs.save(image_inside_filename, image_inside)
                     image_inside_url = fs.url(image_inside_filename)
 
-                    image_store_cashier_filename, image_store_cashier_file_extension = os.path.splitext(
-                        image_store_cashier.name)
-                    if image_store_cashier_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    image_store_cashier_filename = image_store_cashier_filename[:100] if len(
-                        image_store_cashier_filename) > 100 else image_store_cashier_filename
-                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + image_store_cashier_filename + '.jpg'
+                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + '.jpg'
                     image_store_cashier_filename = fs.save(image_store_cashier_filename, image_store_cashier)
                     image_store_cashier_url = fs.url(image_store_cashier_filename)
 
@@ -420,16 +367,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     }, status=400)
                 try:
                     pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
-                    cessation_of_business_filename, cessation_of_business_file_extension = os.path.splitext(
-                        cessation_of_business_image.name)
-                    if cessation_of_business_file_extension not in ['.png', '.jpg']:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'file_extension is invalid',
-                        }, status=400)
-                    cessation_of_business_filename = cessation_of_business_filename[:100] if len(
-                        cessation_of_business_filename) > 100 else cessation_of_business_filename
-                    cessation_of_business_filename = 'cessation_of_business_image__' + pre_fix + cessation_of_business_filename + '.jpg'
+
+                    cessation_of_business_filename = 'cessation_of_business_image__' + pre_fix + '.jpg'
                     cessation_of_business_image_filename = fs.save(cessation_of_business_filename,
                                                                    cessation_of_business_image)
                     cessation_of_business_image_url = fs.url(cessation_of_business_image_filename)
