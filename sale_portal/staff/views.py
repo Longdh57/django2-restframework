@@ -13,9 +13,9 @@ from rest_framework import viewsets, mixins
 
 from sale_portal.team.models import Team
 from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff, StaffTeamRole, StaffTeamLog, StaffTeamLogType, StaffTeamRoleType
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.staff.models import Staff, StaffLogType, StaffTeamRole
 
 
 class StaffViewSet(mixins.ListModelMixin,
@@ -83,7 +83,7 @@ class StaffViewSet(mixins.ListModelMixin,
                 "name": staff.team.name,
                 "code": staff.team.code,
                 "created_date": formats.date_format(staff.team.created_date,
-                                                "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
+                                                    "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
             }
 
         if staff.role is not None:
@@ -158,11 +158,9 @@ def change_staff_team(request):
     """
     try:
         body = json.loads(request.body)
-        staff_id = team_id = None
-        if 'staff_id' in body:
-            staff_id = body['staff_id']
-        if 'team_id' in body:
-            team_id = body['team_id']
+
+        staff_id = body.get('staff_id')
+        team_id = body.get('team_id')
 
         if staff_id is None or staff_id == '' or team_id is None or team_id == '':
             return JsonResponse({
@@ -170,13 +168,14 @@ def change_staff_team(request):
                 'message': 'Invalid body'
             }, status=400)
 
-        staff = Staff.objects.filter(pk=staff_id).first()
+        staff = Staff.objects.get(pk=staff_id)
         if staff is None:
             return JsonResponse({
                 'status': 404,
                 'message': 'Staff not found'
             }, status=404)
-        team = Team.objects.filter(pk=team_id).first()
+
+        team = Team.objects.get(pk=team_id)
         if team is None:
             return JsonResponse({
                 'status': 404,
@@ -184,7 +183,7 @@ def change_staff_team(request):
             }, status=404)
 
         role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
-
+        # gan staff vao team moi
         if request.method == 'POST':
             if staff.team is not None:
                 message = 'Staff đã thuộc team này từ trước'
@@ -197,10 +196,15 @@ def change_staff_team(request):
             else:
                 staff.team = team
                 staff.role = role
-                staff.save()
-                write_staff_team_log(staff.id, team, StaffTeamLogType.JOIN_TEAM,
-                                     StaffTeamRoleType.TEAM_STAFF, 'Change_staff_team: add new team')
-
+                staff.save(
+                    staff_id=staff.id,
+                    team_id=team.id,
+                    team_code=team.code,
+                    role_id=role.id,
+                    log_type=StaffLogType.JOIN_TEAM,
+                    description='Change_staff_team: add new team'
+                )
+        # Thay doi team cho staff da duoc gan team
         if request.method == 'PUT':
             if staff.team is None or staff.team.id == team.id:
                 message = 'Staff đã thuộc team này từ trước'
@@ -211,16 +215,23 @@ def change_staff_team(request):
                     'message': message
                 }, status=400)
             else:
-                write_staff_team_log(staff.id, staff.team, StaffTeamLogType.OUT_TEAM,
-                                     None, 'Change_staff_team: change team')
+                old_team = staff.team
+
                 staff.team = team
                 staff.role = role
-                staff.save()
+                staff.save(
+                    staff_id=staff.id,
+                    old_team_id=old_team.id,
+                    old_team_code=old_team.code,
+                    team_id=team.id,
+                    team_code=team.code,
+                    role_id=role.id,
+                    log_type=StaffLogType.OUT_TEAM,
+                    description='Change_staff_team: out and join other team'
+                )
                 Shop.objects.filter(staff=staff).update(
                     staff=None
                 )
-                write_staff_team_log(staff.id, team, StaffTeamLogType.JOIN_TEAM,
-                                     StaffTeamRoleType.TEAM_STAFF, 'Change_staff_team: change team')
 
         if request.method == 'DELETE':
             if staff.team is None or staff.team.id != team.id:
@@ -234,12 +245,17 @@ def change_staff_team(request):
             else:
                 staff.team = None
                 staff.role = None
-                staff.save()
+                staff.save(
+                    staff_id=staff.id,
+                    team_id=team.id,
+                    team_code=team.code,
+                    role_id=role.id,
+                    log_type=StaffLogType.OUT_TEAM,
+                    description='Change_staff_team: out team'
+                )
                 Shop.objects.filter(staff=staff).update(
                     staff=None
                 )
-                write_staff_team_log(staff.id, team, StaffTeamLogType.OUT_TEAM,
-                                     None, 'Change_staff_team: delete team')
 
         return JsonResponse({
             'status': 200,
@@ -251,18 +267,3 @@ def change_staff_team(request):
             'status': 500,
             'data': 'Internal sever error'
         }, status=500)
-
-
-def write_staff_team_log(staff_ids, team, type, role, description):
-    try:
-        if isinstance(staff_ids, list):
-            staff_teams = []
-            for staff_id in staff_ids:
-                staff_teams.append(StaffTeamLog(staff_id=staff_id, team_id=team.id, team_code=team.code,
-                                                type=type, role=role, description=description))
-            StaffTeamLog.objects.bulk_create(staff_teams)
-        else:
-            StaffTeamLog.objects.create(staff_id=staff_ids, team_id=team.id, team_code=team.code,
-                                        type=type, role=role, description=description)
-    except Exception as e:
-        logging.error(e)
