@@ -13,7 +13,7 @@ from rest_framework import viewsets, mixins
 
 from sale_portal.team.models import Team
 from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff, StaffTeamRole
+from sale_portal.staff.models import Staff, StaffTeamRole, StaffTeamLog, StaffTeamLogType, StaffTeamRoleType
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
 
@@ -198,6 +198,8 @@ def change_staff_team(request):
                 staff.team = team
                 staff.role = role
                 staff.save()
+                write_staff_team_log(staff.id, team, StaffTeamLogType.JOIN_TEAM,
+                                     StaffTeamRoleType.TEAM_STAFF, 'Change_staff_team: add new team')
 
         if request.method == 'PUT':
             if staff.team is None or staff.team.id == team.id:
@@ -209,12 +211,16 @@ def change_staff_team(request):
                     'message': message
                 }, status=400)
             else:
+                write_staff_team_log(staff.id, staff.team, StaffTeamLogType.OUT_TEAM,
+                                     None, 'Change_staff_team: change team')
                 staff.team = team
                 staff.role = role
                 staff.save()
                 Shop.objects.filter(staff=staff).update(
                     staff=None
                 )
+                write_staff_team_log(staff.id, team, StaffTeamLogType.JOIN_TEAM,
+                                     StaffTeamRoleType.TEAM_STAFF, 'Change_staff_team: change team')
 
         if request.method == 'DELETE':
             if staff.team is None or staff.team.id != team.id:
@@ -232,6 +238,8 @@ def change_staff_team(request):
                 Shop.objects.filter(staff=staff).update(
                     staff=None
                 )
+                write_staff_team_log(staff.id, team, StaffTeamLogType.OUT_TEAM,
+                                     None, 'Change_staff_team: delete team')
 
         return JsonResponse({
             'status': 200,
@@ -243,3 +251,18 @@ def change_staff_team(request):
             'status': 500,
             'data': 'Internal sever error'
         }, status=500)
+
+
+def write_staff_team_log(staff_ids, team, type, role, description):
+    try:
+        if isinstance(staff_ids, list):
+            staff_teams = []
+            for staff_id in staff_ids:
+                staff_teams.append(StaffTeamLog(staff_id=staff_id, team_id=team.id, team_code=team.code,
+                                                type=type, role=role, description=description))
+            StaffTeamLog.objects.bulk_create(staff_teams)
+        else:
+            StaffTeamLog.objects.create(staff_id=staff_ids, team_id=team.id, team_code=team.code,
+                                        type=type, role=role, description=description)
+    except Exception as e:
+        logging.error(e)

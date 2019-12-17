@@ -131,9 +131,9 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'status': 400,
                 'message': 'Invalid body (cannot convert data)'
             }, status=400)
-        status = data_json['status']
-        tentcard_ctkm = data_json['tentcard_ctkm']
-        wobbler_ctkm = data_json['wobbler_ctkm']
+        status = data_json['status'] if 'status' in data_json else None
+        tentcard_ctkm = data_json['tentcard_ctkm'] if 'tentcard_ctkm' in data_json else None
+        wobbler_ctkm = data_json['wobbler_ctkm'] if 'wobbler_ctkm' in data_json else None
 
         try:
             status = int(status) if status else None
@@ -214,10 +214,10 @@ def import_view(request):
             'message': 'Invalid body (cannot convert data)'
         }, status=400)
 
-    title_id = data_json['title_id']
-    title_code = data_json['title_code']
-    title_description = data_json['title_description']
-    is_submit = data_json['is_submit']
+    title_id = data_json['title_id'] if 'title_id' in data_json else None
+    title_code = data_json['title_code'] if 'title_code' in data_json else None
+    title_description = data_json['title_description'] if 'title_description' in data_json else None
+    is_submit = data_json['is_submit'] if 'is_submit' in data_json else None
 
     is_submit = True if is_submit == 'true' else False
 

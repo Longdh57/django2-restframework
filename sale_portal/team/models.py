@@ -17,6 +17,7 @@ class Team(models.Model):
 
     class Meta:
         db_table = 'team'
+        ordering = ['-created_date']
         default_permissions = ()
 
     def __init__(self, *args, **kwargs):
