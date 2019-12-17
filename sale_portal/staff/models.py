@@ -58,7 +58,13 @@ class Staff(models.Model):
     class Meta:
         db_table = 'staff'
         ordering = ['-created_date']
-        default_permissions = ()
+        default_permissions = (
+            ('staff_list_data', 'Can get staff list data'),
+            ('staff_list_search', 'Can get staff list search'),
+            ('staff_detail', 'Can get staff detail'),
+            ('staff_edit', 'Can edit staff'),
+            ('staff_import', 'Can import data staff'),
+        )
 
     def __str__(self):
         return self.email
