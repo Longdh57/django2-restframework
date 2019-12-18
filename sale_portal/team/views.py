@@ -185,13 +185,13 @@ class TeamViewSet(mixins.ListModelMixin,
                 )
                 if team_lead_id in staff_ids:
                     staff_ids.remove(team_lead_id)
-                    self.create_staff_log(
-                        staff_ids=staff_ids,
-                        team=team,
-                        type=StaffLogType.JOIN_TEAM,
-                        role_id=role_staff.id,
-                        description='Create new team: add staff'
-                    )
+                self.create_staff_log(
+                    staff_ids=staff_ids,
+                    team=team,
+                    type=StaffLogType.JOIN_TEAM,
+                    role_id=role_staff.id,
+                    description='Create new team: add staff'
+                )
 
                 if team_lead_id is not None:
                     role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
@@ -401,7 +401,7 @@ class TeamViewSet(mixins.ListModelMixin,
                         staff_ids=remove_ids,
                         team=team,
                         type=StaffLogType.OUT_TEAM,
-                        role_id=role_staff.id,
+                        role_id=None,
                         description='Update team: remove staff from team'
                     )
 

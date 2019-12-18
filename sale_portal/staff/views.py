@@ -249,7 +249,7 @@ def change_staff_team(request):
                     staff_id=staff.id,
                     team_id=team.id,
                     team_code=team.code,
-                    role_id=role.id,
+                    role_id=None,
                     log_type=StaffLogType.OUT_TEAM,
                     description='Change_staff_team: out team'
                 )
