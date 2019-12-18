@@ -136,7 +136,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         wobbler_ctkm = data_json['wobbler_ctkm'] if 'wobbler_ctkm' in data_json else None
 
         try:
-            status = int(status) if status else None
+            status = int(status) if status is not None else None
         except ValueError:
             return JsonResponse({
                 'status': 400,
