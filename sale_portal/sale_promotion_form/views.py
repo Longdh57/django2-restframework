@@ -379,7 +379,7 @@ def get_list_titles(request):
 
     queryset = queryset.order_by('code')[0:settings.PAGINATE_BY]
 
-    data = [{'id': title.id, 'content': title.code + ' - ' + title.description} for title in queryset]
+    data = [{'id': title.id, 'content': title.code + ' - ' + (title.description if title.description else 'N/A')} for title in queryset]
 
     return JsonResponse({
         'status': 200,
