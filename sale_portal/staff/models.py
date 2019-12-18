@@ -118,8 +118,8 @@ class Staff(models.Model):
                     description=kwargs.get('description'),
                 )
 
-            old_data, new_data, type = self.compare()
             if kwargs.get('log_type') is None and type == StaffLogType.UPDATED:
+                old_data, new_data, type = self.compare()
                 StaffLog.objects.create(old_data=old_data, new_data=new_data, staff_id=self.id, type=type)
 
         except Exception as e:
