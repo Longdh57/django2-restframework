@@ -411,7 +411,7 @@ class TeamViewSet(mixins.ListModelMixin,
                         role=role_staff
                     )
                     self.create_staff_log(
-                        staff_ids=remove_ids,
+                        staff_ids=new_staff_ids,
                         team=team,
                         type=StaffLogType.JOIN_TEAM,
                         role_id=role_staff.id,
@@ -440,11 +440,11 @@ class TeamViewSet(mixins.ListModelMixin,
                         team_code=team.code,
                         role_id=role_staff.id,
                         log_type=StaffLogType.UPDATE_ROLE,
-                        description='Update team: promote to staff'
+                        description='Update team: demote to staff'
                     )
 
                 if update_to_leader_id is not None:
-                    staff = Staff.objects.filter(pk=update_to_leader_id)
+                    staff = Staff.objects.get(pk=update_to_leader_id)
                     staff.role = role_leader
                     staff.save(
                         staff_id=update_to_leader_id,
