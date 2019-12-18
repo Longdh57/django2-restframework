@@ -61,7 +61,6 @@ class Staff(models.Model):
         default_permissions = ()
         permissions = (
             ('staff_list_data', 'Can get staff list data'),
-            ('staff_list_search', 'Can get staff list search'),
             ('staff_detail', 'Can get staff detail'),
             ('staff_edit', 'Can edit staff'),
             ('staff_import', 'Can import data staff'),

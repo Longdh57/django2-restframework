@@ -21,7 +21,6 @@ class Team(models.Model):
         default_permissions = ()
         permissions = (
             ('team_list_data', 'Can get team list data'),
-            ('team_list_search', 'Can get team list search'),
             ('team_detail', 'Can get team detail'),
             ('team_create', 'Can create team'),
             ('team_edit', 'Can edit team'),

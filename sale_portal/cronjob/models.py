@@ -18,6 +18,3 @@ class CronjobLog(models.Model):
         db_table = 'cronjob_log'
         ordering = ['-created_date']
         default_permissions = ()
-        permissions = (
-            ('cronjob_log_list_data', 'Can get cronjob_log list data'),
-        )
