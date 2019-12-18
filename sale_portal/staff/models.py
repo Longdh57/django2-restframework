@@ -115,9 +115,11 @@ class Staff(models.Model):
             old_data, new_data, type = self.compare()
             if kwargs.get('log_type') is None and type == StaffLogType.UPDATED:
                 StaffLog.objects.create(old_data=old_data, new_data=new_data, staff_id=self.id, type=type)
+
         except Exception as e:
             logging.error('Staff_log exception: %s', e)
-        super(Staff, self).save(*args, **kwargs)
+
+        super(Staff, self).save()
 
 
 class StaffLog(models.Model):

@@ -1,6 +1,7 @@
 import os
 import pytest
 from django.conf import settings
+from rest_framework.test import APIClient
 
 
 @pytest.fixture(scope='session')
@@ -13,3 +14,8 @@ def django_db_setup():
         'HOST': os.environ.get('TEST_DB_HOST', 'localhost'),
         'PORT': os.environ.get('TEST_DB_PORT', '5432'),
     }
+
+
+@pytest.fixture
+def api_client():
+    return APIClient()
