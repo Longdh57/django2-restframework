@@ -239,10 +239,13 @@ STATICFILES_FINDERS = [
 MEDIA_URL = os.environ.get('MEDIA_URL', '/')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-LOG_ROOT = os.path.join(BASE_DIR, 'log')
-
 FS_IMAGE_UPLOADS = os.path.join(MEDIA_ROOT, 'images/')
 FS_IMAGE_URL = os.path.join(MEDIA_URL, 'images/')
+
+FS_DOCUMENT_UPLOADS = os.path.join(MEDIA_ROOT, 'documents/')
+FS_DOCUMENT_URL = os.path.join(MEDIA_URL, 'documents/')
+
+LOG_ROOT = os.path.join(BASE_DIR, 'log')
 
 # Yêu cầu xác thực request
 REST_FRAMEWORK = {
