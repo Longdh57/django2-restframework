@@ -113,6 +113,10 @@ class Merchant(models.Model):
         db_table = 'merchant'
         ordering = ['-created_date']
         default_permissions = ()
+        permissions = (
+            ('merchant_list_data', 'Can get merchant list data'),
+            ('merchant_detail', 'Can get merchant detail'),
+        )
 
     def __str__(self):
         return self.merchant_code

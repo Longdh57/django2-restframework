@@ -19,6 +19,14 @@ class Team(models.Model):
         db_table = 'team'
         ordering = ['-created_date']
         default_permissions = ()
+        permissions = (
+            ('team_list_data', 'Can get team list data'),
+            ('team_detail', 'Can get team detail'),
+            ('team_create', 'Can create team'),
+            ('team_edit', 'Can edit team'),
+            ('team_delete', 'Can delete team'),
+            ('team_import', 'Can import data team'),
+        )
 
     def __init__(self, *args, **kwargs):
         super(Team, self).__init__(*args, **kwargs)

@@ -55,6 +55,14 @@ class Shop(models.Model):
         db_table = 'shop'
         ordering = ('-created_date',)
         default_permissions = ()
+        permissions = (
+            ('shop_list_data', 'Can get shop list data'),
+            ('shop_detail', 'Can get shop detail'),
+            ('shop_create', 'Can create shop'),
+            ('shop_edit', 'Can edit shop'),
+            ('shop_import', 'Can import data shop'),
+            ('shop_export', 'Can export data shop'),
+        )
 
     def __str__(self):
         return self.name

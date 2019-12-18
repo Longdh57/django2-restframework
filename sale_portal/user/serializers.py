@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, Group
 
 from sale_portal.staff.models import Staff
 
@@ -39,4 +39,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         exclude = (
             'password', 'last_login', 'groups', 'is_staff', 'send_disable_shop_email', 'user_permissions'
+        )
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = (
+            'id', 'name'
         )
