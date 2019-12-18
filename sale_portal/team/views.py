@@ -171,12 +171,9 @@ class TeamViewSet(mixins.ListModelMixin,
 
                 if team_lead_id is not None:
                     role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
-                    staff = Staff.objects.get(pk=team_lead_id).update(
-                        team=team,
-                        role=role_leader
-                    )
+                    staff = Staff.objects.get(pk=team_lead_id)
                     staff.team = team
-                    staff.role = role_leader.id
+                    staff.role = role_leader
                     staff.save(
                         staff_id=staff.id,
                         team_id=team.id,
@@ -188,8 +185,11 @@ class TeamViewSet(mixins.ListModelMixin,
 
             return JsonResponse({
                 'status': 200,
-                'data': team.id
+                'data': {
+                    'team_id': team.id
+                }
             }, status=201)
+
         except Exception as e:
             logging.error('Create team exception: %s', e)
             return JsonResponse({
@@ -302,12 +302,15 @@ class TeamViewSet(mixins.ListModelMixin,
 
             role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
             role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
+
             staff_ids = []
             had_leader = False
             new_staff_ids = []
             new_leader_id = None
             update_to_staff_id = None
             update_to_leader_id = None
+
+            # Validate staff lists
             for st in staffs:
                 is_leader = False
                 if not isinstance(st['id'], int):
@@ -501,12 +504,12 @@ class TeamViewSet(mixins.ListModelMixin,
                     team_id=team.id,
                     team_code=team.code,
                     type=type,
-                    role=role_id,
+                    role_id=role_id,
                     description=description)
                 )
             StaffLog.objects.bulk_create(staff_logs)
         except Exception as e:
-            logging.error(e)
+            logging.error("Create team - Staff log: {}".format(e))
 
 
 @api_view(['GET'])

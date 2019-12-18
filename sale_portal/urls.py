@@ -27,7 +27,7 @@ api_urlpatterns = [
 
 urlpatterns = [
     url(r'^$', schema_view),
-    url(r'^api/', include((api_urlpatterns))),
+    url(r'^api/', include((api_urlpatterns, 'api'), namespace='api')),
 ]
 
 urlpatterns += static('/log/', document_root=settings.LOG_ROOT)
