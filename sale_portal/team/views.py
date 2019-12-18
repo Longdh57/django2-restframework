@@ -9,7 +9,8 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required, permission_required
 
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework import permissions
 
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
@@ -17,6 +18,20 @@ from sale_portal.shop.models import Shop
 from sale_portal.team.serializers import TeamSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
+
+
+class PermissionImport(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return request.user.has_perms(['team.team_import'])
+        return False
+
+
+class PermissionDetail(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return request.user.has_perms(['team.team_detail'])
+        return False
 
 
 class TeamViewSet(mixins.ListModelMixin,
@@ -27,6 +42,13 @@ class TeamViewSet(mixins.ListModelMixin,
         - name -- text
     """
     serializer_class = TeamSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [PermissionDetail]
+        else:
+            permission_classes = [PermissionImport]
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
 
@@ -197,6 +219,7 @@ class TeamViewSet(mixins.ListModelMixin,
                 'data': 'Internal sever error'
             }, status=500)
 
+    # @permission_required('team.team_import', raise_exception=True)
     def retrieve(self, request, pk):
         """
             API get detail Team
@@ -514,7 +537,6 @@ class TeamViewSet(mixins.ListModelMixin,
 
 @api_view(['GET'])
 @login_required
-@permission_required('team.team_import', raise_exception=True)
 def list_teams(request):
     """
         API get list Team to select \n
