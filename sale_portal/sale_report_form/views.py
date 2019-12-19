@@ -129,14 +129,17 @@ class SaleReportViewSet(mixins.ListModelMixin,
         is_draft = datajson.get('is_draft')
         current_draft_id = datajson.get('current_draft_id')
 
+        # validate purpose, longitude, latitude, is_draft
         if purpose is None \
                 or longitude is None or longitude == '0' \
                 or latitude is None or latitude == '0' \
                 or is_draft is None:
-            return JsonResponse({
-                'status': 400,
-                'message': 'Some data fields such as purpose, longitude, latitude, is_draft are required',
-            }, status=400)
+            return self.response(
+                status=400, message='Validate error: purpose, longitude, latitude, is_draft are required')
+
+        purpose = format_string(purpose, True)
+        if purpose not in ['0', '1', '2']:
+            return self.response(status=400, message='Validate error: Purpose is incorrect')
 
         # Create or find sale_report object if has a draft version
         if is_draft == 'true':
@@ -151,43 +154,10 @@ class SaleReportViewSet(mixins.ListModelMixin,
         if sale_report is None:
             sale_report = SaleReport()
         elif sale_report.created_date.date() != date.today():
-            return JsonResponse({
-                'status': 400,
-                'message': 'Only allow access to drafts created on today',
-            }, status=400)
+            return self.response(status=400, message='Only allow access to drafts created on today')
 
-        # other purpose data from request
-        shop_id = datajson.get('shop_id')
-        shop_status = datajson.get('shop_status')
-        image_outside = request.FILES['image_outside'] if 'image_outside' in request.FILES else None
-        image_inside = request.FILES['image_inside'] if 'image_inside' in request.FILES else None
-        image_store_cashier = \
-            request.FILES['image_shop_cashier'] if 'image_shop_cashier' in request.FILES else None
-
-        cessation_of_business_note = datajson.get('cessation_of_business_note')
-        cessation_of_business_image = request.FILES[
-            'cessation_of_business_image'] if 'cessation_of_business_image' in request.FILES else None
-
-        customer_care_posm = datajson.get('customer_care_posm')
-        customer_care_cashier_reward = datajson.get('customer_care_cashier_reward')
-        customer_care_transaction = datajson.get('customer_care_transaction')
-
-        # for upload images
-        fs = FileSystemStorage(
-            location=settings.FS_IMAGE_UPLOADS + datetime.date.today().isoformat(),
-            base_url=settings.FS_IMAGE_URL + datetime.date.today().isoformat()
-        )
-
-        # ingest data to sale_report object
-        purpose = format_string(purpose, True)
-        if purpose not in ['0', '1', '2']:
-            return JsonResponse({
-                'status': 400,
-                'message': 'Purpose is incorrect',
-            }, status=400)
-
+        # Xu ly request Mở Mới
         if purpose == '0':
-            # open_new_shop purpose data from request
             new_merchant_name = datajson.get('new_merchant_name')
             new_merchant_brand = datajson.get('new_merchant_brand')
             new_address = datajson.get('new_address')
@@ -235,25 +205,24 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     'message': 'Validate error: ' + str(e),
                 }, status=400)
 
+        # Xu ly request Triển khai
         elif purpose == '1':
             shop_id = datajson.get('shop_id')
-            shop_status = datajson.get('verify_shop')
-            image_outside = request.FILES['image_outside'] if 'image_outside' in request.FILES else None
-            image_inside = request.FILES['image_inside'] if 'image_inside' in request.FILES else None
-            image_store_cashier = \
-                request.FILES['image_shop_cashier'] if 'image_shop_cashier' in request.FILES else None
+            image_outside_v2 = datajson.get('image_outside')
+            image_inside_v2 = datajson.get('image_inside')
+            image_store_cashier_v2 = datajson.get('image_store_cashier')
             implement_posm = datajson.get('implement_posm')
             implement_merchant_view = datajson.get('implement_merchant_view')
             implement_career_guideline = datajson.get('implement_career_guideline')
-            implement_confirm = datajson.get('verify_shop')
+            implement_confirm = datajson.get('implement_confirm')
             implement_new_address = datajson.get('new_address_input')
 
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
 
             try:
-                field_validator.validate_in_string_list(['0', '1', '2'], \
-                                                        'verify_shop', str(implement_confirm), False, False, True)
+                field_validator.validate_in_string_list([0, 1, 2], \
+                                                        'implement_confirm', implement_confirm, False, False, True)
                 if implement_merchant_view is None:
                     raise Exception('implement_merchant_view is required')
                 sale_report.implement_posm = format_string(implement_posm, True)
@@ -264,57 +233,49 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     field_validator.validate_address(format_string(implement_new_address), False, False, True)
                     sale_report.implement_new_address = format_string(implement_new_address, True)
             except Exception as e:
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Validate error: ' + str(e),
-                }, status=400)
+                return self.response(status=400, message='Validate error: ' + str(e))
 
             # save image
             if not is_draft:
-                if image_outside is None or image_outside == '' \
-                        or image_inside is None or image_inside == '' \
-                        or image_store_cashier is None and image_store_cashier == '':
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'image_outside, image_inside, image_store_cashier are required',
-                    }, status=400)
-                try:
-                    pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
+                if image_outside_v2 is None or image_outside_v2 == '' \
+                        or image_inside_v2 is None or image_inside_v2 == '' \
+                        or image_store_cashier_v2 is None or image_store_cashier_v2 == '':
 
-                    image_outside_filename = 'image_outside__' + pre_fix + '.jpg'
-                    image_outside_filename = fs.save(image_outside_filename, image_outside)
-                    image_outside_url = fs.url(image_outside_filename)
+                    return self.response(
+                        status=400,
+                        message='Validate error: image_outside, image_inside, image_store_cashier are required'
+                    )
+                else:
+                    sale_report.image_outside_v2 = format_string(image_outside_v2, True)
+                    sale_report.image_inside_v2 = format_string(image_inside_v2, True)
+                    sale_report.image_store_cashier_v2 = format_string(image_store_cashier_v2, True)
 
-                    image_inside_filename = 'image_inside__' + pre_fix + '.jpg'
-                    image_inside_filename = fs.save(image_inside_filename, image_inside)
-                    image_inside_url = fs.url(image_inside_filename)
-
-                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + '.jpg'
-                    image_store_cashier_filename = fs.save(image_store_cashier_filename, image_store_cashier)
-                    image_store_cashier_url = fs.url(image_store_cashier_filename)
-
-                    sale_report.image_outside = image_outside_url if image_outside_url is not None else None
-                    sale_report.image_inside = image_inside_url if image_inside_url is not None else None
-                    sale_report.image_store_cashier = image_store_cashier_url if image_store_cashier_url is not None else None
-                except Exception as e:
-                    return JsonResponse({
-                        'status': 500,
-                        'message': 'Save file error: ' + str(e),
-                    }, status=500)
-
+        # Xu ly request Chăm sóc
         else:
+            shop_id = datajson.get('shop_id')
+            shop_status = datajson.get('shop_status')
+            image_outside = datajson.get('image_outside')
+            image_inside = datajson.get('image_inside')
+            image_store_cashier = datajson.get('image_store_cashier')
+
+            cessation_of_business_note = datajson.get('cessation_of_business_note')
+            cessation_of_business_image = datajson.get('cessation_of_business_image')
+
+            customer_care_posm = datajson.get('customer_care_posm')
+            customer_care_cashier_reward = datajson.get('customer_care_cashier_reward')
+            customer_care_transaction = datajson.get('customer_care_transaction')
+
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
             try:
-                field_validator.validate_in_string_list(['0', '1', '2', '3', '4'], 'shop_status',
-                                                        format_string(str(shop_status)),
-                                                        False,
-                                                        False, True)
-                sale_report.shop_status = format_string(shop_status, True)
+                field_validator.validate_in_string_list(
+                    ['0', '1', '2', '3', '4'], 'shop_status', format_string(str(shop_status)), False, False, True)
+                sale_report.shop_status = int(shop_status)
                 if sale_report.shop_status == '2':
-                    field_validator.validate_in_string_list(['0', '1'], 'customer_care_cashier_reward',
-                                                            format_string(str(customer_care_cashier_reward)), False, False,
-                                                            True)
+                    field_validator.validate_in_string_list(
+                        ['0', '1'],
+                        'customer_care_cashier_reward',
+                        format_string(str(customer_care_cashier_reward)), False, False, True)
                     field_validator.validate_transaction(format_string(customer_care_transaction), False, False, True)
                     sale_report.customer_care_cashier_reward = format_string(customer_care_cashier_reward, True)
                     sale_report.customer_care_transaction = format_string(customer_care_transaction, True)
@@ -322,63 +283,27 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     field_validator.validate_note(format_string(cessation_of_business_note), False, False, True)
                     sale_report.cessation_of_business_note = format_string(cessation_of_business_note, True)
             except Exception as e:
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Validate error: ' + str(e),
-                }, status=400)
+                return self.response(status=400, message='Validate error: ' + str(e))
+
             # save image
             if not is_draft and shop_status == '2':
                 if image_outside is None or image_outside == '' \
                         or image_inside is None or image_inside == '' \
-                        or image_store_cashier is None and image_store_cashier == '':
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'image_outside, image_inside, image_store_cashier are required',
-                    }, status=400)
-                try:
-                    pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
+                        or image_store_cashier is None or image_store_cashier == '':
+                    return self.response(
+                        status=400, message='image_outside, image_inside, image_store_cashier are required')
 
-                    image_outside_filename = 'image_outside__' + pre_fix + '.jpg'
-                    image_outside_filename = fs.save(image_outside_filename, image_outside)
-                    image_outside_url = fs.url(image_outside_filename)
-
-                    image_inside_filename = 'image_inside__' + pre_fix + '.jpg'
-                    image_inside_filename = fs.save(image_inside_filename, image_inside)
-                    image_inside_url = fs.url(image_inside_filename)
-
-                    image_store_cashier_filename = 'image_store_cashier__' + pre_fix + '.jpg'
-                    image_store_cashier_filename = fs.save(image_store_cashier_filename, image_store_cashier)
-                    image_store_cashier_url = fs.url(image_store_cashier_filename)
-
-                    sale_report.image_outside = image_outside_url if image_outside_url is not None else None
-                    sale_report.image_inside = image_inside_url if image_inside_url is not None else None
-                    sale_report.image_store_cashier = image_store_cashier_url if image_store_cashier_url is not None else None
-                except Exception as e:
-                    return JsonResponse({
-                        'status': 500,
-                        'message': 'Save file error: ' + str(e),
-                    }, status=500)
+                sale_report.customer_care_posm = format_string(customer_care_posm, True)
+                sale_report.image_outside = image_outside
+                sale_report.image_inside = image_inside
+                sale_report.image_store_cashier = image_store_cashier
 
             if not is_draft and shop_status != '2':
                 if cessation_of_business_image is None or cessation_of_business_image == '':
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'cessation_of_business_image is required',
-                    }, status=400)
-                try:
-                    pre_fix = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S__')
+                    return self.response(
+                        status=400, message='cessation_of_business_image is required')
 
-                    cessation_of_business_filename = 'cessation_of_business_image__' + pre_fix + '.jpg'
-                    cessation_of_business_image_filename = fs.save(cessation_of_business_filename,
-                                                                   cessation_of_business_image)
-                    cessation_of_business_image_url = fs.url(cessation_of_business_image_filename)
-
-                    sale_report.cessation_of_business_image = cessation_of_business_image if cessation_of_business_image_url is not None else None
-                except Exception as e:
-                    return JsonResponse({
-                        'status': 500,
-                        'message': 'Save file error: ' + str(e),
-                    }, status=500)
+                sale_report.cessation_of_business_image = cessation_of_business_image
 
         sale_report.purpose = purpose
         sale_report.longitude = float(longitude)
@@ -390,15 +315,10 @@ class SaleReportViewSet(mixins.ListModelMixin,
         try:
             sale_report.save()
         except Exception as e:
-            return JsonResponse({
-                'status': 400,
-                'message': 'Save sale_report_form error: ' + str(e),
-            }, status=400)
+            return self.response(
+                status=400, message='Save sale_report_form error: ' + str(e))
 
-        return JsonResponse({
-            'status': 200,
-            'data': 'Created',
-        }, status=200)
+        return self.response(status=200, message='Created')
 
     def retrieve(self, request, pk):
         """
@@ -457,3 +377,9 @@ class SaleReportViewSet(mixins.ListModelMixin,
             'status': 200,
             'data': data
         })
+
+    def response(self, status, message):
+        return JsonResponse({
+            'status': int(status),
+            'message': str(message),
+        }, status=int(status))
