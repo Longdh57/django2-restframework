@@ -56,17 +56,18 @@ class Team(models.Model):
         try:
             old_data, new_data, type = self.compare()
             if type == TeamLogType.CREATED:
-                TeamLog.objects.create(new_data=new_data, team_id=self.id, type=type)
+                if kwargs.get('action') is None:
+                    TeamLog.objects.create(new_data=new_data, team_id=self.id, type=type, created_by=kwargs.get('user'))
             else:
-                TeamLog.objects.create(old_data=old_data, new_data=new_data, team_id=self.id, type=type)
+                TeamLog.objects.create(old_data=old_data, new_data=new_data, team_id=self.id, type=type, created_by=kwargs.get('user'))
         except Exception as e:
             logging.error('Save team exception: %s', e)
-        super(Team, self).save(*args, **kwargs)
+        super(Team, self).save()
 
     def delete(self, *args, **kwargs):
         try:
             old_data, new_data, type = self.compare()
-            TeamLog.objects.create(old_data=old_data, team_id=self.id, type=TeamLogType.DELETED)
+            TeamLog.objects.create(old_data=old_data, team_id=self.id, type=TeamLogType.DELETED, created_by=kwargs.get('user'))
         except Exception as e:
             logging.error('Delete team exception: %s', e)
         super(Team, self).delete()

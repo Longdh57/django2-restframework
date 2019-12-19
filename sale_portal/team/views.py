@@ -173,9 +173,11 @@ class TeamViewSet(mixins.ListModelMixin,
                 code=code.upper(),
                 name=name,
                 type=type,
-                description=description
+                description=description,
+                created_by=request.user,
+                updated_by=request.user
             )
-            team.save()
+            team.save(user=request.user)
 
             if staffs is not None and staffs != '':
                 role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
@@ -462,7 +464,8 @@ class TeamViewSet(mixins.ListModelMixin,
                 team.name = name
                 team.type = type
                 team.description = description
-                team.save()
+                team.updated_by = request.user
+                team.save(user=request.user, action="update")
 
             return JsonResponse({
                 'status': 200,
@@ -508,7 +511,7 @@ class TeamViewSet(mixins.ListModelMixin,
                 description='Delete team'
             )
 
-            team.delete()
+            team.delete(user=request.user)
 
             return JsonResponse({
                 'status': 200,
