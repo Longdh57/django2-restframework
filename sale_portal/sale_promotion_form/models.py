@@ -5,6 +5,7 @@ from sale_portal.sale_promotion_form import PromotionStatus
 from ..terminal.models import Terminal
 from ..shop.models import Shop
 from ..staff.models import Staff
+from ..user.models import User
 
 
 class SalePromotionTitle(models.Model):
@@ -20,10 +21,10 @@ class SalePromotionTitle(models.Model):
 
 class SalePromotion(models.Model):
 
-    terminal = models.ForeignKey(Terminal, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
-    shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
-    staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
-    title = models.ForeignKey(SalePromotionTitle, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
+    terminal = models.ForeignKey(Terminal, on_delete=models.SET_NULL, null=True, blank=True)
+    shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True)
+    staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True)
+    title = models.ForeignKey(SalePromotionTitle, on_delete=models.SET_NULL, null=True, blank=True)
 
     contact_person = models.CharField(max_length=100, help_text='contact_person', null=True)
     contact_phone_number = models.CharField(max_length=20, help_text='contact_phone_number', null=True)
@@ -47,6 +48,8 @@ class SalePromotion(models.Model):
 
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='sale_promotion_created_by', null=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='sale_promotion_updated_by', null=True)
 
     class Meta:
         db_table = 'sale_promotion_form'
