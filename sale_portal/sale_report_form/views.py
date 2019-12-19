@@ -259,7 +259,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             image_store_cashier = datajson.get('image_store_cashier')
 
             cessation_of_business_note = datajson.get('cessation_of_business_note')
-            cessation_of_business_image = datajson.get('cessation_of_business_image')
+            cessation_of_business_image_v2 = datajson.get('cessation_of_business_image')
 
             customer_care_posm = datajson.get('customer_care_posm')
             customer_care_cashier_reward = datajson.get('customer_care_cashier_reward')
@@ -299,11 +299,11 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 sale_report.image_store_cashier = image_store_cashier
 
             if not is_draft and shop_status != '2':
-                if cessation_of_business_image is None or cessation_of_business_image == '':
+                if cessation_of_business_image_v2 is None or cessation_of_business_image_v2 == '':
                     return self.response(
                         status=400, message='cessation_of_business_image is required')
 
-                sale_report.cessation_of_business_image = cessation_of_business_image
+                sale_report.cessation_of_business_image_v2 = cessation_of_business_image_v2
 
         sale_report.purpose = purpose
         sale_report.longitude = float(longitude)
