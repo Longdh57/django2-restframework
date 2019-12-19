@@ -8,6 +8,11 @@ from sale_portal.sale_report_form import SaleReportFormPurposeTypes, SaleReportF
 
 
 class SaleReport(models.Model):
+    DATA_VERSION = (
+        (1, 'Data synchronize from sale portal version 1'),
+        (2, 'Data create in sale portal version 2'),
+    )
+
     # Thong tin chung
     # Muc dich den Merchant
     purpose = models.IntegerField(choices=SaleReportFormPurposeTypes.CHOICES, default=0, null=False, blank=False)
@@ -29,6 +34,7 @@ class SaleReport(models.Model):
         on_delete=models.SET_NULL,
         related_name="sale_report_updated"
     )
+    data_version=models.IntegerField(choices=DATA_VERSION, default=2)
 
     # Noi dung mo moi
     new_merchant_name = models.CharField(max_length=255, help_text='Noi dung mo moi merchant_name', null=True)
@@ -59,11 +65,20 @@ class SaleReport(models.Model):
         help_text='Noi dung Cham soc - KQ cham soc, Noi dung Trien khai - image_store_cashier',
         blank=True
     )
+    image_outside_v2 = models.TextField(null=True, blank=True)
+    image_inside_v2 = models.TextField(null=True, blank=True)
+    image_store_cashier_v2 = models.TextField(null=True, blank=True)
 
     # Noi dung Trien khai
     implement_posm = models.TextField(help_text='Noi dung Trien khai - POSM', null=True)
-    implement_merchant_view = models.TextField(help_text='Noi dung Trien khai - merchant_view', null=True)
-    implement_career_guideline = models.TextField(help_text='Noi dung Trien khai - career_guideline', null=True)
+    implement_merchant_view = models.TextField(
+        help_text='Noi dung Trien khai - Merchant view cho Terminal gom nhung gi',
+        null=True
+    )
+    implement_career_guideline = models.TextField(
+        help_text='Noi dung Trien khai - Da huong dan nghiep vu cho ai',
+        null=True
+    )
     implement_confirm = models.IntegerField(choices=SaleReportFormShopConfirm.CHOICES, null=True, blank=True,
                                             help_text='Noi dung xac nhan cua hang')
     implement_new_address = models.TextField(help_text='Noi dung chuyen den dia chi moi', null=True)
@@ -87,13 +102,13 @@ class SaleReport(models.Model):
         default=0,
         null=True,
         blank=True,
-        help_text='Noi dung Cham soc - KQ cham soc - cashier_reward'
+        help_text='Noi dung Cham soc - KQ cham soc - Ky HD thuong thu ngan khong?'
     )
     customer_care_transaction = models.IntegerField(
         default=0,
         null=True,
         blank=True,
-        help_text='Noi dung Cham soc - KQ cham soc - care_transaction'
+        help_text='Noi dung Cham soc - KQ cham soc - SLGD phat sinh trong thoi gian cham soc'
     )
 
     # Bản nháp hay bản chính thức
