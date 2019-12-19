@@ -34,7 +34,7 @@ class SaleReport(models.Model):
         on_delete=models.SET_NULL,
         related_name="sale_report_updated"
     )
-    data_version=models.IntegerField(choices=DATA_VERSION, default=2)
+    data_version = models.IntegerField(choices=DATA_VERSION, default=2)
 
     # Noi dung mo moi
     new_merchant_name = models.CharField(max_length=255, help_text='Noi dung mo moi merchant_name', null=True)
@@ -93,6 +93,7 @@ class SaleReport(models.Model):
         help_text='Noi dung Cham soc - Cua hang nghi kinh doanh - image',
         blank=True
     )
+    cessation_of_business_image_v2 = models.TextField(null=True, blank=True)
 
     # Noi dung Cham soc - Ket qua cham soc
     shop_status = models.IntegerField(choices=SaleReportFormShopStatus.CHOICES, default=0, null=True, blank=True)
