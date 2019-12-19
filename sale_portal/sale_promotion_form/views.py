@@ -176,6 +176,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         sale_promotion.status = status
         sale_promotion.tentcard_ctkm = tentcard_ctkm
         sale_promotion.wobbler_ctkm = wobbler_ctkm
+        sale_promotion.updated_by = request.user
 
         sale_promotion.save()
         return JsonResponse({
@@ -267,7 +268,7 @@ def import_view(request):
             'update_status': ''
         }
         total_row += 1
-        result = import_view_update_action(data, is_submit, promotion_title)
+        result = import_view_update_action(data, request, is_submit, promotion_title)
         if result == 'Tạo mới':
             row_create += 1
         elif result == 'Update staff' or result == 'Update contact info':
@@ -301,7 +302,7 @@ def import_view(request):
         }, status=200)
 
 
-def import_view_update_action(data, is_submit=False, promotion_title=None):
+def import_view_update_action(data, request, is_submit=False, promotion_title=None):
     if data['terminal_id'] is None or str(data['terminal_id']) == '':
         return 'Terminal_ID: Terminal_ID trống - Lỗi dữ liệu'
     if data['shop_code'] is None or str(data['shop_code']) == '':
@@ -338,7 +339,9 @@ def import_view_update_action(data, is_submit=False, promotion_title=None):
 
                 tentcard_ctkm=False,
                 wobbler_ctkm=False,
-                status=0
+                status=0,
+                created_by=request.user,
+                updated_by=request.user
             )
             promotion.save()
         return 'Tạo mới'
@@ -357,6 +360,7 @@ def import_view_update_action(data, is_submit=False, promotion_title=None):
             promotion.contact_person = str(data['contact_person'])
             promotion.contact_phone_number = str(data['contact_phone_number'])
             promotion.contact_email = str(data['contact_email'])
+            promotion.updated_by = request.user
             promotion.save()
         return message
 

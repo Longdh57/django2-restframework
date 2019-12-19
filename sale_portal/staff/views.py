@@ -202,7 +202,8 @@ def change_staff_team(request):
                     team_code=team.code,
                     role_id=role.id,
                     log_type=StaffLogType.JOIN_TEAM,
-                    description='Change_staff_team: add new team'
+                    description='Change_staff_team: add new team',
+                    user=request.user
                 )
         # Thay doi team cho staff da duoc gan team
         if request.method == 'PUT':
@@ -227,7 +228,8 @@ def change_staff_team(request):
                     team_code=team.code,
                     role_id=role.id,
                     log_type=StaffLogType.OUT_TEAM,
-                    description='Change_staff_team: out and join other team'
+                    description='Change_staff_team: out and join other team',
+                    user=request.user
                 )
                 Shop.objects.filter(staff=staff).update(
                     staff=None
@@ -251,7 +253,8 @@ def change_staff_team(request):
                     team_code=team.code,
                     role_id=None,
                     log_type=StaffLogType.OUT_TEAM,
-                    description='Change_staff_team: out team'
+                    description='Change_staff_team: out team',
+                    user=request.user
                 )
                 Shop.objects.filter(staff=staff).update(
                     staff=None
