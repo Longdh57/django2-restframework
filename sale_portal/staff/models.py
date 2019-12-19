@@ -99,6 +99,7 @@ class Staff(models.Model):
                     role_id=kwargs.get('role_id'),
                     type=kwargs.get('log_type'),
                     description=kwargs.get('description'),
+                    created_by=kwargs.get('user'),
                 )
 
             if kwargs.get('log_type') and kwargs.get('old_team_id') and kwargs.get('old_team_code'):
@@ -109,6 +110,7 @@ class Staff(models.Model):
                     role_id=None,
                     type=StaffLogType.OUT_TEAM,
                     description=kwargs.get('description'),
+                    created_by=kwargs.get('user'),
                 )
                 StaffLog.objects.create(
                     staff_id=kwargs.get('staff_id'),
@@ -117,10 +119,11 @@ class Staff(models.Model):
                     role_id=kwargs.get('role_id'),
                     type=StaffLogType.JOIN_TEAM,
                     description=kwargs.get('description'),
+                    created_by=kwargs.get('user'),
                 )
 
+            old_data, new_data, type = self.compare()
             if kwargs.get('log_type') is None and type == StaffLogType.UPDATED:
-                old_data, new_data, type = self.compare()
                 StaffLog.objects.create(old_data=old_data, new_data=new_data, staff_id=self.id, type=type)
 
         except Exception as e:

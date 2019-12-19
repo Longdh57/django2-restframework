@@ -2,7 +2,7 @@ import json
 import logging
 from django.contrib.auth.models import Group
 from django.http import JsonResponse
-from rest_framework.permissions import IsAdminUser
+from rest_framework import permissions
 from rest_framework import viewsets, mixins
 from .serializers import UserSerializer, GroupSerializer
 from ..staff.models import Staff
@@ -70,13 +70,21 @@ def get_staffs_viewable(user):
     return staff_ids
 
 
+class PermissionIsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated and request.user.is_superuser:
+            return True
+        return False
+
+
 class GroupViewSet(mixins.ListModelMixin,
                   viewsets.GenericViewSet):
     """
         API get list group_permission \n
     """
     serializer_class = GroupSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [PermissionIsAdmin]
+    ordering = ['-id']
 
     def get_queryset(self):
         queryset = Group.objects.all()

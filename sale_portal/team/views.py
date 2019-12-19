@@ -204,7 +204,8 @@ class TeamViewSet(mixins.ListModelMixin,
                         team_code=team.code,
                         role_id=role_leader.id,
                         log_type=StaffLogType.JOIN_TEAM,
-                        description='Create new team: add management'
+                        description='Create new team: add management',
+                        user=request.user
                     )
 
             return JsonResponse({
@@ -428,7 +429,8 @@ class TeamViewSet(mixins.ListModelMixin,
                         team_code=team.code,
                         role_id=role_leader.id,
                         log_type=StaffLogType.JOIN_TEAM,
-                        description='Update team: add new management'
+                        description='Update team: add new management',
+                        user=request.user
                     )
 
                 if update_to_staff_id is not None:
@@ -440,7 +442,8 @@ class TeamViewSet(mixins.ListModelMixin,
                         team_code=team.code,
                         role_id=role_staff.id,
                         log_type=StaffLogType.UPDATE_ROLE,
-                        description='Update team: demote to staff'
+                        description='Update team: demote to staff',
+                        user=request.user
                     )
 
                 if update_to_leader_id is not None:
@@ -452,7 +455,8 @@ class TeamViewSet(mixins.ListModelMixin,
                         team_code=team.code,
                         role_id=role_leader.id,
                         log_type=StaffLogType.UPDATE_ROLE,
-                        description='Update team: promote to management'
+                        description='Update team: promote to management',
+                        user=request.user
                     )
 
                 team.name = name
@@ -529,7 +533,8 @@ class TeamViewSet(mixins.ListModelMixin,
                     team_code=team.code,
                     type=type,
                     role_id=role_id,
-                    description=description)
+                    description=description,
+                    created_by=self.request.user)
                 )
             StaffLog.objects.bulk_create(staff_logs)
         except Exception as e:
