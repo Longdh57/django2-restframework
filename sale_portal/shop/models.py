@@ -128,6 +128,7 @@ def create_or_update_document(sender, instance, created, *args, **kwargs):
     )
     return
 
+
 class ShopLog(models.Model):
     old_data = JSONField(blank=True, default=dict)
     new_data = JSONField(blank=True, default=dict)

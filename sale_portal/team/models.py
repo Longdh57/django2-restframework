@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 
 from sale_portal.team import TeamType, TeamLogType
+from sale_portal.user.models import User
 
 
 class Team(models.Model):
@@ -14,6 +15,8 @@ class Team(models.Model):
     description = models.TextField(null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='team_created_by', null=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='team_updated_by', null=True)
 
     class Meta:
         db_table = 'team'
@@ -78,6 +81,7 @@ class TeamLog(models.Model):
     team_id = models.IntegerField(blank=True, null=True)
     type = models.IntegerField(choices=TeamLogType.CHOICES)
     created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='team_log_created_by', null=True)
 
     class Meta:
         db_table = 'team_log'

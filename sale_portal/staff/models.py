@@ -6,6 +6,7 @@ from django.contrib.postgres.fields import JSONField
 
 from sale_portal.team.models import Team
 from sale_portal.staff import StaffLogType
+from ..user.models import User
 
 
 class StaffTeamRole(models.Model):
@@ -138,6 +139,7 @@ class StaffLog(models.Model):
     role_id = models.IntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='staff_log_created_by', null=True)
 
     class Meta:
         db_table = 'staff_log'

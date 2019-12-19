@@ -8,6 +8,7 @@ from sale_portal.merchant.models import Merchant
 from sale_portal.terminal import TerminalLogType
 from ..qr_status.models import QrStatus
 from ..administrative_unit.models import QrProvince, QrDistrict, QrWards
+from ..user.models import User
 
 
 class QrTerminal(models.Model):
@@ -215,6 +216,7 @@ class TerminalLog(models.Model):
     type = models.IntegerField(choices=TerminalLogType.CHOICES)
     terminal_id = models.IntegerField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='terminal_log_created_by', null=True)
 
     class Meta:
         db_table = 'terminal_log'
