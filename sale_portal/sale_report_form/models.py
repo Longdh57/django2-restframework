@@ -68,6 +68,7 @@ class SaleReport(models.Model):
     image_outside_v2 = models.TextField(null=True, blank=True)
     image_inside_v2 = models.TextField(null=True, blank=True)
     image_store_cashier_v2 = models.TextField(null=True, blank=True)
+    posm_v2 = models.TextField(null=True, blank=True)
 
     # Noi dung Trien khai
     implement_posm = models.TextField(help_text='Noi dung Trien khai - POSM', null=True)

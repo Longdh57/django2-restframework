@@ -8,6 +8,9 @@ from sale_portal.staff.models import Staff
 class SaleReportSerializer(serializers.ModelSerializer):
     created_by = serializers.SerializerMethodField()
     merchant = serializers.SerializerMethodField()
+    image_outside = serializers.SerializerMethodField()
+    image_inside = serializers.SerializerMethodField()
+    image_store_cashier = serializers.SerializerMethodField()
     created_date = serializers.SerializerMethodField()
     updated_date = serializers.SerializerMethodField()
 
@@ -46,6 +49,24 @@ class SaleReportSerializer(serializers.ModelSerializer):
                     'brand': merchant.merchant_brand,
                 }
         return None
+
+    def get_image_outside(self, sale_report):
+        if sale_report.data_version == 1:
+            return sale_report.image_outside
+        else:
+            return sale_report.image_outside_v2
+
+    def get_image_inside(self, sale_report):
+        if sale_report.data_version == 1:
+            return sale_report.image_inside
+        else:
+            return sale_report.image_inside_v2
+
+    def get_image_store_cashier(self, sale_report):
+        if sale_report.data_version == 1:
+            return sale_report.image_store_cashier
+        else:
+            return sale_report.image_store_cashier_v2
 
     def get_created_date(self, sale_report):
         return formats.date_format(sale_report.created_date,

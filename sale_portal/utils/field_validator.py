@@ -133,3 +133,9 @@ def validate_transaction(input, allow_none=False, allow_blank=False, rase_except
             raise Exception('Transaction is invalid.')
         else:
             return False
+
+
+def validate_posm_field(name, input):
+    if not isinstance(input, int):
+        raise Exception('Type of {} not equal Interger'.format(name))
+    return True
