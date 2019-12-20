@@ -1,22 +1,18 @@
-import datetime
 import json
-import time
 from datetime import date
 from datetime import datetime as dt_datetime
 
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 
-from sale_portal.sale_report_form.models import SaleReport
-from sale_portal.sale_report_form.serializers import SaleReportSerializer
 from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff
 from sale_portal.user.models import User
+from sale_portal.staff.models import Staff
 from sale_portal.utils import field_validator
+from sale_portal.sale_report_form.models import SaleReport
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.sale_report_form.serializers import SaleReportSerializer
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -96,10 +92,17 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 HA nghiệm thu (Ngoài CH) - *image_outside - binary - {} - image_outside: (binary)   \n
                 HA nghiệm thu (Trong CH) - *image_inside - binary - {} - image_inside: (binary)   \n
                 HA nghiệm thu (Quầy thu ngân) - *image_store_cashier - binary - {} - image_store_cashier: (binary)   \n
+                Bộ posm triển khai bao gồm - standeeQr - int - {} - standeeQr: 2   \n
+                Bộ posm triển khai bao gồm - stickerTable - int - {} - stickerTable: 2   \n
+                Bộ posm triển khai bao gồm - wobbler - int - {} - wobbler: 2   \n
+                Bộ posm triển khai bao gồm - standeeCtkm - int - {} - standeeCtkm: 2   \n
+                Bộ posm triển khai bao gồm - stickerDoor - int - {} - stickerDoor: 2   \n
+                Bộ posm triển khai bao gồm - guide - int - {} - guide: 2   \n
+                Bộ posm triển khai bao gồm - poster - int - {} - poster: 2   \n
+                Bộ posm triển khai bao gồm - tentcard - int - {} - tentcard: 2   \n
 
             Các trường cho tạo báo cáo triển khai   \n
                 Xác thực shop - *implement_confirm - int - [0, 1, 2] - implement_confirm: 1   \n
-                Bộ posm triển khai bao gồm - implement_posm - text - {} - implement_posm:[{"standeeQr":"2","stickerDoor":"4","stickerTable":"4","guide":"4","wobbler":"4","poster":"3","standeeCtkm":"4","tentcard":"4"}]   \n
                 Merchant view cho Terminal gồm - *implement_merchant_view - array() - [1: 'web', 2: 'app', 3: 'other'] - implement_merchant_view: [2, 3]   \n
                 Đã hướng dẫn nghiệp vụ cho - *implement_career_guideline - array() - [0: 'Thu ngân', 1: 'Cửa hàng trưởng'] - implement_career_guideline: [0, 1]   \n
             Nếu Triển khai - implement_confirm = 1 thì nhập thêm trường   \n
@@ -111,7 +114,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 Mô tả - *cessation_of_business_note - text - {} - cessation_of_business_note: 'Không tìm được cửa hàng để chăm sóc'   \n
                 Ảnh nghiệm thu - *cessation_of_business_image - binary - {} - cessation_of_business_image: (binary)   \n
             Nếu shop_status = 2 cần upload 3 ảnh & thêm các trường dưới  \n
-                Bộ posm triển khai bao gồm: (note: 8 mục, bỏ cái 'Hàng 9' đi) - customer_care_posm - text - {} - customer_care_posm:[{"standeeQr":"2","stickerDoor":"4","stickerTable":"4","guide":"4","wobbler":"4","poster":"3","standeeCtkm":"4","tentcard":"4"}]   \n
                 Ký HĐ thưởng thu ngân không - *customer_care_cashier_reward - int - [0: 'Không', 1: 'Có'] - customer_care_cashier_reward: 0   \n
                 Số giao dịch phát sinh trong thời gian chăm sóc - *customer_care_transaction - int - {} - customer_care_transaction: 4   \n
 
@@ -217,6 +219,15 @@ class SaleReportViewSet(mixins.ListModelMixin,
             implement_confirm = datajson.get('implement_confirm')
             implement_new_address = datajson.get('new_address_input')
 
+            standeeQr = datajson.get('standeeQr')
+            stickerTable = datajson.get('stickerTable')
+            wobbler = datajson.get('wobbler')
+            standeeCtkm = datajson.get('standeeCtkm')
+            stickerDoor = datajson.get('stickerDoor')
+            guide = datajson.get('guide')
+            poster = datajson.get('poster')
+            tentcard = datajson.get('tentcard')
+
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
 
@@ -232,6 +243,34 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 if implement_confirm == '1':
                     field_validator.validate_address(format_string(implement_new_address), False, False, True)
                     sale_report.implement_new_address = format_string(implement_new_address, True)
+            except Exception as e:
+
+                return self.response(status=400, message='Validate error: ' + str(e))
+
+            # validate posm field
+            try:
+                posm_v2 = {}
+                field_validator.validate_posm_field(name='standeeQr', input=standeeQr)
+                field_validator.validate_posm_field(name='stickerTable', input=stickerTable)
+                field_validator.validate_posm_field(name='wobbler', input=wobbler)
+                field_validator.validate_posm_field(name='standeeCtkm', input=standeeCtkm)
+                field_validator.validate_posm_field(name='stickerDoor', input=stickerDoor)
+                field_validator.validate_posm_field(name='guide', input=guide)
+                field_validator.validate_posm_field(name='poster', input=poster)
+                field_validator.validate_posm_field(name='tentcard', input=tentcard)
+
+                posm_v2.update({
+                    'standeeQr': standeeQr,
+                    'stickerTable': stickerTable,
+                    'wobbler': wobbler,
+                    'standeeCtkm': standeeCtkm,
+                    'stickerDoor': stickerDoor,
+                    'guide': guide,
+                    'poster': poster,
+                    'tentcard': tentcard,
+                })
+                sale_report.posm_v2 = posm_v2
+
             except Exception as e:
                 return self.response(status=400, message='Validate error: ' + str(e))
 
@@ -258,6 +297,15 @@ class SaleReportViewSet(mixins.ListModelMixin,
             image_inside = datajson.get('image_inside')
             image_store_cashier = datajson.get('image_store_cashier')
 
+            standeeQr = datajson.get('standeeQr')
+            stickerTable = datajson.get('stickerTable')
+            wobbler = datajson.get('wobbler')
+            standeeCtkm = datajson.get('standeeCtkm')
+            stickerDoor = datajson.get('stickerDoor')
+            guide = datajson.get('guide')
+            poster = datajson.get('poster')
+            tentcard = datajson.get('tentcard')
+
             cessation_of_business_note = datajson.get('cessation_of_business_note')
             cessation_of_business_image_v2 = datajson.get('cessation_of_business_image')
 
@@ -267,11 +315,12 @@ class SaleReportViewSet(mixins.ListModelMixin,
 
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
+
             try:
                 field_validator.validate_in_string_list(
                     ['0', '1', '2', '3', '4'], 'shop_status', format_string(str(shop_status)), False, False, True)
                 sale_report.shop_status = int(shop_status)
-                if sale_report.shop_status == '2':
+                if sale_report.shop_status == 2:
                     field_validator.validate_in_string_list(
                         ['0', '1'],
                         'customer_care_cashier_reward',
@@ -285,8 +334,35 @@ class SaleReportViewSet(mixins.ListModelMixin,
             except Exception as e:
                 return self.response(status=400, message='Validate error: ' + str(e))
 
+            # validate posm field
+            try:
+                posm_v2 = {}
+                field_validator.validate_posm_field(name='standeeQr', input=standeeQr)
+                field_validator.validate_posm_field(name='stickerTable', input=stickerTable)
+                field_validator.validate_posm_field(name='wobbler', input=wobbler)
+                field_validator.validate_posm_field(name='standeeCtkm', input=standeeCtkm)
+                field_validator.validate_posm_field(name='stickerDoor', input=stickerDoor)
+                field_validator.validate_posm_field(name='guide', input=guide)
+                field_validator.validate_posm_field(name='poster', input=poster)
+                field_validator.validate_posm_field(name='tentcard', input=tentcard)
+
+                posm_v2.update({
+                    'standeeQr': standeeQr,
+                    'stickerTable': stickerTable,
+                    'wobbler': wobbler,
+                    'standeeCtkm': standeeCtkm,
+                    'stickerDoor': stickerDoor,
+                    'guide': guide,
+                    'poster': poster,
+                    'tentcard': tentcard,
+                })
+                sale_report.posm_v2 = posm_v2
+
+            except Exception as e:
+                return self.response(status=400, message='Validate error: ' + str(e))
+
             # save image
-            if not is_draft and shop_status == '2':
+            if not is_draft and shop_status == 2:
                 if image_outside is None or image_outside == '' \
                         or image_inside is None or image_inside == '' \
                         or image_store_cashier is None or image_store_cashier == '':
@@ -298,7 +374,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 sale_report.image_inside = image_inside
                 sale_report.image_store_cashier = image_store_cashier
 
-            if not is_draft and shop_status != '2':
+            if not is_draft and shop_status != 2:
                 if cessation_of_business_image_v2 is None or cessation_of_business_image_v2 == '':
                     return self.response(
                         status=400, message='cessation_of_business_image is required')
@@ -328,6 +404,17 @@ class SaleReportViewSet(mixins.ListModelMixin,
         if sale_report.shop_code is not None and sale_report.shop_code != '':
             shop = get_object_or_404(Shop, code=sale_report.shop_code)
 
+        if sale_report.data_version == 1:
+            image_outside = sale_report.image_outside.url if sale_report.image_outside else ''
+            image_inside = sale_report.image_inside.url if sale_report.image_inside else ''
+            image_store_cashier = sale_report.image_store_cashier.url if sale_report.image_store_cashier else ''
+            posm = ''
+        else:
+            image_outside = sale_report.image_outside_v2
+            image_inside = sale_report.image_inside_v2
+            image_store_cashier = sale_report.image_store_cashier_v2
+            posm = sale_report.posm_v2
+
         data = {
             'purpose': sale_report.purpose,
             'longitude': sale_report.longitude,
@@ -352,21 +439,20 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 'shop_name': shop.name if sale_report.shop_code else ''
             },
             'shop_status': sale_report.shop_status,
-            'image_outside': sale_report.image_outside.url if sale_report.image_outside else '',
-            'image_inside': sale_report.image_inside.url if sale_report.image_inside else '',
-            'image_store_cashier': sale_report.image_store_cashier.url if sale_report.image_store_cashier else '',
+            'image_outside': image_outside,
+            'image_inside': image_inside,
+            'image_store_cashier': image_store_cashier,
+            'posm': posm,
 
             # nghỉ kinh doanh
             'cessation_of_business_note': sale_report.cessation_of_business_note,
             'cessation_of_business_image': sale_report.cessation_of_business_image.url if sale_report.cessation_of_business_image else '',
 
             # chăm sóc
-            'customer_care_posm': sale_report.customer_care_posm,
             'customer_care_cashier_reward': sale_report.customer_care_cashier_reward,
             'customer_care_transaction': sale_report.customer_care_transaction,
 
             # triển khai
-            'implement_posm': sale_report.implement_posm,
             'implement_merchant_view': sale_report.implement_merchant_view,
             'implement_career_guideline': sale_report.implement_career_guideline,
             'implement_confirm': sale_report.implement_confirm,
