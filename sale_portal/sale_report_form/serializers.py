@@ -104,6 +104,13 @@ class SaleReportStatisticSerializer(serializers.Serializer):
     count_care_opening = serializers.IntegerField()
     count_care_uncooperative = serializers.IntegerField()
     count_standee_qr = serializers.IntegerField()
+    count_sticker_door = serializers.IntegerField()
+    count_sticker_table = serializers.IntegerField()
+    count_guide = serializers.IntegerField()
+    count_wobbler = serializers.IntegerField()
+    count_poster = serializers.IntegerField()
+    count_standee_ctkm = serializers.IntegerField()
+    count_tentcard = serializers.IntegerField()
 
     # staff = serializers.SerializerMethodField()
     #

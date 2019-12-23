@@ -2,17 +2,12 @@ import json
 from datetime import date
 from datetime import datetime as dt_datetime
 
-from django.conf import settings
-from django.contrib.postgres.fields.jsonb import KeyTextTransform
-from django.core.files.storage import FileSystemStorage
-from django.db.models.expressions import RawSQL
+import datetime
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
-from django.db.models import Min
 
-from sale_portal.sale_report_form.models import SaleReport
-from sale_portal.sale_report_form.serializers import SaleReportSerializer, SaleReportStatisticSerializer
+from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
 from sale_portal.shop.models import Shop
 from sale_portal.user.models import User
 from sale_portal.staff.models import Staff
@@ -264,7 +259,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     'poster': poster,
                     'tentcard': tentcard,
                 })
-                sale_report.posm_v2 = posm_v2
+                sale_report.posm_v2 = json.dumps(posm_v2)
                 if implement_confirm == '1':
                     field_validator.validate_address(format_string(implement_new_address), False, False, True)
                     sale_report.implement_new_address = format_string(implement_new_address, True)
@@ -343,7 +338,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                         'poster': poster,
                         'tentcard': tentcard,
                     })
-                    sale_report.posm_v2 = posm_v2
+                    sale_report.posm_v2 = json.dumps(posm_v2)
                 else:
                     field_validator.validate_note(format_string(cessation_of_business_note), False, False, True)
                     sale_report.cessation_of_business_note = format_string(cessation_of_business_note, True)
@@ -468,13 +463,19 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
         team_id = self.request.query_params.get('team_id', None)
         raw_query = get_raw_query_statistic(report_date=report_date, report_month=report_month, team_id=team_id)
         queryset = SaleReport.objects.raw(raw_query)
-        # queryset = SaleReport.objects.filter(is_draft=False).annotate(
-        #     val=RawSQL("CAST(implement_posm :: json ->> %s as Integer)", ('standee_qr',))
-        # ).aggregate(result=Min('val'))
         return queryset
 
 
 def get_raw_query_statistic(report_date=None, report_month=None, team_id=None):
+    filter_time = ''
+    if report_month is not None and report_month != '':
+        filter_time += "and to_char(created_date, 'MM-YYYY') = '" + report_month + "'"
+    else:
+        if report_date is None or report_date == '':
+            report_date = datetime.date.today()
+        filter_time += "and created_date :: date = '" + str(report_date) + "'"
+
+    filter_user = 'and created_by_id is not null'
     raw_query = '''
         SELECT au.username,
                au.email, 
@@ -535,24 +536,65 @@ def get_raw_query_statistic(report_date=None, report_month=None, team_id=None):
                                               AND shop_status = 3 THEN 1 
                                           ELSE NULL 
                                         END)    AS count_care_uncooperative ,
-                                 Sum(case when is_json(implement_posm) and implement_posm :: json ->> 'standee_qr' is not null and
-                                    implement_posm :: json ->> 'standee_qr' ~ E'^\\\d+$' and purpose = 1
-                                    then
-                                    CAST(implement_posm :: json ->> 'standee_qr' as Integer)
-                                    else
-                                      0
-                                    end +
-                                    case when
-                                      is_json(customer_care_posm) and customer_care_posm :: json ->> 'customer_care_standeeQr' is not null and
-                                      customer_care_posm :: json ->> 'customer_care_standeeQr' ~ E'^\\\d+$' and purpose = 2
-                                      then
-                                        CAST(customer_care_posm :: json ->> 'customer_care_standeeQr' as Integer)
-                                    else
-                                      0
-                                    end)             AS count_standee_qr
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'standeeQr' is not null and
+                                            posm_v2 :: json ->> 'standeeQr' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'standeeQr' as Integer)
+                                        ELSE 0
+                                    END)       AS count_standee_qr,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'stickerDoor' is not null and
+                                            posm_v2 :: json ->> 'stickerDoor' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'stickerDoor' as Integer)
+                                        ELSE 0
+                                    END)       AS count_sticker_door,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'stickerTable' is not null and
+                                            posm_v2 :: json ->> 'stickerTable' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'stickerTable' as Integer)
+                                        ELSE 0
+                                    END)       AS count_sticker_table,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'guide' is not null and
+                                            posm_v2 :: json ->> 'guide' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'guide' as Integer)
+                                        ELSE 0
+                                    END)       AS count_guide,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'wobbler' is not null and
+                                            posm_v2 :: json ->> 'wobbler' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'wobbler' as Integer)
+                                        ELSE 0
+                                    END)       AS count_wobbler,
+                                   Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'poster' is not null and
+                                            posm_v2 :: json ->> 'poster' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'poster' as Integer)
+                                        ELSE 0
+                                    END)       AS count_poster,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'standeeCtkm' is not null and
+                                            posm_v2 :: json ->> 'standeeCtkm' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'standeeCtkm' as Integer)
+                                        ELSE 0
+                                    END)       AS count_standee_ctkm,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'tentcard' is not null and
+                                            posm_v2 :: json ->> 'tentcard' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'tentcard' as Integer)
+                                        ELSE 0
+                                    END)       AS count_tentcard                                                                                                                                                  
                           FROM   sale_report_form 
-                          WHERE  is_draft = false 
+                          WHERE  is_draft = false %s %s
                           GROUP  BY created_by_id) AS data_statistic 
                       ON data_statistic.id = au.id; 
-    '''
+    ''' % (filter_time, filter_user)
     return raw_query
