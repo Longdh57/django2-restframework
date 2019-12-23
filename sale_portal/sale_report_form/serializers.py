@@ -88,3 +88,32 @@ class SaleReportSerializer(serializers.ModelSerializer):
             'implement_career_guideline',
             'merchant'
         )
+
+
+class SaleReportStatisticSerializer(serializers.Serializer):
+    result = serializers.IntegerField()
+    staff = serializers.SerializerMethodField()
+
+    def get_staff(self, sale_report):
+        staff = Staff.objects.filter(email=sale_report.created_by).first()
+        if staff is None:
+            return {
+                'user_id': sale_report.created_by.id,
+                'staff_id': 'N/A',
+                'full_name': 'N/A',
+                'email': sale_report.created_by.email,
+                'team': 'N/A'
+            }
+        else:
+            return {
+                'user_id': sale_report.created_by.id,
+                'staff_id': staff.id,
+                'full_name': staff.full_name,
+                'email': staff.email,
+                'team': {
+                    'id': staff.team.id,
+                    'code': staff.team.code,
+                    'name': staff.team.name if staff.team.name is not None else 'N/A',
+                    'description': staff.team.description if staff.team.description is not None else 'N/A',
+                } if staff.team is not None else 'N/A'
+            }

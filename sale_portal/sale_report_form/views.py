@@ -5,13 +5,16 @@ from datetime import date
 from datetime import datetime as dt_datetime
 
 from django.conf import settings
+from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.core.files.storage import FileSystemStorage
+from django.db.models.expressions import RawSQL
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
+from django.db.models import Min
 
 from sale_portal.sale_report_form.models import SaleReport
-from sale_portal.sale_report_form.serializers import SaleReportSerializer
+from sale_portal.sale_report_form.serializers import SaleReportSerializer, SaleReportStatisticSerializer
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
 from sale_portal.user.models import User
@@ -383,3 +386,29 @@ class SaleReportViewSet(mixins.ListModelMixin,
             'status': int(status),
             'message': str(message),
         }, status=int(status))
+
+
+class SaleReportStatisticViewSet(mixins.ListModelMixin,
+                                 viewsets.GenericViewSet):
+    serializer_class = SaleReportStatisticSerializer
+
+    def get_queryset(self):
+        print('call')
+        # report_date = self.request.query_params.get('date', None)
+        # report_month = self.request.query_params.get('month', None)
+        # team_id = self.request.query_params.get('team_id', None)
+        # raw_query = get_raw_query_statistic(request, report_date=report_date, report_month=report_month, team_id=team_id)
+        # paginator = LimitOffsetPagination()
+        # paginator.limit_query_param = 'length'
+        # paginator.offset_query_param = 'start'
+        # if raw_query == '':
+        #     result_page = paginator.paginate_queryset([], request)
+        # else:
+        #     result_page = paginator.paginate_queryset(list(SaleReport.objects.raw(raw_query)), request)
+        #
+        # serializer = SaleReportStatisticSerializer(result_page, many=True)
+        # return paginator.get_paginated_response(serializer.data)
+        queryset = SaleReport.objects.filter(is_draft=False).annotate(
+            val=RawSQL("CAST(implement_posm :: json -> 0 ->> %s as Integer)", ('standee_qr',))
+        ).aggregate(result=Min('val'))
+        return queryset
