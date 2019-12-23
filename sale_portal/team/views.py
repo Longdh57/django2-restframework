@@ -36,8 +36,7 @@ class PermissionWriteData(permissions.BasePermission):
         return False
 
 
-class TeamViewSet(mixins.ListModelMixin,
-                  viewsets.GenericViewSet):
+class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
         API get list Team \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
@@ -525,7 +524,7 @@ class TeamViewSet(mixins.ListModelMixin,
                 'data': 'Internal sever error'
             }, status=500)
 
-    def create_staff_log(self, staff_ids, team, type, role_id, description):
+    def create_staff_log(self, staff_ids, team, type, role_id, description, user=None):
         try:
             staff_logs = []
 
@@ -537,7 +536,7 @@ class TeamViewSet(mixins.ListModelMixin,
                     type=type,
                     role_id=role_id,
                     description=description,
-                    created_by=self.request.user)
+                    created_by=user or None)
                 )
             StaffLog.objects.bulk_create(staff_logs)
         except Exception as e:
