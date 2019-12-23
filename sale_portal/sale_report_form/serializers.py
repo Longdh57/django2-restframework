@@ -88,29 +88,45 @@ class SaleReportSerializer(serializers.ModelSerializer):
 
 
 class SaleReportStatisticSerializer(serializers.Serializer):
-    result = serializers.IntegerField()
-    staff = serializers.SerializerMethodField()
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    full_name = serializers.CharField()
+    count_total = serializers.IntegerField()
+    count_new = serializers.IntegerField()
+    count_impl = serializers.IntegerField()
+    count_care = serializers.IntegerField()
+    count_new_signed = serializers.IntegerField()
+    count_new_unsigned = serializers.IntegerField()
+    count_new_consider = serializers.IntegerField()
+    count_new_refused = serializers.IntegerField()
+    count_care_cessation = serializers.IntegerField()
+    count_care_liquidation = serializers.IntegerField()
+    count_care_opening = serializers.IntegerField()
+    count_care_uncooperative = serializers.IntegerField()
+    count_standee_qr = serializers.IntegerField()
 
-    def get_staff(self, sale_report):
-        staff = Staff.objects.filter(email=sale_report.created_by).first()
-        if staff is None:
-            return {
-                'user_id': sale_report.created_by.id,
-                'staff_id': 'N/A',
-                'full_name': 'N/A',
-                'email': sale_report.created_by.email,
-                'team': 'N/A'
-            }
-        else:
-            return {
-                'user_id': sale_report.created_by.id,
-                'staff_id': staff.id,
-                'full_name': staff.full_name,
-                'email': staff.email,
-                'team': {
-                    'id': staff.team.id,
-                    'code': staff.team.code,
-                    'name': staff.team.name if staff.team.name is not None else 'N/A',
-                    'description': staff.team.description if staff.team.description is not None else 'N/A',
-                } if staff.team is not None else 'N/A'
-            }
+    # staff = serializers.SerializerMethodField()
+    #
+    # def get_staff(self, sale_report):
+    #     staff = Staff.objects.filter(email=sale_report.created_by).first()
+    #     if staff is None:
+    #         return {
+    #             'user_id': sale_report.created_by.id,
+    #             'staff_id': 'N/A',
+    #             'full_name': 'N/A',
+    #             'email': sale_report.created_by.email,
+    #             'team': 'N/A'
+    #         }
+    #     else:
+    #         return {
+    #             'user_id': sale_report.created_by.id,
+    #             'staff_id': staff.id,
+    #             'full_name': staff.full_name,
+    #             'email': staff.email,
+    #             'team': {
+    #                 'id': staff.team.id,
+    #                 'code': staff.team.code,
+    #                 'name': staff.team.name if staff.team.name is not None else 'N/A',
+    #                 'description': staff.team.description if staff.team.description is not None else 'N/A',
+    #             } if staff.team is not None else 'N/A'
+    #         }

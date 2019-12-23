@@ -123,7 +123,7 @@ def validate_note(input, allow_none=False, allow_blank=False, rase_exception=Fal
 
 
 def validate_transaction(input, allow_none=False, allow_blank=False, rase_exception=False):
-    string_common_validate = validate_string_field('Note', input, allow_none, allow_blank, rase_exception)
+    string_common_validate = validate_string_field('Transaction', input, allow_none, allow_blank, rase_exception)
     if not str(string_common_validate) == 'continue':
         return string_common_validate
     if input.isdigit():
@@ -136,6 +136,6 @@ def validate_transaction(input, allow_none=False, allow_blank=False, rase_except
 
 
 def validate_posm_field(name, input):
-    if not isinstance(input, int) or input is None or input == '':
+    if input is not None and not str(input).isdigit():
         raise Exception('{} is required and typeOf {} must equal Interger'.format(name, name))
     return True
