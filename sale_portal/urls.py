@@ -17,16 +17,16 @@ schema_view = get_swagger_view(title='Sale_Portal API')
 
 api_urlpatterns = [
     url(r'^login', include(login_urls)),
-    url(r'^users/', include((account_urls, 'account'), namespace='account')),
     url(r'^merchants/', include((merchant_urls, 'merchant'), namespace='merchant')),
     url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),
-    url(r'^sale-promotion-form/', include((sale_promotion_form_urls, 'sale_promotion_form'), namespace='sale_promotion_form')),
+    url(r'^sale-promotion-form/',
+        include((sale_promotion_form_urls, 'sale_promotion_form'), namespace='sale_promotion_form')),
     url(r'^staffs/', include((staff_urls, 'staff'), namespace='staff')),
     url(r'^teams/', include((team_urls, 'team'), namespace='team')),
     url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
     url(r'^shop/', include((shop_urls, 'shop'), namespace='shop')),
+    url(r'^users/', include((account_urls, 'account'), namespace='account')),
 ]
-
 urlpatterns = [
     url(r'^$', schema_view),
     url(r'^api/', include((api_urlpatterns, 'api'), namespace='api')),

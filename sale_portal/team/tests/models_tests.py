@@ -15,27 +15,13 @@ class TestTeamModel:
         team = mixer.blend(Team, name='Team Ha Noi', code='HN1')
         assert team.type == 0
 
-    def create_team_duplicate_code(self):
-        try:
-            mixer.blend(Team, name='Team Ha Noi', code='HN1')
-            mixer.blend(Team, name='Team Ha Nang', code='HN1')
-        except Exception as e:
-            raise Exception(e)
-
-    def test_create_team_duplicate_code(self):
-        with pytest.raises(Exception):
-            assert self.create_team_duplicate_code()
-
 
 @pytest.mark.django_db
 class TestTeamLogModel:
     pytestmark = pytest.mark.django_db
 
     def test_log_action_create_team(self):
-        team = Team.objects.create(
-            name='Team Ha Noi',
-            code='HN1'
-        )
+        team = Team.objects.create(name='Team Ha Noi', code='HN1')
         team_log = TeamLog.objects.filter(new_data__icontains=team.code).first()
         assert team_log is not None
 
