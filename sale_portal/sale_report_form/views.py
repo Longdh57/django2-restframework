@@ -2,10 +2,12 @@ import json
 from datetime import date
 from datetime import datetime as dt_datetime
 
+import datetime
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 
+from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
 from sale_portal.shop.models import Shop
 from sale_portal.user.models import User
 from sale_portal.staff.models import Staff
@@ -213,7 +215,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
             image_outside_v2 = datajson.get('image_outside')
             image_inside_v2 = datajson.get('image_inside')
             image_store_cashier_v2 = datajson.get('image_store_cashier')
-            implement_posm = datajson.get('implement_posm')
             implement_merchant_view = datajson.get('implement_merchant_view')
             implement_career_guideline = datajson.get('implement_career_guideline')
             implement_confirm = datajson.get('implement_confirm')
@@ -236,19 +237,9 @@ class SaleReportViewSet(mixins.ListModelMixin,
                                                         'implement_confirm', implement_confirm, False, False, True)
                 if implement_merchant_view is None:
                     raise Exception('implement_merchant_view is required')
-                sale_report.implement_posm = format_string(implement_posm, True)
                 sale_report.implement_merchant_view = format_string(implement_merchant_view, True)
                 sale_report.implement_career_guideline = format_string(implement_career_guideline, True)
                 sale_report.implement_confirm = format_string(implement_confirm, True)
-                if implement_confirm == '1':
-                    field_validator.validate_address(format_string(implement_new_address), False, False, True)
-                    sale_report.implement_new_address = format_string(implement_new_address, True)
-            except Exception as e:
-
-                return self.response(status=400, message='Validate error: ' + str(e))
-
-            # validate posm field
-            try:
                 posm_v2 = {}
                 field_validator.validate_posm_field(name='standeeQr', input=standeeQr)
                 field_validator.validate_posm_field(name='stickerTable', input=stickerTable)
@@ -258,7 +249,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 field_validator.validate_posm_field(name='guide', input=guide)
                 field_validator.validate_posm_field(name='poster', input=poster)
                 field_validator.validate_posm_field(name='tentcard', input=tentcard)
-
                 posm_v2.update({
                     'standeeQr': standeeQr,
                     'stickerTable': stickerTable,
@@ -269,8 +259,10 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     'poster': poster,
                     'tentcard': tentcard,
                 })
-                sale_report.posm_v2 = posm_v2
-
+                sale_report.posm_v2 = json.dumps(posm_v2)
+                if implement_confirm == '1':
+                    field_validator.validate_address(format_string(implement_new_address), False, False, True)
+                    sale_report.implement_new_address = format_string(implement_new_address, True)
             except Exception as e:
                 return self.response(status=400, message='Validate error: ' + str(e))
 
@@ -309,9 +301,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
             cessation_of_business_note = datajson.get('cessation_of_business_note')
             cessation_of_business_image_v2 = datajson.get('cessation_of_business_image')
 
-            customer_care_posm = datajson.get('customer_care_posm')
-            customer_care_cashier_reward = datajson.get('customer_care_cashier_reward')
-            customer_care_transaction = datajson.get('customer_care_transaction')
+            customer_care_cashier_reward = datajson.get('cashier_reward')
+            customer_care_transaction = datajson.get('transaction')
 
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
@@ -328,36 +319,29 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     field_validator.validate_transaction(format_string(customer_care_transaction), False, False, True)
                     sale_report.customer_care_cashier_reward = format_string(customer_care_cashier_reward, True)
                     sale_report.customer_care_transaction = format_string(customer_care_transaction, True)
+                    posm_v2 = {}
+                    field_validator.validate_posm_field(name='standeeQr', input=standeeQr)
+                    field_validator.validate_posm_field(name='stickerTable', input=stickerTable)
+                    field_validator.validate_posm_field(name='wobbler', input=wobbler)
+                    field_validator.validate_posm_field(name='standeeCtkm', input=standeeCtkm)
+                    field_validator.validate_posm_field(name='stickerDoor', input=stickerDoor)
+                    field_validator.validate_posm_field(name='guide', input=guide)
+                    field_validator.validate_posm_field(name='poster', input=poster)
+                    field_validator.validate_posm_field(name='tentcard', input=tentcard)
+                    posm_v2.update({
+                        'standeeQr': standeeQr,
+                        'stickerTable': stickerTable,
+                        'wobbler': wobbler,
+                        'standeeCtkm': standeeCtkm,
+                        'stickerDoor': stickerDoor,
+                        'guide': guide,
+                        'poster': poster,
+                        'tentcard': tentcard,
+                    })
+                    sale_report.posm_v2 = json.dumps(posm_v2)
                 else:
                     field_validator.validate_note(format_string(cessation_of_business_note), False, False, True)
                     sale_report.cessation_of_business_note = format_string(cessation_of_business_note, True)
-            except Exception as e:
-                return self.response(status=400, message='Validate error: ' + str(e))
-
-            # validate posm field
-            try:
-                posm_v2 = {}
-                field_validator.validate_posm_field(name='standeeQr', input=standeeQr)
-                field_validator.validate_posm_field(name='stickerTable', input=stickerTable)
-                field_validator.validate_posm_field(name='wobbler', input=wobbler)
-                field_validator.validate_posm_field(name='standeeCtkm', input=standeeCtkm)
-                field_validator.validate_posm_field(name='stickerDoor', input=stickerDoor)
-                field_validator.validate_posm_field(name='guide', input=guide)
-                field_validator.validate_posm_field(name='poster', input=poster)
-                field_validator.validate_posm_field(name='tentcard', input=tentcard)
-
-                posm_v2.update({
-                    'standeeQr': standeeQr,
-                    'stickerTable': stickerTable,
-                    'wobbler': wobbler,
-                    'standeeCtkm': standeeCtkm,
-                    'stickerDoor': stickerDoor,
-                    'guide': guide,
-                    'poster': poster,
-                    'tentcard': tentcard,
-                })
-                sale_report.posm_v2 = posm_v2
-
             except Exception as e:
                 return self.response(status=400, message='Validate error: ' + str(e))
 
@@ -368,11 +352,9 @@ class SaleReportViewSet(mixins.ListModelMixin,
                         or image_store_cashier is None or image_store_cashier == '':
                     return self.response(
                         status=400, message='image_outside, image_inside, image_store_cashier are required')
-
-                sale_report.customer_care_posm = format_string(customer_care_posm, True)
-                sale_report.image_outside = image_outside
-                sale_report.image_inside = image_inside
-                sale_report.image_store_cashier = image_store_cashier
+                sale_report.image_outside_v2 = image_outside
+                sale_report.image_inside_v2 = image_inside
+                sale_report.image_store_cashier_v2 = image_store_cashier
 
             if not is_draft and shop_status != 2:
                 if cessation_of_business_image_v2 is None or cessation_of_business_image_v2 == '':
@@ -469,3 +451,150 @@ class SaleReportViewSet(mixins.ListModelMixin,
             'status': int(status),
             'message': str(message),
         }, status=int(status))
+
+
+class SaleReportStatisticViewSet(mixins.ListModelMixin,
+                                 viewsets.GenericViewSet):
+    serializer_class = SaleReportStatisticSerializer
+
+    def get_queryset(self):
+        report_date = self.request.query_params.get('date', None)
+        report_month = self.request.query_params.get('month', None)
+        team_id = self.request.query_params.get('team_id', None)
+        raw_query = get_raw_query_statistic(report_date=report_date, report_month=report_month, team_id=team_id)
+        queryset = SaleReport.objects.raw(raw_query)
+        return queryset
+
+
+def get_raw_query_statistic(report_date=None, report_month=None, team_id=None):
+    filter_time = ''
+    if report_month is not None and report_month != '':
+        filter_time += "and to_char(created_date, 'MM-YYYY') = '" + report_month + "'"
+    else:
+        if report_date is None or report_date == '':
+            report_date = datetime.date.today()
+        filter_time += "and created_date :: date = '" + str(report_date) + "'"
+
+    filter_user = 'and created_by_id is not null'
+    raw_query = '''
+        SELECT au.username,
+               au.email, 
+               Concat(au.last_name, ' ', au.first_name) AS full_name,
+               data_statistic.* 
+        FROM   auth_user au 
+               INNER JOIN (SELECT created_by_id AS id, 
+                                  Count(*)      AS count_total, 
+                                  Count(CASE 
+                                          WHEN purpose = 0 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_new, 
+                                  Count(CASE 
+                                          WHEN purpose = 1 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_impl, 
+                                  Count(CASE 
+                                          WHEN purpose = 2 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_care, 
+                                  Count(CASE 
+                                          WHEN purpose = 0 
+                                               AND new_result = 0 THEN 1 
+                                         ELSE NULL 
+                                       END)    AS count_new_signed, 
+                                 Count(CASE 
+                                          WHEN purpose = 0 
+                                               AND new_result = 1 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_new_unsigned, 
+                                  Count(CASE 
+                                          WHEN purpose = 0 
+                                               AND new_result = 2 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_new_consider, 
+                                  Count(CASE 
+                                          WHEN purpose = 0 
+                                               AND new_result = 3 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_new_refused, 
+                                  Count(CASE 
+                                          WHEN purpose = 2 
+                                              AND shop_status = 0 THEN 1 
+                                          ELSE NULL 
+                                       END)    AS count_care_cessation, 
+                                 Count(CASE 
+                                         WHEN purpose = 2 
+                                              AND shop_status = 1 THEN 1 
+                                         ELSE NULL 
+                                       END)    AS count_care_liquidation, 
+                                  Count(CASE 
+                                          WHEN purpose = 2 
+                                               AND shop_status = 2 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_care_opening, 
+                                 Count(CASE 
+                                          WHEN purpose = 2 
+                                              AND shop_status = 3 THEN 1 
+                                          ELSE NULL 
+                                        END)    AS count_care_uncooperative ,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'standeeQr' is not null and
+                                            posm_v2 :: json ->> 'standeeQr' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'standeeQr' as Integer)
+                                        ELSE 0
+                                    END)       AS count_standee_qr,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'stickerDoor' is not null and
+                                            posm_v2 :: json ->> 'stickerDoor' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'stickerDoor' as Integer)
+                                        ELSE 0
+                                    END)       AS count_sticker_door,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'stickerTable' is not null and
+                                            posm_v2 :: json ->> 'stickerTable' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'stickerTable' as Integer)
+                                        ELSE 0
+                                    END)       AS count_sticker_table,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'guide' is not null and
+                                            posm_v2 :: json ->> 'guide' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'guide' as Integer)
+                                        ELSE 0
+                                    END)       AS count_guide,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'wobbler' is not null and
+                                            posm_v2 :: json ->> 'wobbler' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'wobbler' as Integer)
+                                        ELSE 0
+                                    END)       AS count_wobbler,
+                                   Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'poster' is not null and
+                                            posm_v2 :: json ->> 'poster' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'poster' as Integer)
+                                        ELSE 0
+                                    END)       AS count_poster,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'standeeCtkm' is not null and
+                                            posm_v2 :: json ->> 'standeeCtkm' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'standeeCtkm' as Integer)
+                                        ELSE 0
+                                    END)       AS count_standee_ctkm,
+                                 Sum(CASE WHEN
+                                            is_json(posm_v2) and posm_v2 :: json ->> 'tentcard' is not null and
+                                            posm_v2 :: json ->> 'tentcard' ~ E'^\\\d+$' and purpose != 0
+                                        THEN
+                                            CAST(posm_v2 :: json ->> 'tentcard' as Integer)
+                                        ELSE 0
+                                    END)       AS count_tentcard                                                                                                                                                  
+                          FROM   sale_report_form 
+                          WHERE  is_draft = false %s %s
+                          GROUP  BY created_by_id) AS data_statistic 
+                      ON data_statistic.id = au.id; 
+    ''' % (filter_time, filter_user)
+    return raw_query

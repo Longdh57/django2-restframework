@@ -85,3 +85,29 @@ class SaleReportSerializer(serializers.ModelSerializer):
             'implement_career_guideline',
             'merchant'
         )
+
+
+class SaleReportStatisticSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    full_name = serializers.CharField()
+    count_total = serializers.IntegerField()
+    count_new = serializers.IntegerField()
+    count_impl = serializers.IntegerField()
+    count_care = serializers.IntegerField()
+    count_new_signed = serializers.IntegerField()
+    count_new_unsigned = serializers.IntegerField()
+    count_new_consider = serializers.IntegerField()
+    count_new_refused = serializers.IntegerField()
+    count_care_cessation = serializers.IntegerField()
+    count_care_liquidation = serializers.IntegerField()
+    count_care_opening = serializers.IntegerField()
+    count_care_uncooperative = serializers.IntegerField()
+    count_standee_qr = serializers.IntegerField()
+    count_sticker_door = serializers.IntegerField()
+    count_sticker_table = serializers.IntegerField()
+    count_guide = serializers.IntegerField()
+    count_wobbler = serializers.IntegerField()
+    count_poster = serializers.IntegerField()
+    count_standee_ctkm = serializers.IntegerField()
+    count_tentcard = serializers.IntegerField()
