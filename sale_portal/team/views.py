@@ -1,6 +1,7 @@
 import json
 import logging
 
+from datetime import datetime
 from django.db.models import Q
 from django.conf import settings
 from django.utils import formats
@@ -56,10 +57,22 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         queryset = Team.objects.all()
 
         name = self.request.query_params.get('name', None)
+        code = self.request.query_params.get('code', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
 
         if name is not None and name != '':
             name = format_string(name)
-            queryset = queryset.filter(Q(name__icontains=name) | Q(code__icontains=name))
+            queryset = queryset.filter(name__icontains=name)
+        if code is not None and code != '':
+            code = format_string(code)
+            queryset = queryset.filter(code__icontains=code)
+        if from_date is not None and from_date != '':
+            queryset = queryset.filter(
+                created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+        if to_date is not None and to_date != '':
+            queryset = queryset.filter(
+                created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
         return queryset
 
