@@ -284,9 +284,9 @@ def import_view_update_action(data, request, is_submit=False, promotion_title=No
                 shop=shop,
                 staff=staff,
                 title=promotion_title,
-                contact_person=str(data['contact_person']),
-                contact_phone_number=str(data['contact_phone_number']),
-                contact_email=str(data['contact_email']),
+                contact_person=str(data['contact_person']) if data['contact_person'] is not None else '',
+                contact_phone_number=str(data['contact_phone_number']) if data['contact_phone_number'] is not None else '',
+                contact_email=str(data['contact_email']) if data['contact_email'] is not None else '',
 
                 tentcard_ctkm=False,
                 wobbler_ctkm=False,
@@ -308,9 +308,9 @@ def import_view_update_action(data, request, is_submit=False, promotion_title=No
             message = 'Update contact info'
         if is_submit:
             promotion.staff = staff
-            promotion.contact_person = str(data['contact_person'])
-            promotion.contact_phone_number = str(data['contact_phone_number'])
-            promotion.contact_email = str(data['contact_email'])
+            promotion.contact_person = str(data['contact_person']) if data['contact_person'] is not None else ''
+            promotion.contact_phone_number = str(data['contact_phone_number']) if data['contact_phone_number'] is not None else ''
+            promotion.contact_email = str(data['contact_email']) if data['contact_email'] is not None else ''
             promotion.updated_by = request.user
             promotion.save()
         return message
