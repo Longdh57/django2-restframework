@@ -6,7 +6,6 @@ from django.db.models import Q
 from django.conf import settings
 from django.utils import formats
 from django.db import transaction
-from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required, permission_required
 
 from rest_framework import viewsets, mixins
@@ -19,6 +18,8 @@ from sale_portal.shop.models import Shop
 from sale_portal.team.serializers import TeamSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
+
+from ..common.standard_response import successful_response, custom_response, Code
 
 
 class PermissionReadData(permissions.BasePermission):
@@ -107,34 +108,22 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             staffs = body.get('staffs')
 
             if staffs is not None and staffs != '' and not isinstance(staffs, list):
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Invalid body (staffs Invalid)'
-                }, status=400)
+                return custom_response(Code.INVALID_BODY, 'staffs Invalid')
 
             if type is not None and type != '':
                 if not (isinstance(type, int) and 0 <= type <= 2):
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'Invalid body (type Invalid)'
-                    }, status=400)
+                    return custom_response(Code.INVALID_BODY, 'type Invalid')
             else:
                 type = 0
 
             if name is None or name == '' or code is None or code == '':
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Invalid body (name or code Invalid)'
-                }, status=400)
+                return custom_response(Code.INVALID_BODY, 'name or code Invalid')
 
             name = format_string(name)
             code = format_string(code)
 
             if Team.objects.filter(Q(name__iexact=name) | Q(code__iexact=code)):
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'name or code be used by other Team'
-                }, status=400)
+                return custom_response(Code.BAD_REQUEST, 'name or code be used by other Team')
 
             # validate staff_list
             staff_ids = []
@@ -143,31 +132,19 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             if staffs is not None and staffs != '':
                 for staff in staffs:
                     if not isinstance(staff['id'], int):
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'Invalid body (staff_id Invalid)'
-                        }, status=400)
+                        return custom_response(Code.INVALID_BODY, 'staff_id Invalid')
                     staff_ids.append(staff['id'])
                     if staff['role'] == 'TEAM_MANAGEMENT':
                         if had_leader:
-                            return JsonResponse({
-                                'status': 400,
-                                'message': 'Team chỉ được phép có 1 leader'
-                            }, status=400)
+                            return custom_response(Code.INVALID_BODY, 'Team chỉ được phép có 1 leader')
                         had_leader = True
                         team_lead_id = staff['id']
                     elif staff['role'] != 'TEAM_STAFF':
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'Invalid body (staff_role Invalid)'
-                        }, status=400)
+                        return custom_response(Code.INVALID_BODY, 'staff_role Invalid')
 
                 if staff_ids:
                     if len(staff_ids) != Staff.objects.filter(pk__in=staff_ids).count():
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'Invalid body (Staff not found)'
-                        }, status=400)
+                        return custom_response(Code.STAFF_NOT_FOUND)
 
                 staff_have_teams = Staff.objects.filter(pk__in=staff_ids, team__isnull=False)
 
@@ -176,10 +153,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     for staff in staff_have_teams:
                         staff_emails += staff.email + ', '
                     staff_emails = staff_emails[:-2]
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'Các nhân viên: ' + staff_emails + ' đang thuộc team khác'
-                    }, status=400)
+                    return custom_response(Code.BAD_REQUEST, 'Các nhân viên: ' + staff_emails + ' đang thuộc team khác')
 
             team = Team(
                 code=code.upper(),
@@ -222,19 +196,11 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         user=request.user
                     )
 
-            return JsonResponse({
-                'status': 200,
-                'data': {
-                    'team_id': team.id
-                }
-            }, status=201)
+            return successful_response(team.id)
 
         except Exception as e:
             logging.error('Create team exception: %s', e)
-            return JsonResponse({
-                'status': 500,
-                'data': 'Internal sever error'
-            }, status=500)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk):
         """
@@ -242,10 +208,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
         team = Team.objects.filter(pk=pk).first()
         if team is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Team not found'
-            }, status=404)
+            return custom_response(Code.TEAM_NOT_FOUND)
 
         members = []
         staffs = team.staff_set.all()
@@ -271,10 +234,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                                                 "SHORT_DATETIME_FORMAT") if team.created_date else '',
         }
 
-        return JsonResponse({
-            'status': 200,
-            'data': data
-        }, status=200)
+        return successful_response(data)
 
     def update(self, request, pk):
         """
@@ -299,10 +259,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         try:
             team = Team.objects.filter(pk=pk).first()
             if team is None:
-                return JsonResponse({
-                    'status': 404,
-                    'message': 'Team not found'
-                }, status=404)
+                return custom_response(Code.TEAM_NOT_FOUND)
             body = json.loads(request.body)
 
             name = body.get('name')
@@ -312,32 +269,20 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
             if staffs is not None and staffs != '':
                 if not isinstance(staffs, list):
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'Invalid body (staffs Invalid)'
-                    }, status=400)
+                    return custom_response(Code.INVALID_BODY, 'staffs Invalid')
             else:
                 staffs = []
 
             if name is None or name == '':
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Invalid body (name Invalid)'
-                }, status=400)
+                return custom_response(Code.INVALID_BODY, 'name Invalid')
 
             if type is None and type == '' or not (isinstance(type, int) and 0 <= type <= 2):
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Invalid body (type Invalid)'
-                }, status=400)
+                return custom_response(Code.INVALID_BODY, 'type Invalid')
 
             name = format_string(name)
 
             if Team.objects.filter(name__iexact=name).exclude(pk=pk):
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'name being used by other Team'
-                }, status=400)
+                return custom_response(Code.BAD_REQUEST, 'name being used by other Team')
 
             role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
             role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
@@ -353,33 +298,21 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             for st in staffs:
                 is_leader = False
                 if not isinstance(st['id'], int):
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'Invalid body (staff_id Invalid)'
-                    }, status=400)
+                    return custom_response(Code.INVALID_BODY, 'staff_id Invalid')
 
                 staff_ids.append(st['id'])
 
                 if st['role'] == 'TEAM_MANAGEMENT':
                     if had_leader:
-                        return JsonResponse({
-                            'status': 400,
-                            'message': 'Team chỉ được phép có 1 leader'
-                        }, status=400)
+                        return custom_response(Code.INVALID_BODY, 'Team chỉ được phép có 1 leader')
                     had_leader = True
                     is_leader = True
                 elif st['role'] != 'TEAM_STAFF':
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'Invalid body (staff_role Invalid)'
-                    }, status=400)
+                    return custom_response(Code.INVALID_BODY, 'staff_role Invalid')
 
                 staff = Staff.objects.filter(pk=st['id']).first()
                 if staff is None:
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'staff_id ' + str(st['id']) + ' not found'
-                    }, status=400)
+                    return custom_response(Code.STAFF_NOT_FOUND, 'staff_id ' + str(st['id']) + ' not found')
                 if staff.team is None:
                     if is_leader:
                         new_leader_id = st['id']
@@ -392,10 +325,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         else:
                             update_to_staff_id = st['id']
                 else:
-                    return JsonResponse({
-                        'status': 400,
-                        'message': 'Nhân viên ' + staff.email + ' đang thuộc team khác'
-                    }, status=400)
+                    return custom_response(Code.BAD_REQUEST, 'Nhân viên ' + staff.email + ' đang thuộc team khác')
 
             staffs_remove = Staff.objects.filter(team=team).exclude(pk__in=staff_ids)
             remove_ids = []
@@ -479,16 +409,10 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 team.updated_by = request.user
                 team.save(user=request.user, action="update")
 
-            return JsonResponse({
-                'status': 200,
-                'data': 'success'
-            }, status=200)
+            return successful_response()
         except Exception as e:
             logging.error('Update team exception: %s', e)
-            return JsonResponse({
-                'status': 500,
-                'data': 'Internal sever error'
-            }, status=500)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
     def destroy(self, request, pk):
         """
@@ -497,10 +421,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         try:
             team = Team.objects.filter(pk=pk).first()
             if team is None:
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Team not found'
-                }, status=400)
+                return custom_response(Code.TEAM_NOT_FOUND)
             staffs = team.staff_set.all()
             remove_ids = []
             for id in staffs.values('id'):
@@ -525,17 +446,11 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
             team.delete(user=request.user)
 
-            return JsonResponse({
-                'status': 200,
-                'data': 'success'
-            }, status=200)
+            return successful_response()
 
         except Exception as e:
             logging.error('Delete team exception: %s', e)
-            return JsonResponse({
-                'status': 500,
-                'data': 'Internal sever error'
-            }, status=500)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
     def create_staff_log(self, staff_ids, team, type, role_id, description, user=None):
         try:
@@ -577,7 +492,4 @@ def list_teams(request):
 
     data = [{'id': team['id'], 'name': team['name'] + ' - ' + team['code']} for team in queryset]
 
-    return JsonResponse({
-        'status': 200,
-        'data': data
-    }, status=200)
+    return successful_response(data)

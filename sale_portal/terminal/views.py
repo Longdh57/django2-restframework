@@ -4,7 +4,6 @@ from django.db.models import Q
 from datetime import datetime
 from django.utils import formats
 from django.conf import settings
-from django.http import JsonResponse
 from django.utils.html import conditional_escape
 from django.contrib.auth.decorators import login_required
 
@@ -18,6 +17,8 @@ from sale_portal.team import TeamType
 from .serializers import TerminalSerializer
 from ..utils.field_formatter import format_string
 from ..qr_status.views import get_terminal_status_list
+
+from ..common.standard_response import successful_response, custom_response, Code
 
 
 class TerminalViewSet(mixins.ListModelMixin,
@@ -107,10 +108,7 @@ class TerminalViewSet(mixins.ListModelMixin,
         """
             API update Terminal
         """
-        return JsonResponse({
-            'status': 200,
-            'data': "update method"
-        }, status=200)
+        return custom_response(Code.SUCCESS, "update method")
 
 
 @api_view(['GET'])
@@ -138,10 +136,7 @@ def list_terminals(request):
     data = [{'id': terminal['id'], 'name': terminal['terminal_id'] + ' - ' + terminal['terminal_name']} for
             terminal in queryset]
 
-    return JsonResponse({
-        'status': 200,
-        'data': data
-    }, status=200)
+    return successful_response(data)
 
 
 @login_required
@@ -149,10 +144,7 @@ def detail(request, pk):
     try:
         terminal = Terminal.objects.filter(pk=pk).first()
         if terminal is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Terminal not found'
-            }, status=404)
+            return custom_response(Code.TERMINAL_NOT_FOUND)
 
         merchant = terminal.merchant
         shop = terminal.shop
@@ -207,16 +199,10 @@ def detail(request, pk):
                                                 "SHORT_DATETIME_FORMAT") if terminal.created_date else '',
             'status': int(terminal.get_status()) if terminal.get_status() else None,
         }
-        return JsonResponse({
-            'status': 200,
-            'data': data
-        }, status=200)
+        return successful_response(data)
     except Exception as e:
         logging.error('Get detail terminal exception: %s', e)
-        return JsonResponse({
-            'status': 500,
-            'message': 'Internal sever error'
-        }, status=500)
+        return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -225,10 +211,7 @@ def list_status(request):
     """
         API get list status of Terminal
     """
-    return JsonResponse({
-        'status': 200,
-        'data': get_terminal_status_list()
-    }, status=200)
+    return successful_response(get_terminal_status_list())
 
 
 @api_view(['POST'])
@@ -260,10 +243,7 @@ def shop_store(request):
         street = request.street
 
     else:
-        return JsonResponse({
-            'status': 501,
-            'data': {}
-        }, status=501)
+        return custom_response(Code.NOT_IMPLEMENTED)
 
     staff = None
     staff_of_chain = None
@@ -295,9 +275,7 @@ def shop_store(request):
     if request.method == 'OTHER':
         return True
 
-    return JsonResponse({
-        'status': 200,
-        'data': {
-            'shop_id': shop.pk
-        }
-    }, status=200)
+    data = {
+        'shop_id': shop.pk
+    }
+    return successful_response(data)

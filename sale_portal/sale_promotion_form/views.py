@@ -5,7 +5,6 @@ import datetime
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django.utils import formats
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
@@ -18,6 +17,7 @@ from ..staff.models import Staff
 from ..terminal.models import Terminal
 from ..shop.models import Shop
 from ..utils.excel_util import create_simple_excel_file
+from ..common.standard_response import successful_response, custom_response, Code
 
 
 class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -68,10 +68,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         sale_promotion = SalePromotion.objects.filter(pk=pk).first()
 
         if sale_promotion is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'SalePromotion not found'
-            }, status=404)
+            return custom_response(Code.PROMOTION_NOT_FOUND)
 
         data = {
             'merchant': sale_promotion.get_merchant(),
@@ -93,10 +90,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                                                 "SHORT_DATETIME_FORMAT") if sale_promotion.updated_date else ''
         }
 
-        return JsonResponse({
-            'status': 200,
-            'data': data
-        }, status=200)
+        return successful_response(data)
 
     def update(self, request, pk):
         """
@@ -110,27 +104,19 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
         sale_promotion = SalePromotion.objects.filter(pk=pk).first()
         if sale_promotion is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Sale Promotion not found'
-            }, status=404)
+            return custom_response(Code.PROMOTION_NOT_FOUND)
 
         image = request.FILES['image_file'] if 'image_file' in request.FILES else None
         sub_image = request.FILES['sub_image_file'] if 'sub_image_file' in request.FILES else None
         data = request.POST.get('data', None)
         if data is None:
-            return JsonResponse({
-                'status': 400,
-                'message': 'Invalid body (cannot read data)'
-            }, status=400)
+            return custom_response(Code.CANNOT_READ_DATA_BODY)
         try:
             data_json = json.loads(data)
         except Exception as e:
             logging.error(e)
-            return JsonResponse({
-                'status': 400,
-                'message': 'Invalid body (cannot convert data)'
-            }, status=400)
+            return custom_response(Code.CANNOT_CONVERT_DATA_BODY)
+
         status = data_json['status'] if 'status' in data_json else None
         tentcard_ctkm = data_json['tentcard_ctkm'] if 'tentcard_ctkm' in data_json else None
         wobbler_ctkm = data_json['wobbler_ctkm'] if 'wobbler_ctkm' in data_json else None
@@ -138,16 +124,10 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         try:
             status = int(status) if status is not None else None
         except ValueError:
-            return JsonResponse({
-                'status': 400,
-                'message': 'Invalid body (status Invalid)'
-            }, status=400)
+            return custom_response(Code.STATUS_NOT_VALID)
 
         if status is None or not 0 <= status <= 3:
-            return JsonResponse({
-                'status': 400,
-                'message': 'Invalid body (status Invalid)'
-            }, status=400)
+            return custom_response(Code.STATUS_NOT_VALID)
 
         tentcard_ctkm = True if tentcard_ctkm is not None and tentcard_ctkm == 'true' else False
         wobbler_ctkm = True if wobbler_ctkm is not None and wobbler_ctkm == 'true' else False
@@ -163,10 +143,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             sale_promotion.image = image_url
 
         elif status != 0 and (sale_promotion.image is None or sale_promotion.image == ''):
-            return JsonResponse({
-                'status': 400,
-                'message': 'Cần upload ảnh nghiệm thu với trạng thái hiện tại của shop'
-            }, status=400)
+            return custom_response(Code.BAD_REQUEST, 'Cần upload ảnh nghiệm thu với trạng thái hiện tại của shop')
 
         if sub_image is not None and sub_image != '':
             sub_image_filename = fs.save(sub_image.name, sub_image)
@@ -179,10 +156,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         sale_promotion.updated_by = request.user
 
         sale_promotion.save()
-        return JsonResponse({
-            'status': 200,
-            'data': 'success'
-        }, status=200)
+        return successful_response()
 
 
 @api_view(['POST'])
@@ -202,18 +176,12 @@ def import_view(request):
     promotion_file = request.FILES['promotion_file']
     data = request.POST.get('data', None)
     if data is None:
-        return JsonResponse({
-            'status': 400,
-            'message': 'Invalid body (cannot read data)'
-        }, status=400)
+        return custom_response(Code.CANNOT_READ_DATA_BODY)
     try:
         data_json = json.loads(data)
     except Exception as e:
         logging.error(e)
-        return JsonResponse({
-            'status': 400,
-            'message': 'Invalid body (cannot convert data)'
-        }, status=400)
+        return custom_response(Code.CANNOT_CONVERT_DATA_BODY)
 
     title_id = data_json['title_id'] if 'title_id' in data_json else None
     title_code = data_json['title_code'] if 'title_code' in data_json else None
@@ -225,22 +193,13 @@ def import_view(request):
     if title_id is not None and title_id != '':
         promotion_title = SalePromotionTitle.objects.filter(pk=title_id).first()
         if promotion_title is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Invalid body (PromotionTitle not found)'
-            }, status=404)
+            return custom_response(Code.PROMOTION_TITLE_NOT_FOUND)
     else:
         if title_code is None or title_code == '':
-            return JsonResponse({
-                'status': 400,
-                'message': 'Invalid body (new title_code invalid)'
-            }, status=400)
+            return custom_response(Code.INVALID_BODY, 'title_code invalid')
         promotion_title = SalePromotionTitle.objects.filter(code__iexact=title_code).first()
         if promotion_title is not None:
-            return JsonResponse({
-                'status': 400,
-                'message': 'Invalid body (title_code be used by other PromotionTitle)'
-            }, status=400)
+            return custom_response(Code.BAD_REQUEST, 'title_code be used by other PromotionTitle')
         promotion_title = SalePromotionTitle(
             code=title_code.upper(),
             description=title_description
@@ -281,25 +240,17 @@ def import_view(request):
             data_error.append(data)
 
     if is_submit:
-        return JsonResponse(
-            {
-                'status': 200,
-                'data': "Cập nhật thành công " + str(row_create + row_update) + "/" + str(total_row) + " bản ghi",
-            },
-            status=200
-        )
+        data = "Cập nhật thành công " + str(row_create + row_update) + "/" + str(total_row) + " bản ghi"
     else:
-        return JsonResponse({
-            'status': 200,
-            'data': {
-                'total_row': total_row,
-                'row_create': row_create,
-                'row_no_change': row_no_change,
-                'row_update': row_update,
-                'row_error': row_error,
-                'path_data_error': render_excel_import_error(request.user, data_error)
-            }
-        }, status=200)
+        data = {
+            'total_row': total_row,
+            'row_create': row_create,
+            'row_no_change': row_no_change,
+            'row_update': row_update,
+            'row_error': row_error,
+            'path_data_error': render_excel_import_error(request.user, data_error)
+        }
+    return successful_response(data)
 
 
 def import_view_update_action(data, request, is_submit=False, promotion_title=None):
@@ -385,10 +336,7 @@ def get_list_titles(request):
 
     data = [{'id': title.id, 'content': title.code + ' - ' + (title.description if title.description else 'N/A')} for title in queryset]
 
-    return JsonResponse({
-        'status': 200,
-        'data': data
-    }, status=200)
+    return successful_response(data)
 
 
 @api_view(['DELETE'])
@@ -399,10 +347,7 @@ def reset_data(request):
     """
     SalePromotion.objects.all().delete()
 
-    return JsonResponse({
-        'status': 200,
-        'data': 'Reset dữ liệu triển khai CTKM thành công!'
-    }, status=200)
+    return successful_response()
 
 
 def render_excel_import_error(staff_email='', data=[]):
