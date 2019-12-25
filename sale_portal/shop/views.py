@@ -1,10 +1,8 @@
 from datetime import datetime
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
-from django.db.models.functions import Lower
 from django.db import connection
 
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
@@ -20,6 +18,7 @@ from sale_portal.shop.models import Shop, vn_unaccent
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.utils.geo_utils import findDistance
 from sale_portal.shop import ShopActivateType
+from ..common.standard_response import successful_response
 
 
 @api_view(['GET'])
@@ -48,10 +47,8 @@ def list_shop_for_search(request):
         address = shop.address if shop.address is not None else 'N/A'
         merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
         data.append({'id': shop.id, 'shop_info': code + ' - ' + merchant_brand + ' - ' + address})
-    return JsonResponse({
-        'status': 200,
-        'data': data
-    }, status=200)
+
+    return successful_response(data)
 
 
 @api_view(['GET'])
@@ -98,18 +95,17 @@ def list_recommend_shops(request, pk):
             if s_have_distance.get('distance_value') is not None:
                 nearly_shops_by_latlong.append(s_have_distance)
         nearly_shops_by_latlong_sorted = sorted(nearly_shops_by_latlong, key=lambda k: k['distance_value'])
-    return JsonResponse({
-        'status': 200,
-        'data': {
-            'address': current_shop.address if current_shop.address != '' and current_shop.address is not None else 'N/A',
-            'street': current_shop.street if current_shop.street != '' and current_shop.street is not None else 'N/A',
-            'number_of_tran': current_shop_number_of_tran,
-            'latitude': current_shop.latitude,
-            'longitude': current_shop.longitude,
-            'nearly_shops_by_ward': nearly_shops_by_ward[:3],
-            'nearly_shops_by_latlong': nearly_shops_by_latlong_sorted[:3]
-        }
-    }, status=200)
+
+    data = {
+        'address': current_shop.address if current_shop.address != '' and current_shop.address is not None else 'N/A',
+        'street': current_shop.street if current_shop.street != '' and current_shop.street is not None else 'N/A',
+        'number_of_tran': current_shop_number_of_tran,
+        'latitude': current_shop.latitude,
+        'longitude': current_shop.longitude,
+        'nearly_shops_by_ward': nearly_shops_by_ward[:3],
+        'nearly_shops_by_latlong': nearly_shops_by_latlong_sorted[:3]
+    }
+    return successful_response(data)
 
 
 class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
