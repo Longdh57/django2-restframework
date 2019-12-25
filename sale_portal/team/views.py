@@ -378,7 +378,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 if staff is None:
                     return JsonResponse({
                         'status': 400,
-                        'message': 'staff_id ' + st['id'] + ' not found'
+                        'message': 'staff_id ' + str(st['id']) + ' not found'
                     }, status=400)
                 if staff.team is None:
                     if is_leader:
@@ -498,9 +498,9 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             team = Team.objects.filter(pk=pk).first()
             if team is None:
                 return JsonResponse({
-                    'status': 404,
+                    'status': 400,
                     'message': 'Team not found'
-                }, status=404)
+                }, status=400)
             staffs = team.staff_set.all()
             remove_ids = []
             for id in staffs.values('id'):

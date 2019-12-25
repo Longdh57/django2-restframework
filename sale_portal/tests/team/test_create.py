@@ -2,7 +2,7 @@ import json
 import pytest
 
 from mixer.backend.django import mixer
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory
 
 from sale_portal.user.models import User
 from sale_portal.team.views import TeamViewSet
