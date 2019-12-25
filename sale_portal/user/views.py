@@ -1,12 +1,12 @@
 import json
 import logging
 from django.contrib.auth.models import Group
-from django.http import JsonResponse
 from rest_framework import permissions
 from rest_framework import viewsets, mixins
 from .serializers import UserSerializer, GroupSerializer
 from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
+from ..common.standard_response import successful_response, custom_response, Code
 
 
 def jwt_response_payload_handler(token, user=None, request=None):
@@ -109,31 +109,19 @@ class GroupViewSet(mixins.ListModelMixin,
                 group_permissions = body['group_permissions']
 
             if group_name is None or group_name == '':
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Invalid body (group_name not valid)'
-                }, status=400)
+                return custom_response(Code.INVALID_BODY, 'group_name not valid')
 
             group = Group.objects.filter(name__iexact=group_name)
             if group:
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Group_name have been used'
-                }, status=400)
+                return custom_response(Code.BAD_REQUEST, 'Group_name have been used')
             group = Group.objects.create(name=group_name)
             group.permissions.set(group_permissions)
             group.save()
 
-            return JsonResponse({
-                'status': 200,
-                'data': group.id
-            }, status=200)
+            return successful_response(group.id)
         except Exception as e:
             logging.error('Create account_group_permission exception: %s', e)
-            return JsonResponse({
-                'status': 500,
-                'data': 'Internal sever error'
-            }, status=500)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk):
         """
@@ -141,10 +129,7 @@ class GroupViewSet(mixins.ListModelMixin,
         """
         group = Group.objects.filter(pk=pk).first()
         if group is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Groups not found'
-            }, status=404)
+            return custom_response(Code.GROUP_NOT_FOUND)
 
         permissions = []
 
@@ -166,10 +151,7 @@ class GroupViewSet(mixins.ListModelMixin,
             'permissions': permissions
         }
 
-        return JsonResponse({
-            'status': 200,
-            'data': data
-        }, status=200)
+        return successful_response(data)
 
     def update(self, request, pk):
         """
@@ -183,10 +165,7 @@ class GroupViewSet(mixins.ListModelMixin,
         try:
             group = Group.objects.filter(pk=pk).first()
             if group is None:
-                return JsonResponse({
-                    'status': 404,
-                    'message': 'Groups not found'
-                }, status=404)
+                return custom_response(Code.GROUP_NOT_FOUND)
 
             body = json.loads(request.body)
             group_name = None
@@ -197,32 +176,20 @@ class GroupViewSet(mixins.ListModelMixin,
                 group_permissions = body['group_permissions']
 
             if group_name is None or group_name == '':
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Invalid body (group_name not valid)'
-                }, status=400)
+                return custom_response(Code.INVALID_BODY, 'group_name not valid')
 
             if Group.objects.filter(name__iexact=group_name).exclude(pk=pk):
-                return JsonResponse({
-                    'status': 400,
-                    'message': 'Group_name have been used by other group'
-                }, status=400)
+                return custom_response(Code.BAD_REQUEST, 'Group_name have been used by other group')
 
             group.name = group_name
             group.permissions.clear()
             group.permissions.set(group_permissions)
             group.save()
 
-            return JsonResponse({
-                'status': 200,
-                'data': 'success'
-            }, status=200)
+            return successful_response()
         except Exception as e:
             logging.error('Delete account_group_permission exception: %s', e)
-            return JsonResponse({
-                'status': 500,
-                'data': 'Internal sever error'
-            }, status=500)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
     def destroy(self, request, pk):
         """
@@ -231,21 +198,12 @@ class GroupViewSet(mixins.ListModelMixin,
         try:
             group = Group.objects.filter(pk=pk).first()
             if group is None:
-                return JsonResponse({
-                    'status': 404,
-                    'message': 'Groups not found'
-                }, status=404)
+                return custom_response(Code.GROUP_NOT_FOUND)
 
             group.delete()
 
-            return JsonResponse({
-                'status': 200,
-                'data': 'success'
-            }, status=200)
+            return successful_response()
         except Exception as e:
             logging.error('Delete account_group_permission exception: %s', e)
-            return JsonResponse({
-                'status': 500,
-                'data': 'Internal sever error'
-            }, status=500)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
