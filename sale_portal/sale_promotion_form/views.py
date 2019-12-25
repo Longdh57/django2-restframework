@@ -47,7 +47,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             queryset = queryset.filter(title_id=title_id)
         if terminal_id is not None and terminal_id != '':
             terminals = Terminal.objects.filter(terminal_id__icontains=terminal_id)
-            queryset = queryset.filter(termail__in=terminals)
+            queryset = queryset.filter(terminal__in=terminals)
         if shop_code is not None and shop_code != '':
             shops = Shop.objects.filter(code__icontains=shop_code)
             queryset = queryset.filter(shop__in=shops)
@@ -86,7 +86,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'wobbler_ctkm': sale_promotion.wobbler_ctkm,
             'status': sale_promotion.get_status(),
             'image': sale_promotion.image.url if sale_promotion.image else '',
-            'sub_image': sale_promotion.image.url if sale_promotion.image else '',
+            'sub_image': sale_promotion.sub_image.url if sale_promotion.sub_image else '',
             'created_date': formats.date_format(sale_promotion.created_date,
                                                 "SHORT_DATETIME_FORMAT") if sale_promotion.created_date else '',
             'updated_date': formats.date_format(sale_promotion.updated_date,

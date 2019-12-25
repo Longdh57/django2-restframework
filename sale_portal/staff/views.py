@@ -5,7 +5,6 @@ from datetime import datetime
 from django.db.models import Q
 from django.utils import formats
 from django.conf import settings
-from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
 from rest_framework.decorators import api_view
@@ -16,6 +15,8 @@ from sale_portal.shop.models import Shop
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLogType, StaffTeamRole
+
+from ..common.standard_response import Code, successful_response, custom_response
 
 
 class StaffViewSet(mixins.ListModelMixin,
@@ -73,10 +74,7 @@ class StaffViewSet(mixins.ListModelMixin,
 
         staff = Staff.objects.filter(pk=pk).first()
         if staff is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Staff not found'
-            }, status=404)
+            return custom_response(Code.STAFF_NOT_FOUND)
 
         if staff.team is not None:
             team = {
@@ -101,10 +99,7 @@ class StaffViewSet(mixins.ListModelMixin,
                                                 "SHORT_DATETIME_FORMAT") if staff.created_date else '',
         }
 
-        return JsonResponse({
-            'status': 200,
-            'data': data
-        }, status=200)
+        return successful_response(data)
 
 
 @api_view(['GET'])
@@ -139,10 +134,7 @@ def list_staffs(request):
 
     data = [{'id': staff['id'], 'email': staff['full_name'] + ' - ' + staff['email']} for staff in queryset]
 
-    return JsonResponse({
-        'status': 200,
-        'data': data
-    }, status=200)
+    return successful_response(data)
 
 
 @api_view(['POST', 'PUT', 'DELETE'])
@@ -163,24 +155,14 @@ def change_staff_team(request):
         team_id = body.get('team_id')
 
         if staff_id is None or staff_id == '' or team_id is None or team_id == '':
-            return JsonResponse({
-                'status': 400,
-                'message': 'Invalid body'
-            }, status=400)
+            return custom_response(Code.INVALID_BODY)
 
-        staff = Staff.objects.get(pk=staff_id)
+        staff = Staff.objects.filter(pk=staff_id).first()
         if staff is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Staff not found'
-            }, status=404)
-
-        team = Team.objects.get(pk=team_id)
+            return custom_response(Code.STAFF_NOT_FOUND)
+        team = Team.objects.filter(pk=team_id).first()
         if team is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Team not found'
-            }, status=404)
+            return custom_response(Code.TEAM_NOT_FOUND)
 
         role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
         # gan staff vao team moi
@@ -189,10 +171,7 @@ def change_staff_team(request):
                 message = 'Staff đã thuộc team này từ trước'
                 if staff.team.id != team.id:
                     message = 'Staff đang thuộc 1 Team khác'
-                return JsonResponse({
-                    'status': 400,
-                    'message': message
-                }, status=400)
+                return custom_response(Code.BAD_REQUEST, message)
             else:
                 staff.team = team
                 staff.role = role
@@ -211,10 +190,7 @@ def change_staff_team(request):
                 message = 'Staff đã thuộc team này từ trước'
                 if staff.team is None:
                     message = 'Staff đang không thuộc team nào, không thể chuyển Team'
-                return JsonResponse({
-                    'status': 400,
-                    'message': message
-                }, status=400)
+                return custom_response(Code.BAD_REQUEST, message)
             else:
                 old_team = staff.team
 
@@ -240,10 +216,7 @@ def change_staff_team(request):
                 message = 'Staff không thuộc team hiện tại'
                 if staff.team is None:
                     message = 'Staff đang không thuộc team nào, không thể xóa Team'
-                return JsonResponse({
-                    'status': 400,
-                    'message': message
-                }, status=400)
+                return custom_response(Code.BAD_REQUEST, message)
             else:
                 staff.team = None
                 staff.role = None
@@ -260,13 +233,7 @@ def change_staff_team(request):
                     staff=None
                 )
 
-        return JsonResponse({
-            'status': 200,
-            'data': 'success'
-        }, status=200)
+        return successful_response()
     except Exception as e:
         logging.error('Update team for staff exception: %s', e)
-        return JsonResponse({
-            'status': 500,
-            'data': 'Internal sever error'
-        }, status=500)
+        return custom_response(Code.INTERNAL_SERVER_ERROR)

@@ -1,6 +1,4 @@
 from django.db.models import Q
-from django.http import JsonResponse
-from django.template.response import TemplateResponse
 import logging
 from django.utils import formats
 from rest_framework import viewsets, mixins
@@ -15,6 +13,7 @@ from .models import Merchant
 from .serializers import MerchantSerializer
 
 from ..utils.field_formatter import format_string
+from ..common.standard_response import successful_response, custom_response, Code
 
 
 class MerchantViewSet(mixins.ListModelMixin,
@@ -90,10 +89,7 @@ def list_merchants(request):
     data = [{'id': merchant['id'], 'code': merchant['merchant_code'] + ' - ' + merchant['merchant_brand']} for
             merchant in queryset]
 
-    return JsonResponse({
-        'status': 200,
-        'data': data
-    }, status=200)
+    return successful_response(data)
 
 
 @login_required
@@ -102,10 +98,7 @@ def detail(request, pk):
     try:
         merchant = Merchant.objects.filter(pk=pk).first()
         if merchant is None:
-            return JsonResponse({
-                'status': 404,
-                'message': 'Merchant not found'
-            }, status=404)
+            return custom_response(Code.MERCHANT_NOT_FOUND)
         staff = merchant.get_staff()
         data = {
             'merchant_id': merchant.id,
@@ -123,16 +116,10 @@ def detail(request, pk):
             'status': int(merchant.get_status()) if merchant.get_status() else None,
             'merchant_cube': merchant.get_merchant_cube(),
         }
-        return JsonResponse({
-            'status': 200,
-            'data': data
-        }, status=200)
+        return successful_response(data)
     except Exception as e:
         logging.error('Get detail merchant exception: %s', e)
-        return JsonResponse({
-            'status': 500,
-            'message': 'Internal sever error'
-        }, status=500)
+        return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -141,10 +128,7 @@ def list_status(request):
     """
         API get list status of Merchant
     """
-    return JsonResponse({
-        'status': 200,
-        'data': get_merchant_status_list()
-    }, status=200)
+    return successful_response(get_merchant_status_list())
 
 
 def store(request):
