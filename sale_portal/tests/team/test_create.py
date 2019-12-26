@@ -45,23 +45,28 @@ def data(request):
 
 
 @pytest.fixture
+def status_code(request):
+    return request.param
+
+
+@pytest.fixture
 def response_message(request):
     return request.param
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(('data', 'response_message'),
+@pytest.mark.parametrize(('data', 'status_code', 'response_message'),
                          [
-                             ({'staffs': 1}, 'Invalid body (staffs Invalid)'),
-                             ({'type': 3}, 'Invalid body (type Invalid)'),
-                             ({'code': ''}, 'Invalid body (name or code Invalid)'),
-                             ({'name': ''}, 'Invalid body (name or code Invalid)'),
+                             ({'staffs': 1}, 400, 'staffs Invalid'),
+                             ({'type': 3}, 400, 'type Invalid'),
+                             ({'code': ''}, 400, 'name or code Invalid'),
+                             ({'name': ''}, 400, 'name or code Invalid'),
                              ({'staffs': [
                                  {
                                      'id': '1149',
                                      'role': 'TEAM_STAFF'
                                  }
-                             ]}, 'Invalid body (staff_id Invalid)'),
+                             ]}, 400, 'staff_id Invalid'),
                              ({'staffs': [
                                  {
                                      'id': 1149,
@@ -71,22 +76,22 @@ def response_message(request):
                                      'id': 1160,
                                      'role': 'TEAM_MANAGEMENT'
                                  }
-                             ]}, 'Team chỉ được phép có 1 leader'),
+                             ]}, 400, 'Team chỉ được phép có 1 leader'),
                              ({'staffs': [
                                  {
                                      'id': 1149,
                                      'role': 'TEAM_STAFFF'
                                  }
-                             ]}, 'Invalid body (staff_role Invalid)'),
+                             ]}, 400, 'staff_role Invalid'),
                              ({'staffs': [
                                  {
                                      'id': 100000,
                                      'role': 'TEAM_STAFF'
                                  }
-                             ]}, 'Invalid body (Staff not found)'),
+                             ]}, 404, 'STAFF NOT FOUND'),
                          ]
     , indirect=True)
-def test_create_data_invalid(user, factory, data, response_message):
+def test_create_data_invalid(user, factory, data, status_code, response_message):
     request = factory
     request.user = user
     request.method = 'POST'
@@ -94,7 +99,7 @@ def test_create_data_invalid(user, factory, data, response_message):
 
     response = TeamViewSet().create(request=request)
 
-    assert response.status_code == 400
+    assert response.status_code == status_code
     assert response_message in str(json.loads(response.content))
 
 
