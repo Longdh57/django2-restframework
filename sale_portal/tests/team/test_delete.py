@@ -35,7 +35,7 @@ def response_message(request):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize('response_message', ['Team not found'], indirect=True)
+@pytest.mark.parametrize('response_message', ['TEAM NOT FOUND'], indirect=True)
 def test_delete_not_found(test_data, factory, response_message):
     request = factory
     request.user = test_data['user']
@@ -43,12 +43,12 @@ def test_delete_not_found(test_data, factory, response_message):
 
     response = TeamViewSet().destroy(request=request, pk=1000000)
 
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response_message in str(json.loads(response.content))
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize('response_message', ['success'], indirect=True)
+@pytest.mark.parametrize('response_message', ['SUCCESS'], indirect=True)
 def test_delete_success(test_data, factory, response_message):
     request = factory
     request.user = test_data['user']

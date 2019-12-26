@@ -53,12 +53,17 @@ def data(request):
 
 
 @pytest.fixture
+def status_code(request):
+    return request.param
+
+
+@pytest.fixture
 def response_message(request):
     return request.param
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(('data', 'response_message'),
+@pytest.mark.parametrize(('data', 'status_code', 'response_message'),
                          [({'staffs': [
                              {
                                  'id': 1168,
@@ -72,8 +77,8 @@ def response_message(request):
                                  'id': 1185,
                                  'role': 'TEAM_MANAGEMENT'
                              }
-                         ]}, 'Team not found')], indirect=True)
-def test_update_team_not_found(test_data, factory, data, response_message):
+                         ]}, 404, 'TEAM NOT FOUND')], indirect=True)
+def test_update_team_not_found(test_data, factory, data, status_code, response_message):
     request = factory
     request.user = test_data['user']
     request.method = 'PUT'
@@ -81,22 +86,23 @@ def test_update_team_not_found(test_data, factory, data, response_message):
 
     response = TeamViewSet().update(request=request, pk=1000000)
 
+    assert response.status_code == status_code
     assert response_message in str(json.loads(response.content))
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(('data', 'response_message'),
+@pytest.mark.parametrize(('data', 'status_code', 'response_message'),
                          [
-                             ({'staffs': 1}, 'Invalid body (staffs Invalid)'),
-                             ({'name': ''}, 'Invalid body (name Invalid)'),
-                             ({'type': 100}, 'Invalid body (type Invalid)'),
-                             ({'name': 'HN5'}, 'name being used by other Team'),
+                             ({'staffs': 1}, 400, 'staffs Invalid'),
+                             ({'name': ''}, 400, 'name Invalid'),
+                             ({'type': 100}, 400, 'type Invalid'),
+                             ({'name': 'HN5'}, 400, 'name being used by other Team'),
                              ({'staffs': [
                                  {
                                      'id': '1149',
                                      'role': 'TEAM_STAFF'
                                  }
-                             ]}, 'Invalid body (staff_id Invalid)'),
+                             ]}, 400, 'staff_id Invalid'),
                              ({'staffs': [
                                  {
                                      'id': 1149,
@@ -106,27 +112,27 @@ def test_update_team_not_found(test_data, factory, data, response_message):
                                      'id': 1160,
                                      'role': 'TEAM_MANAGEMENT'
                                  }
-                             ]}, 'Team chỉ được phép có 1 leader'),
+                             ]}, 400, 'Team chỉ được phép có 1 leader'),
                              ({'staffs': [
                                  {
                                      'id': 1160,
                                      'role': 'TEAM_MANAGEMENTXX'
                                  }
-                             ]}, 'Invalid body (staff_role Invalid)'),
+                             ]}, 400, 'staff_role Invalid'),
                              ({'staffs': [
                                  {
                                      'id': 10000000,
                                      'role': 'TEAM_STAFF'
                                  }
-                             ]}, 'staff_id 10000000 not found'),
+                             ]}, 404, 'staff_id 10000000 not found'),
                              ({'staffs': [
                                  {
                                      'id': 1191,
                                      'role': 'TEAM_MANAGEMENT'
                                  }
-                             ]}, 'đang thuộc team khác'),
+                             ]}, 400, 'đang thuộc team khác'),
                          ], indirect=True)
-def test_update_data_invalid(test_data, factory, data, response_message):
+def test_update_data_invalid(test_data, factory, data, status_code, response_message):
     request = factory
     request.user = test_data['user']
     request.method = 'PUT'
@@ -134,11 +140,12 @@ def test_update_data_invalid(test_data, factory, data, response_message):
 
     response = TeamViewSet().update(request=request, pk=test_data['team'].id)
 
+    assert response.status_code == status_code
     assert response_message in str(json.loads(response.content))
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(('data', 'response_message'),
+@pytest.mark.parametrize(('data', 'status_code', 'response_message'),
                          [({'staffs': [
                              {
                                  'id': 1168,
@@ -152,8 +159,8 @@ def test_update_data_invalid(test_data, factory, data, response_message):
                                  'id': 1185,
                                  'role': 'TEAM_MANAGEMENT'
                              }
-                         ]}, 'success')], indirect=True)
-def test_update_success(test_data, factory, data, response_message):
+                         ]}, 200, 'SUCCESS')], indirect=True)
+def test_update_success(test_data, factory, data, status_code, response_message):
     request = factory
     request.user = test_data['user']
     request.method = 'PUT'
@@ -180,4 +187,5 @@ def test_update_success(test_data, factory, data, response_message):
     assert staff2.team_id == team.id and staff2.role_id == role_manager.id
     assert staff_log1 is not None and staff_log1.team_id == team.id and staff_log1.role_id == role_staff.id
     assert staff_log2 is not None and staff_log2.team_id == team.id and staff_log2.role_id == role_manager.id
+    assert response.status_code == status_code
     assert response_message in str(json.loads(response.content))
