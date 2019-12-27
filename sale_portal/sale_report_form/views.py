@@ -1,12 +1,17 @@
 import json
-from datetime import date
+from datetime import date, time
 from datetime import datetime as dt_datetime
 
 import datetime
+
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 
+from sale_portal.sale_report_form import SaleReportFormPurposeTypes
 from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
 from sale_portal.shop.models import Shop
 from sale_portal.user.models import User
@@ -132,7 +137,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
         latitude = datajson.get('latitude')
         is_draft = datajson.get('is_draft')
         current_draft_id = datajson.get('current_draft_id')
-
         # validate purpose, longitude, latitude, is_draft
         if purpose is None \
                 or longitude is None or longitude == '0' \
@@ -146,7 +150,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             return self.response(status=400, message='Validate error: Purpose is incorrect')
 
         # Create or find sale_report object if has a draft version
-        if is_draft == 'true':
+        if str(is_draft).lower() == 'true':
             is_draft = True
         else:
             is_draft = False
@@ -598,3 +602,37 @@ def get_raw_query_statistic(report_date=None, report_month=None, team_id=None):
                       ON data_statistic.id = au.id; 
     ''' % (filter_time, filter_user)
     return raw_query
+
+
+@api_view(['GET'])
+@login_required
+def list_draff(request):
+    queryset = SaleReport.objects.values('id', 'purpose', 'new_merchant_brand', 'shop_code')
+    queryset = queryset.filter(created_by=request.user)
+    queryset = queryset.filter(is_draft=True)
+    today_min = dt_datetime.combine(date.today(), time.min)
+    today_max = dt_datetime.combine(date.today(), time.max)
+    queryset = queryset.filter(created_date__range=(today_min, today_max))
+
+    name = request.GET.get('name', None)
+
+    if name is not None and name != '':
+        queryset = queryset.filter(Q(shop_code__icontains=name) | Q(new_merchant_brand__icontains=name))
+
+    data = []
+    for draft in queryset:
+        purpose = SaleReportFormPurposeTypes.CHOICES[draft['purpose']][1] + ' - ';
+        if draft['purpose'] == 0:
+            purpose += str(draft['new_merchant_brand'])
+        elif draft['shop_code']:
+            purpose += str(draft['shop_code']) + ' - '
+            shop = Shop.objects.filter(code=draft['shop_code']).first()
+            if shop:
+                purpose += shop.merchant.merchant_brand if shop.merchant else ' '
+                purpose += ' - ' + str(shop.address)
+
+        data.append({'id': draft['id'], 'purpose': purpose})
+
+    return JsonResponse({
+        'data': data
+    }, status=200)
