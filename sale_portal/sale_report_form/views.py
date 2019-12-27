@@ -152,7 +152,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
         # Create or find sale_report object if has a draft version
         if str(is_draft).lower() == 'true':
             is_draft = True
-            print('call')
         else:
             is_draft = False
 
