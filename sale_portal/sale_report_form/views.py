@@ -16,6 +16,7 @@ from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializ
 from sale_portal.shop.models import Shop
 from sale_portal.user.models import User
 from sale_portal.staff.models import Staff
+from sale_portal.user.views import get_user_info
 from sale_portal.utils import field_validator
 from sale_portal.sale_report_form.models import SaleReport
 from sale_portal.utils.field_formatter import format_string
@@ -462,15 +463,20 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
     serializer_class = SaleReportStatisticSerializer
 
     def get_queryset(self):
+        """
+            API get SaleReportStatisticView   \n
+            param có report_date report_month team_id
+        """
         report_date = self.request.query_params.get('date', None)
         report_month = self.request.query_params.get('month', None)
         team_id = self.request.query_params.get('team_id', None)
-        raw_query = get_raw_query_statistic(report_date=report_date, report_month=report_month, team_id=team_id)
+        raw_query = get_raw_query_statistic(user=self.request.user, report_date=report_date, report_month=report_month,
+                                            team_id=team_id)
         queryset = SaleReport.objects.raw(raw_query)
         return queryset
 
 
-def get_raw_query_statistic(report_date=None, report_month=None, team_id=None):
+def get_raw_query_statistic(user=None, report_date=None, report_month=None, team_id=None):
     filter_time = ''
     if report_month is not None and report_month != '':
         filter_time += "and to_char(created_date, 'MM-YYYY') = '" + report_month + "'"
@@ -479,7 +485,20 @@ def get_raw_query_statistic(report_date=None, report_month=None, team_id=None):
             report_date = datetime.date.today()
         filter_time += "and created_date :: date = '" + str(report_date) + "'"
 
-    filter_user = 'and created_by_id is not null'
+    user = get_user_info(user)  # for filter by permission
+    if team_id is not None:
+        staffs = Staff.objects.all().filter(team_id=team_id)
+        staff_emails = [x.email for x in staffs]
+        users = User.objects.filter(email__in=staff_emails)
+        users_id = [x.id for x in users]
+        filter_user = 'and created_by_id in {}'.format(tuple(users_id))
+        if filter_user.endswith(",)"):
+            filter_user = filter_user[:-2] + ")"
+        elif filter_user.endswith(", )"):
+            filter_user = filter_user[:-3] + ")"
+    else:
+        filter_user = 'and created_by_id is not null'
+
     raw_query = '''
         SELECT au.username,
                au.email, 
@@ -607,6 +626,11 @@ def get_raw_query_statistic(report_date=None, report_month=None, team_id=None):
 @api_view(['GET'])
 @login_required
 def list_draff(request):
+    """
+        API get list_draff   \n
+        trả về danh sách tên các bản nháp \n
+        param có name , là chuỗi ký tự để search
+    """
     queryset = SaleReport.objects.values('id', 'purpose', 'new_merchant_brand', 'shop_code')
     queryset = queryset.filter(created_by=request.user)
     queryset = queryset.filter(is_draft=True)
