@@ -673,7 +673,8 @@ def list_draff(request):
 def export_excel(request):
     """
         API get export statistic view to excel   \n
-        trả về danh sách tên các bản nháp \n
+        param bao gồm  date, month, team_id \n
+        và các các data field muốn muốn export ( tạm thời chữa xử lý )
     """
     check_or_create_excel_folder()
 
