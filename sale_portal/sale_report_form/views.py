@@ -1,9 +1,12 @@
 import json
-from datetime import date, time
+import os
+import time
+from datetime import date
 from datetime import datetime as dt_datetime
 
 import datetime
 
+import xlsxwriter
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
@@ -11,6 +14,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
+from sale_portal import settings
 from sale_portal.sale_report_form import SaleReportFormPurposeTypes
 from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
 from sale_portal.shop.models import Shop
@@ -19,6 +23,7 @@ from sale_portal.staff.models import Staff
 from sale_portal.user.views import get_user_info
 from sale_portal.utils import field_validator
 from sale_portal.sale_report_form.models import SaleReport
+from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.sale_report_form.serializers import SaleReportSerializer
 
@@ -658,5 +663,114 @@ def list_draff(request):
         data.append({'id': draft['id'], 'purpose': purpose})
 
     return JsonResponse({
+        'status': 200,
         'data': data
     }, status=200)
+
+
+@api_view(['GET'])
+@login_required
+def export_excel(request):
+    """
+        API get export statistic view to excel   \n
+        trả về danh sách tên các bản nháp \n
+    """
+    check_or_create_excel_folder()
+
+    if not os.path.exists(settings.MEDIA_ROOT + '/excel/sale-report-statistic'):
+        os.mkdir(os.path.join(settings.MEDIA_ROOT + '/excel', 'sale-report-statistic'))
+
+    file_name = 'sale_report_statistic_' + str(int(time.time())) + '.xlsx'
+    workbook = xlsxwriter.Workbook(settings.MEDIA_ROOT + '/excel/sale-report-statistic/' + file_name)
+    worksheet = workbook.add_worksheet('THỐNG KÊ HOẠT ĐỘNG SALE')
+
+    # ------------------- font style -----------------------
+    merge_format = workbook.add_format({
+        'bold': 1,
+        'border': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'fg_color': '#74beff',
+        'font_color': '#ffffff',
+    })
+
+    # ------------------- header -----------------------
+    worksheet.merge_range('A1:A2', 'Nhân viên', merge_format)
+    worksheet.merge_range('B1:B2', 'Email', merge_format)
+    worksheet.merge_range('C1:F1', 'Nhân viên', merge_format)
+    worksheet.merge_range('C1:F1', 'Tổng số lần tiếp xúc', merge_format)
+    worksheet.merge_range('G1:J1', 'Kết quả mở mới', merge_format)
+    worksheet.merge_range('K1:N1', 'Kết quả chăm sóc', merge_format)
+    worksheet.merge_range('O1:V1', 'Số lượng ấn phẩm sử dụng', merge_format)
+    worksheet.write('C2', 'Tổng', merge_format)
+    worksheet.write('D2', 'Số MC chăm sóc', merge_format)
+    worksheet.write('E2', 'Số MC triển khai', merge_format)
+    worksheet.write('F2', 'Số MC tiếp cận mở mới', merge_format)
+    worksheet.write('G2', 'Đồng ý, đã kí hợp đồng', merge_format)
+    worksheet.write('H2', 'Đồng ý, chưa kí hợp đồng', merge_format)
+    worksheet.write('I2', 'Cần xem xét', merge_format)
+    worksheet.write('J2', 'Từ chối hợp tác', merge_format)
+    worksheet.write('K2', 'Đã nghỉ kinh doanh', merge_format)
+    worksheet.write('L2', 'Muốn thanh lý QR', merge_format)
+    worksheet.write('M2', 'Đang hoạt động', merge_format)
+    worksheet.write('N2', 'Không hợp tác', merge_format)
+    worksheet.write('O2', 'StandeeQR', merge_format)
+    worksheet.write('P2', 'Sticker dán cửa', merge_format)
+    worksheet.write('Q2', 'Sticker dán bàn thu ngân', merge_format)
+    worksheet.write('R2', 'Hướng dẫn sử dụng', merge_format)
+    worksheet.write('S2', 'Wobbler CTKM', merge_format)
+    worksheet.write('T2', 'Poster CTKM', merge_format)
+    worksheet.write('U2', 'Standee CTKM(60x160)', merge_format)
+    worksheet.write('V2', 'Tentcard CTKM', merge_format)
+    worksheet.freeze_panes(2, 0)
+
+    data = get_statistic_data(request)
+
+    row_num = 2
+    for item in data:
+        worksheet.write(row_num, 0, item.full_name)
+        worksheet.write(row_num, 1, item.email)
+        worksheet.write(row_num, 2, item.count_total)
+        worksheet.write(row_num, 3, item.count_new)
+        worksheet.write(row_num, 4, item.count_impl)
+        worksheet.write(row_num, 5, item.count_care)
+        worksheet.write(row_num, 6, item.count_new_signed)
+        worksheet.write(row_num, 7, item.count_new_unsigned)
+        worksheet.write(row_num, 8, item.count_new_consider)
+        worksheet.write(row_num, 9, item.count_new_refused)
+        worksheet.write(row_num, 10, item.count_care_cessation)
+        worksheet.write(row_num, 11, item.count_care_liquidation)
+        worksheet.write(row_num, 12, item.count_care_opening)
+        worksheet.write(row_num, 13, item.count_care_uncooperative)
+        worksheet.write(row_num, 14, item.count_standee_qr)
+        worksheet.write(row_num, 15, item.count_sticker_door)
+        worksheet.write(row_num, 16, item.count_sticker_table)
+        worksheet.write(row_num, 17, item.count_guide)
+        worksheet.write(row_num, 18, item.count_wobbler)
+        worksheet.write(row_num, 19, item.count_poster)
+        worksheet.write(row_num, 20, item.count_standee_ctkm)
+        worksheet.write(row_num, 21, item.count_tentcard)
+
+        row_num += 1
+
+    workbook.close()
+
+    return JsonResponse({
+        'status': 200,
+        'data': settings.MEDIA_URL + '/excel/sale-report-statistic/' + file_name},
+        status=200
+    )
+
+
+def get_statistic_data(request):
+    report_date = request.GET.get('date', None)
+    report_month = request.GET.get('month', None)
+    team_id = request.GET.get('team_id', None)
+
+    raw_query = get_raw_query_statistic(request.user, report_date=report_date, report_month=report_month,
+                                        team_id=team_id)
+
+    if raw_query == '':
+        return []
+    else:
+        return SaleReport.objects.raw(raw_query)
