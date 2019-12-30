@@ -179,7 +179,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             new_phone = datajson.get('new_phone')
             new_result = datajson.get('new_result')
             new_note = datajson.get('new_note')
-            new_using_application = datajson.get('new_using_software')
+            new_using_application = datajson.get('new_using_application')
 
             try:
                 field_validator.validate_merchant_name(
