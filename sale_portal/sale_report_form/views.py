@@ -1,7 +1,7 @@
 import json
 import os
-import time
-from datetime import date
+import time as time_t
+from datetime import date,time
 from datetime import datetime as dt_datetime
 
 import datetime
@@ -681,7 +681,7 @@ def export_excel(request):
     if not os.path.exists(settings.MEDIA_ROOT + '/excel/sale-report-statistic'):
         os.mkdir(os.path.join(settings.MEDIA_ROOT + '/excel', 'sale-report-statistic'))
 
-    file_name = 'sale_report_statistic_' + str(int(time.time())) + '.xlsx'
+    file_name = 'sale_report_statistic_' + str(int(time_t.time())) + '.xlsx'
     workbook = xlsxwriter.Workbook(settings.MEDIA_ROOT + '/excel/sale-report-statistic/' + file_name)
     worksheet = workbook.add_worksheet('THỐNG KÊ HOẠT ĐỘNG SALE')
 
