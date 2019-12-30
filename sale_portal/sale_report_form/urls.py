@@ -3,7 +3,7 @@ from django.urls import include
 from rest_framework import routers
 
 from sale_portal.merchant.views import list_merchants
-from .views import SaleReportViewSet, SaleReportStatisticViewSet,list_draff
+from .views import SaleReportViewSet, SaleReportStatisticViewSet, list_draff, export_excel
 
 router = routers.DefaultRouter()
 router.register(r'', SaleReportViewSet, 'SaleReport')
@@ -15,4 +15,5 @@ urlpatterns = [
     url(r'^', include(router.urls), name='SaleReport'),
     url(r'^statistic', include(router_statistic.urls), name='SaleReportStatistic'),
     url(r'^list-draff', list_draff, name='list_draff'),
+    url(r'^export-statistic-to-excel', export_excel, name='export_excel'),
 ]
