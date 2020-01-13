@@ -1,7 +1,8 @@
+import ast
 import json
 import os
 import time as time_t
-from datetime import date,time
+from datetime import date, time
 from datetime import datetime as dt_datetime
 
 import datetime
@@ -128,7 +129,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 Ảnh nghiệm thu - *cessation_of_business_image - binary - {} - cessation_of_business_image: (binary)   \n
             Nếu shop_status = 2 cần upload 3 ảnh & thêm các trường dưới  \n
                 Ký HĐ thưởng thu ngân không - *customer_care_cashier_reward - int - [0: 'Không', 1: 'Có'] - customer_care_cashier_reward: 0   \n
-                Số giao dịch phát sinh trong thời gian chăm sóc - *customer_care_transaction - int - {} - customer_care_transaction: 4   \n
+                Số giao dịch phát sinh trong thời gian chăm sóc - *transaction - int - {} - transaction: 4   \n
 
             Chú ý: nếu là bản nháp ko cần upload ảnh - Không push ảnh lên server   \n
 
@@ -311,8 +312,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
             cessation_of_business_note = datajson.get('cessation_of_business_note')
             cessation_of_business_image_v2 = datajson.get('cessation_of_business_image')
 
-            customer_care_cashier_reward = datajson.get('cashier_reward')
-            customer_care_transaction = datajson.get('transaction')
+            customer_care_cashier_reward = str(datajson.get('customer_care_cashier_reward'))
+            customer_care_transaction = str(datajson.get('transaction'))
 
             shop = get_object_or_404(Shop, pk=shop_id)
             sale_report.shop_code = shop.code
@@ -674,8 +675,35 @@ def export_excel(request):
     """
         API get export statistic view to excel   \n
         param bao gồm  date, month, team_id \n
-        và các các data field muốn muốn export ( tạm thời chữa xử lý )
+        và option là một string array đã được convert sang json string, bao gồm các trường muốn export ví dụ \n
+        \t ["full_name","email","count_total","count_new","count_standee_ctkm","count_standee_qr","count_new_refused"] \n
+        nếu options là null, sẽ export toàn bộ các trường : \n
+        \t ["full_name","email","count_total","count_new","count_impl", \n
+        \t "count_care","count_new_signed","count_new_unsigned", \n
+        \t "count_new_consider","count_new_refused","count_care_cessation", \n
+        \t "count_care_liquidation","count_care_opening","count_care_uncooperative", \n
+        \t "count_standee_qr","count_sticker_door","count_sticker_table","count_guide", \n
+        \t "count_wobbler","count_poster","count_standee_ctkm","count_tentcard"]\n
     """
+    post_options = ast.literal_eval(request.GET.get('options', None))
+    full_options = ['full_name', 'email', 'count_total', 'count_care', 'count_impl',
+
+                    'count_new', 'count_new_signed', 'count_new_unsigned',
+
+                    'count_new_consider', 'count_new_refused', 'count_care_cessation',
+
+                    'count_care_liquidation', 'count_care_opening', 'count_care_uncooperative',
+
+                    'count_standee_qr', 'count_sticker_door', 'count_sticker_table', 'count_guide',
+
+                    'count_wobbler', 'count_poster', 'count_standee_ctkm', 'count_tentcard']
+    if post_options is None:
+        options = full_options
+    else:
+        options = []
+        for op in full_options:
+            if op in post_options:
+                options.append(op)
     check_or_create_excel_folder()
 
     if not os.path.exists(settings.MEDIA_ROOT + '/excel/sale-report-statistic'):
@@ -696,62 +724,122 @@ def export_excel(request):
     })
 
     # ------------------- header -----------------------
-    worksheet.merge_range('A1:A2', 'Nhân viên', merge_format)
-    worksheet.merge_range('B1:B2', 'Email', merge_format)
-    worksheet.merge_range('C1:F1', 'Nhân viên', merge_format)
-    worksheet.merge_range('C1:F1', 'Tổng số lần tiếp xúc', merge_format)
-    worksheet.merge_range('G1:J1', 'Kết quả mở mới', merge_format)
-    worksheet.merge_range('K1:N1', 'Kết quả chăm sóc', merge_format)
-    worksheet.merge_range('O1:V1', 'Số lượng ấn phẩm sử dụng', merge_format)
-    worksheet.write('C2', 'Tổng', merge_format)
-    worksheet.write('D2', 'Số MC chăm sóc', merge_format)
-    worksheet.write('E2', 'Số MC triển khai', merge_format)
-    worksheet.write('F2', 'Số MC tiếp cận mở mới', merge_format)
-    worksheet.write('G2', 'Đồng ý, đã kí hợp đồng', merge_format)
-    worksheet.write('H2', 'Đồng ý, chưa kí hợp đồng', merge_format)
-    worksheet.write('I2', 'Cần xem xét', merge_format)
-    worksheet.write('J2', 'Từ chối hợp tác', merge_format)
-    worksheet.write('K2', 'Đã nghỉ kinh doanh', merge_format)
-    worksheet.write('L2', 'Muốn thanh lý QR', merge_format)
-    worksheet.write('M2', 'Đang hoạt động', merge_format)
-    worksheet.write('N2', 'Không hợp tác', merge_format)
-    worksheet.write('O2', 'StandeeQR', merge_format)
-    worksheet.write('P2', 'Sticker dán cửa', merge_format)
-    worksheet.write('Q2', 'Sticker dán bàn thu ngân', merge_format)
-    worksheet.write('R2', 'Hướng dẫn sử dụng', merge_format)
-    worksheet.write('S2', 'Wobbler CTKM', merge_format)
-    worksheet.write('T2', 'Poster CTKM', merge_format)
-    worksheet.write('U2', 'Standee CTKM(60x160)', merge_format)
-    worksheet.write('V2', 'Tentcard CTKM', merge_format)
+    start = 65
+    if 'full_name' in options:
+        worksheet.merge_range(str(chr(start)) + '1' + ':' + str(chr(start)) + '2', 'Nhân viên', merge_format)
+        start = start + 1
+    if 'email' in options:
+        worksheet.merge_range(str(chr(start)) + '1' + ':' + str(chr(start)) + '2', 'Gmail', merge_format)
+        start = start + 1
+
+    start_total = start
+    if 'count_total' in options:
+        worksheet.write(str(chr(start)) + '2', 'Tổng', merge_format)
+        start = start + 1
+    if 'count_care' in options:
+        worksheet.write(str(chr(start)) + '2', 'Số MC chăm sóc', merge_format)
+        start = start + 1
+    if 'count_impl' in options:
+        worksheet.write(str(chr(start)) + '2', 'Số MC triển khai', merge_format)
+        start = start + 1
+    if 'count_new' in options:
+        worksheet.write(str(chr(start)) + '2', 'Số MC tiếp cận mở mới', merge_format)
+        start = start + 1
+    end_total = start - 1
+    if 'count_total' in options or 'count_care' in options or 'count_impl' in options or 'count_new' in options:
+        if end_total - start_total > 0:
+            worksheet.merge_range(str(chr(start_total)) + '1' + ':' + str(chr(end_total)) + '1',
+                                  'Tổng số lần tiếp xúc',
+                                  merge_format)
+        else:
+            worksheet.write(str(chr(start_total)) + '1', 'Tổng số lần tiếp xúc', merge_format)
+
+    start_new = start
+    if 'count_new_signed' in options:
+        worksheet.write(str(chr(start)) + '2', 'Đồng ý, đã kí HĐ', merge_format)
+        start = start + 1
+    if 'count_new_unsigned' in options:
+        worksheet.write(str(chr(start)) + '2', 'Đồng ý, chưa kí HĐ', merge_format)
+        start = start + 1
+    if 'count_new_consider' in options:
+        worksheet.write(str(chr(start)) + '2', 'Cần xem xét', merge_format)
+        start = start + 1
+    if 'count_new_refused' in options:
+        worksheet.write(str(chr(start)) + '2', 'Từ chối hợp tác', merge_format)
+        start = start + 1
+    end_new = start - 1
+    if 'count_new_signed' in options or 'count_new_unsigned' in options or 'count_new_consider' in options or 'count_new_refused' in options:
+        if end_new - start_new > 0:
+            worksheet.merge_range(str(chr(start_new)) + '1' + ':' + str(chr(end_new)) + '1',
+                                  'Kết quả mở mới',
+                                  merge_format)
+        else:
+            worksheet.write(str(chr(start_new)) + '1', 'Kết quả mở mới', merge_format)
+
+    start_care = start
+    if 'count_care_cessation' in options:
+        worksheet.write(str(chr(start)) + '2', 'Đã nghỉ kinh doanh', merge_format)
+        start = start + 1
+    if 'count_care_liquidation' in options:
+        worksheet.write(str(chr(start)) + '2', 'Muốn thanh lý QR', merge_format)
+        start = start + 1
+    if 'count_care_opening' in options:
+        worksheet.write(str(chr(start)) + '2', 'Đang hoạt động', merge_format)
+        start = start + 1
+    if 'count_care_uncooperative' in options:
+        worksheet.write(str(chr(start)) + '2', 'Không hợp tác', merge_format)
+        start = start + 1
+    end_care = start - 1
+    if 'count_care_cessation' in options or 'count_care_liquidation' in options or 'count_care_opening' in options or 'count_care_uncooperative' in options:
+        if end_care - start_care > 0:
+            worksheet.merge_range(str(chr(start_care)) + '1' + ':' + str(chr(end_care)) + '1',
+                                  'Kết quả chăm sóc',
+                                  merge_format)
+        else:
+            worksheet.write(str(chr(start_care)) + '1', 'Kết quả chăm sóc', merge_format)
+    start_pub = start
+    if 'count_standee_qr' in options:
+        worksheet.write(str(chr(start)) + '2', 'Standee mã QR', merge_format)
+        start = start + 1
+    if 'count_sticker_door' in options:
+        worksheet.write(str(chr(start)) + '2', 'Sticker dán cửa', merge_format)
+        start = start + 1
+    if 'count_sticker_table' in options:
+        worksheet.write(str(chr(start)) + '2', 'Sticker dán bàn thu ngân', merge_format)
+        start = start + 1
+    if 'count_guide' in options:
+        worksheet.write(str(chr(start)) + '2', 'Hướng dẫn SD', merge_format)
+        start = start + 1
+    if 'count_wobbler' in options:
+        worksheet.write(str(chr(start)) + '2', 'Wobbler CTKM', merge_format)
+        start = start + 1
+    if 'count_poster' in options:
+        worksheet.write(str(chr(start)) + '2', 'Poster CTKM', merge_format)
+        start = start + 1
+    if 'count_standee_ctkm' in options:
+        worksheet.write(str(chr(start)) + '2', 'Standee CTKM (60x160)', merge_format)
+        start = start + 1
+    if 'count_tentcard' in options:
+        worksheet.write(str(chr(start)) + '2', 'Tentcard CTKM', merge_format)
+        start = start + 1
+    end_pub = start - 1
+    if 'count_standee_qr' in options or 'count_sticker_door' in options or 'count_sticker_table' in options or 'count_guide' in options \
+            or 'count_wobbler' in options or 'count_poster' in options or 'count_standee_ctkm' in options or 'count_tentcard' in options:
+        if end_pub - start_pub > 0:
+            worksheet.merge_range(str(chr(start_pub)) + '1' + ':' + str(chr(end_pub)) + '1',
+                                  'Số lượng ấn phẩm sử dụng',
+                                  merge_format)
+        else:
+            worksheet.write(str(chr(start_pub)) + '1', 'Số lượng ấn phẩm sử dụng', merge_format)
+
     worksheet.freeze_panes(2, 0)
 
     data = get_statistic_data(request)
 
     row_num = 2
     for item in data:
-        worksheet.write(row_num, 0, item.full_name)
-        worksheet.write(row_num, 1, item.email)
-        worksheet.write(row_num, 2, item.count_total)
-        worksheet.write(row_num, 3, item.count_new)
-        worksheet.write(row_num, 4, item.count_impl)
-        worksheet.write(row_num, 5, item.count_care)
-        worksheet.write(row_num, 6, item.count_new_signed)
-        worksheet.write(row_num, 7, item.count_new_unsigned)
-        worksheet.write(row_num, 8, item.count_new_consider)
-        worksheet.write(row_num, 9, item.count_new_refused)
-        worksheet.write(row_num, 10, item.count_care_cessation)
-        worksheet.write(row_num, 11, item.count_care_liquidation)
-        worksheet.write(row_num, 12, item.count_care_opening)
-        worksheet.write(row_num, 13, item.count_care_uncooperative)
-        worksheet.write(row_num, 14, item.count_standee_qr)
-        worksheet.write(row_num, 15, item.count_sticker_door)
-        worksheet.write(row_num, 16, item.count_sticker_table)
-        worksheet.write(row_num, 17, item.count_guide)
-        worksheet.write(row_num, 18, item.count_wobbler)
-        worksheet.write(row_num, 19, item.count_poster)
-        worksheet.write(row_num, 20, item.count_standee_ctkm)
-        worksheet.write(row_num, 21, item.count_tentcard)
-
+        for index, op in enumerate(options):
+            worksheet.write(row_num, index, getattr(item, op))
         row_num += 1
 
     workbook.close()
