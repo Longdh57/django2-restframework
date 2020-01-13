@@ -1,7 +1,19 @@
 image: python:3.6
 
 stages:
+  - test
   - deploy
+
+test:
+  stage: test
+  script:
+    - cp .env.sample .env
+    - sed -i 's/YOUR_TEST_DB_NAME/sp_pytest/g' .env
+    - sed -i 's/YOUR_TEST_USER/spv2_user/g' .env
+    - sed -i 's/YOUR_TEST_PASSWORD/secret123/g' .env
+    - sed -i 's/YOUR_TEST_HOST/45.77.246.200/g' .env
+    - pip install -r requirements-dev.txt
+    - pytest
 
 deploy:
   stage: deploy
