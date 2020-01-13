@@ -3,10 +3,20 @@ import logging
 from django.contrib.auth.models import Group
 from rest_framework import permissions
 from rest_framework import viewsets, mixins
+from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView
+from rest_social_auth.serializers import JWTSerializer
 from .serializers import UserSerializer, GroupSerializer
 from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
 from ..common.standard_response import successful_response, custom_response, Code
+
+
+class UserJWTSerializer(JWTSerializer, UserSerializer):
+    pass
+
+
+class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
+    serializer_class = UserJWTSerializer
 
 
 def jwt_response_payload_handler(token, user=None, request=None):
@@ -55,7 +65,8 @@ def get_staffs_viewable(user):
                 team_ids.append(team.id)
         else:
             staff = Staff.objects.filter(email=user.email).first()
-            if staff.team and staff.role and staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+            if staff.team and staff.role and staff.role.code == \
+                    StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
                 team_ids.append(staff.team.id)
             else:
                 staff_id = staff.id
@@ -78,7 +89,7 @@ class PermissionIsAdmin(permissions.BasePermission):
 
 
 class GroupViewSet(mixins.ListModelMixin,
-                  viewsets.GenericViewSet):
+                   viewsets.GenericViewSet):
     """
         API get list group_permission \n
     """
@@ -206,4 +217,3 @@ class GroupViewSet(mixins.ListModelMixin,
         except Exception as e:
             logging.error('Delete account_group_permission exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
-
