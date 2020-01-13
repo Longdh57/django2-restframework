@@ -14,6 +14,8 @@ test:
     - sed -i 's/YOUR_TEST_HOST/45.77.246.200/g' .env
     - pip install -r requirements-dev.txt
     - pytest
+  only:
+    - master
 
 deploy:
   stage: deploy
