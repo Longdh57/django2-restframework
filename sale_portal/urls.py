@@ -12,6 +12,7 @@ from sale_portal.sale_report_form.urls import urlpatterns as sale_report_form_ur
 from sale_portal.sale_promotion_form.urls import urlpatterns as sale_promotion_form_urls
 from sale_portal.team.urls import urlpatterns as team_urls
 from sale_portal.shop.urls import urlpatterns as shop_urls
+from sale_portal.user.views import CSRFGeneratorView
 
 schema_view = get_swagger_view(title='Sale_Portal API')
 
@@ -26,10 +27,13 @@ api_urlpatterns = [
     url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
     url(r'^shop/', include((shop_urls, 'shop'), namespace='shop')),
     url(r'^users/', include((account_urls, 'account'), namespace='account')),
+    url(r'^generate-csrf/$', CSRFGeneratorView.as_view()),
 ]
 urlpatterns = [
     url(r'^$', schema_view),
+    url(r'^auth/', include('rest_framework_social_oauth2.urls')),
     url(r'^api/', include((api_urlpatterns, 'api'), namespace='api')),
+
 ]
 
 urlpatterns += static('/log/', document_root=settings.LOG_ROOT)
