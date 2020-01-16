@@ -17,7 +17,7 @@ from sale_portal.user.views import CSRFGeneratorView
 schema_view = get_swagger_view(title='Sale_Portal API')
 
 api_urlpatterns = [
-    url(r'^login', include(login_urls)),
+    url(r'^login/', include(login_urls)),
     url(r'^merchants/', include((merchant_urls, 'merchant'), namespace='merchant')),
     url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),
     url(r'^sale-promotion-form/',

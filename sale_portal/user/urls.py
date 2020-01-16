@@ -8,8 +8,8 @@ router = routers.DefaultRouter()
 router.register(r'', GroupViewSet, 'Group')
 
 url_login_patterns = [
-    url(r'^', obtain_jwt_token, name='login'),
-    url(r'^social/jwt_user/(?:(?P<provider>[a-zA-Z0-9_-]+)/?)?$',
+    url(r'^$', obtain_jwt_token, name='login'),
+    url(r'social/jwt_user/(?:(?P<provider>[a-zA-Z0-9_-]+)/?)?$',
         views.SocialJWTUserAuthView.as_view(),
         name='login_social_jwt_user'),
 ]
