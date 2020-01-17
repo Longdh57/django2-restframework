@@ -131,6 +131,10 @@ class Staff(models.Model):
 
         super(Staff, self).save()
 
+    @property
+    def area(self):
+        return self.team.area
+
 
 class StaffLog(models.Model):
     old_data = JSONField(blank=True, default=dict)

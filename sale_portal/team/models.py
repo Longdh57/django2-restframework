@@ -4,8 +4,9 @@ import datetime
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
-from sale_portal.team import TeamType, TeamLogType
+from sale_portal.area.models import Area
 from sale_portal.user.models import User
+from sale_portal.team import TeamType, TeamLogType
 
 
 class Team(models.Model):
@@ -13,6 +14,7 @@ class Team(models.Model):
     code = models.CharField(max_length=20, unique=True, null=True)
     type = models.IntegerField(choices=TeamType.CHOICES, default=0)
     description = models.TextField(null=True)
+    area = models.ForeignKey(Area, on_delete=models.SET_NULL, related_name='teams', null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='team_created_by', null=True)
@@ -33,7 +35,7 @@ class Team(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Team, self).__init__(*args, **kwargs)
-        self.__important_fields = ['name', 'code', 'description', 'created_date', 'updated_date', 'type']
+        self.__important_fields = ['name', 'code', 'description', 'area', 'created_date', 'updated_date', 'type']
         for field in self.__important_fields:
             setattr(self, '__original_%s' % field, getattr(self, field))
 
@@ -57,9 +59,20 @@ class Team(models.Model):
             old_data, new_data, type = self.compare()
             if type == TeamLogType.CREATED:
                 if kwargs.get('action') is None:
-                    TeamLog.objects.create(new_data=new_data, team_id=self.id, type=type, created_by=kwargs.get('user'))
+                    TeamLog.objects.create(
+                        new_data=new_data,
+                        team_id=self.id,
+                        type=type,
+                        created_by=kwargs.get('user')
+                    )
             else:
-                TeamLog.objects.create(old_data=old_data, new_data=new_data, team_id=self.id, type=type, created_by=kwargs.get('user'))
+                TeamLog.objects.create(
+                    old_data=old_data,
+                    new_data=new_data,
+                    team_id=self.id,
+                    type=type,
+                    created_by=kwargs.get('user')
+                )
         except Exception as e:
             logging.error('Save team exception: %s', e)
         super(Team, self).save()
@@ -67,7 +80,8 @@ class Team(models.Model):
     def delete(self, *args, **kwargs):
         try:
             old_data, new_data, type = self.compare()
-            TeamLog.objects.create(old_data=old_data, team_id=self.id, type=TeamLogType.DELETED, created_by=kwargs.get('user'))
+            TeamLog.objects.create(old_data=old_data, team_id=self.id, type=TeamLogType.DELETED,
+                                   created_by=kwargs.get('user'))
         except Exception as e:
             logging.error('Delete team exception: %s', e)
         super(Team, self).delete()

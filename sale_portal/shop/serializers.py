@@ -52,7 +52,7 @@ class ShopSerializer(serializers.ModelSerializer):
         return shop.terminals.count()
 
     def get_shop_cube(self, shop):
-        shop_cube = shop.get_shop_cube()
+        shop_cube = shop.shop_cube()
         voucher_code_list = ''
 
         if shop_cube is None:
