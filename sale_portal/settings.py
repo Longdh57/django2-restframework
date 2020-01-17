@@ -127,6 +127,13 @@ INSTALLED_APPS = [
     'rest_framework_datatables',
     'rest_framework_swagger',
 
+    # Social Auth
+    'rest_framework.authtoken',
+    'social_django',
+    'rest_social_auth',
+    'oauth2_provider',
+    'rest_framework_social_oauth2',
+
     # Module in Project
     'sale_portal.administrative_unit',
     'sale_portal.area',
@@ -205,6 +212,20 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = [
     FRONTEND_URL
 ]
+
+# Google Social OAuth2
+SOCIAL_AUTH_RAISE_EXCEPTIONS = True
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = ['vnpay.vn']
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'rest_framework_social_oauth2.backends.DjangoOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+# Google Social OAuth2
 
 # Config send email
 EMAIL_USE_TLS = True

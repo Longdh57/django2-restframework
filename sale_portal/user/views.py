@@ -1,12 +1,25 @@
 import json
 import logging
 from django.contrib.auth.models import Group
+from django.http import JsonResponse
 from rest_framework import permissions
 from rest_framework import viewsets, mixins
+from rest_framework.views import APIView
+from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView
+from rest_social_auth.serializers import JWTSerializer
 from .serializers import UserSerializer, GroupSerializer
 from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
 from ..common.standard_response import successful_response, custom_response, Code
+from django.middleware.csrf import get_token
+
+
+class UserJWTSerializer(JWTSerializer, UserSerializer):
+    pass
+
+
+class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
+    serializer_class = UserJWTSerializer
 
 
 def jwt_response_payload_handler(token, user=None, request=None):
@@ -15,6 +28,12 @@ def jwt_response_payload_handler(token, user=None, request=None):
         'user': UserSerializer(user, context={'request': request}).data
     }
 
+class CSRFGeneratorView(APIView):
+    def get(self, request):
+        csrf_token = get_token(request)
+        return JsonResponse({
+            'csrf_token':csrf_token
+        }, status=200)
 
 def get_user_info(user):
     user_info = {
@@ -55,7 +74,8 @@ def get_staffs_viewable(user):
                 team_ids.append(team.id)
         else:
             staff = Staff.objects.filter(email=user.email).first()
-            if staff.team and staff.role and staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+            if staff.team and staff.role and staff.role.code == \
+                    StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
                 team_ids.append(staff.team.id)
             else:
                 staff_id = staff.id
@@ -78,7 +98,7 @@ class PermissionIsAdmin(permissions.BasePermission):
 
 
 class GroupViewSet(mixins.ListModelMixin,
-                  viewsets.GenericViewSet):
+                   viewsets.GenericViewSet):
     """
         API get list group_permission \n
     """
@@ -206,4 +226,3 @@ class GroupViewSet(mixins.ListModelMixin,
         except Exception as e:
             logging.error('Delete account_group_permission exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
-
