@@ -14,5 +14,5 @@ url_login_patterns = [
         name='login_social_jwt_user'),
 ]
 url_account_patterns = [
-    url(r'^group/', include(router.urls), name='Restful API Group'),
+    url(r'^groups/', include(router.urls), name='Restful API Group'),
 ]
