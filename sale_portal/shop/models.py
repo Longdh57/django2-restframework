@@ -120,6 +120,7 @@ def create_code(sender, instance, created, *args, **kwargs):
         instance.save()
         return
 
+
 @receiver(post_save, sender=Shop)
 def create_or_update_document(sender, instance, created, *args, **kwargs):
     Shop.objects.filter(pk=instance.id).update(

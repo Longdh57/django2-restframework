@@ -129,6 +129,7 @@ INSTALLED_APPS = [
 
     # Module in Project
     'sale_portal.administrative_unit',
+    'sale_portal.area',
     'sale_portal.cronjob',
     'sale_portal.merchant',
     'sale_portal.qr_status',
