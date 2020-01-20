@@ -214,6 +214,7 @@ class GroupViewSet(mixins.ListModelMixin,
             status = True if status == 'true' else False
 
             custom_group.status = status
+            custom_group.updated_by = request.user
             custom_group.permissions.clear()
             custom_group.permissions.set(group_permissions)
             custom_group.save()
