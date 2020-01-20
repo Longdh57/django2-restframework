@@ -1,6 +1,7 @@
 import json
 import logging
 from django.contrib.auth.models import Group
+from ..user.models import CustomGroup
 from django.http import JsonResponse
 from rest_framework import permissions
 from rest_framework import viewsets, mixins
@@ -12,6 +13,7 @@ from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
 from ..common.standard_response import successful_response, custom_response, Code
 from django.middleware.csrf import get_token
+from django.utils import formats
 
 
 class UserJWTSerializer(JWTSerializer, UserSerializer):
@@ -27,6 +29,7 @@ def jwt_response_payload_handler(token, user=None, request=None):
         'token': token,
         'user': UserSerializer(user, context={'request': request}).data
     }
+
 
 class CSRFGeneratorView(APIView):
     def get(self, request):
@@ -107,7 +110,7 @@ class GroupViewSet(mixins.ListModelMixin,
     ordering = ['-id']
 
     def get_queryset(self):
-        queryset = Group.objects.all()
+        queryset = CustomGroup.objects.all()
         return queryset
 
     def create(self, request):
@@ -131,14 +134,19 @@ class GroupViewSet(mixins.ListModelMixin,
             if group_name is None or group_name == '':
                 return custom_response(Code.INVALID_BODY, 'group_name not valid')
 
-            group = Group.objects.filter(name__iexact=group_name)
-            if group:
+            if Group.objects.filter(name__iexact=group_name):
                 return custom_response(Code.BAD_REQUEST, 'Group_name have been used')
-            group = Group.objects.create(name=group_name)
-            group.permissions.set(group_permissions)
-            group.save()
 
-            return successful_response(group.id)
+            custom_group = CustomGroup(
+                name=group_name,
+                created_by=request.user,
+                updated_by=request.user
+            )
+            custom_group.save()
+            custom_group.permissions.set(group_permissions)
+            custom_group.save()
+
+            return successful_response(custom_group.id)
         except Exception as e:
             logging.error('Create account_group_permission exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
@@ -147,13 +155,13 @@ class GroupViewSet(mixins.ListModelMixin,
         """
             API get detail account_group_permission
         """
-        group = Group.objects.filter(pk=pk).first()
-        if group is None:
+        custom_group = CustomGroup.objects.filter(pk=pk).first()
+        if custom_group is None:
             return custom_response(Code.GROUP_NOT_FOUND)
 
         permissions = []
 
-        for permission in group.permissions.all():
+        for permission in custom_group.permissions.all():
             element = {
                 'id': permission.id,
                 'name': permission.name,
@@ -166,8 +174,13 @@ class GroupViewSet(mixins.ListModelMixin,
             permissions.append(element)
 
         data = {
-            'id': group.id,
-            'name': group.name,
+            'id': custom_group.id,
+            'name': custom_group.name,
+            'status': custom_group.status,
+            'created_date': formats.date_format(custom_group.created_date, "SHORT_DATETIME_FORMAT") if custom_group.created_date else '',
+            'created_by': custom_group.created_by.username if custom_group.created_by else '',
+            'updated_date': formats.date_format(custom_group.updated_date, "SHORT_DATETIME_FORMAT") if custom_group.updated_date else '',
+            'updated_by': custom_group.updated_by.username if custom_group.updated_by else '',
             'permissions': permissions
         }
 
@@ -178,49 +191,32 @@ class GroupViewSet(mixins.ListModelMixin,
             API update account_group_permission\n
             Request body for this api : Không được bỏ trống \n
                 {
-                    'group_name' : 'text',
+                    'status': true/false
                     'group_permissions' : [1,2,3,4,5,6..]
                 }
         """
         try:
-            group = Group.objects.filter(pk=pk).first()
-            if group is None:
+            custom_group = CustomGroup.objects.filter(pk=pk).first()
+            if custom_group is None:
                 return custom_response(Code.GROUP_NOT_FOUND)
 
             body = json.loads(request.body)
-            group_name = None
+            status = None
             group_permissions = []
-            if 'group_name' in body:
-                group_name = body['group_name']
+            if 'status' in body:
+                status = body['status']
             if 'group_permissions' in body:
                 group_permissions = body['group_permissions']
 
-            if group_name is None or group_name == '':
-                return custom_response(Code.INVALID_BODY, 'group_name not valid')
+            if status is None or status == '':
+                return custom_response(Code.INVALID_BODY, 'Status not valid')
 
-            if Group.objects.filter(name__iexact=group_name).exclude(pk=pk):
-                return custom_response(Code.BAD_REQUEST, 'Group_name have been used by other group')
+            status = True if status == 'true' else False
 
-            group.name = group_name
-            group.permissions.clear()
-            group.permissions.set(group_permissions)
-            group.save()
-
-            return successful_response()
-        except Exception as e:
-            logging.error('Delete account_group_permission exception: %s', e)
-            return custom_response(Code.INTERNAL_SERVER_ERROR)
-
-    def destroy(self, request, pk):
-        """
-            API delete account_group_permission
-        """
-        try:
-            group = Group.objects.filter(pk=pk).first()
-            if group is None:
-                return custom_response(Code.GROUP_NOT_FOUND)
-
-            group.delete()
+            custom_group.status = status
+            custom_group.permissions.clear()
+            custom_group.permissions.set(group_permissions)
+            custom_group.save()
 
             return successful_response()
         except Exception as e:
