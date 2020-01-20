@@ -1,7 +1,9 @@
 from django.db.models import Q
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission, Group
+from django.contrib.auth.models import Permission
+from ..user.models import CustomGroup
+from django.utils import formats
 
 from sale_portal.staff.models import Staff
 
@@ -43,8 +45,25 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    created_date = serializers.SerializerMethodField()
+    updated_date = serializers.SerializerMethodField()
+    created_by = serializers.SerializerMethodField()
+    updated_by = serializers.SerializerMethodField()
+
+    def get_created_date(self, custom_group):
+        return formats.date_format(custom_group.created_date, "SHORT_DATETIME_FORMAT") if custom_group.created_date else ''
+
+    def get_updated_date(self, custom_group):
+        return formats.date_format(custom_group.updated_date, "SHORT_DATETIME_FORMAT") if custom_group.updated_date else ''
+
+    def get_created_by(self, custom_group):
+        return custom_group.created_by.username if custom_group.created_by else ''
+
+    def get_updated_by(self, custom_group):
+        return custom_group.updated_by.username if custom_group.updated_by else ''
+
     class Meta:
-        model = Group
+        model = CustomGroup
         fields = (
-            'id', 'name'
+            'id', 'name', 'status', 'created_date', 'updated_date', 'created_by', 'updated_by'
         )

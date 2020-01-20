@@ -17,3 +17,25 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class CustomGroup(Group):
+    status = models.BooleanField(default=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='groups_created', null=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='groups_updated', null=True)
+
+    objects = models.Manager()
+
+    class Meta:
+        db_table = "custom_group"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+# class CustomGroup(models.Model):
+#     group = models.OneToOneField('auth.Group', unique=True, on_delete=models.SET_NULL, null=True)
+# #     your fields
