@@ -30,6 +30,7 @@ class CustomGroup(Group):
 
     class Meta:
         db_table = "custom_group"
+        default_permissions = ()
         ordering = ['name']
 
     def __str__(self):

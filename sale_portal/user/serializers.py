@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, ContentType
 from ..user.models import CustomGroup
 from django.utils import formats
 
@@ -66,4 +66,23 @@ class GroupSerializer(serializers.ModelSerializer):
         model = CustomGroup
         fields = (
             'id', 'name', 'status', 'created_date', 'updated_date', 'created_by', 'updated_by'
+        )
+
+
+class ContentTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ContentType
+        fields = (
+            'app_label', 'model'
+        )
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    content_type = ContentTypeSerializer()
+
+    class Meta:
+        model = Permission
+        fields = (
+            'id', 'name', 'codename', 'content_type'
         )
