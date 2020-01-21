@@ -46,6 +46,7 @@ class CSRFGeneratorView(APIView):
             'csrf_token':csrf_token
         }, status=200)
 
+
 def get_user_info(user):
     user_info = {
         'is_superuser': user.is_superuser,
@@ -270,6 +271,8 @@ def list_groups(request):
 class PermissionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
         API get list Permissions \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - name -- text
     """
     serializer_class = PermissionSerializer
     permission_classes = [PermissionIsAdmin]
