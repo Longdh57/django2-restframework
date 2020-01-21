@@ -1,14 +1,22 @@
 import json
 import logging
-from django.contrib.auth.models import Group
+import collections
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group, Permission
+from rest_framework.decorators import api_view
+from django.conf import settings
+from django.db.models import Q
+
 from ..user.models import CustomGroup
+from ..user import model_names
 from django.http import JsonResponse
 from rest_framework import permissions
 from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView
 from rest_social_auth.serializers import JWTSerializer
-from .serializers import UserSerializer, GroupSerializer
+from .serializers import UserSerializer, GroupSerializer, PermissionSerializer
 from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
 from ..common.standard_response import successful_response, custom_response, Code
@@ -111,6 +119,17 @@ class GroupViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         queryset = CustomGroup.objects.all()
+
+        group_id = self.request.query_params.get('group_id', None)
+        status = self.request.query_params.get('status', None)
+
+        if group_id is not None and group_id != '':
+            queryset = queryset.filter(pk=group_id)
+
+        if status is not None and status != '':
+            status = True if status == 'true' else False
+            queryset = queryset.filter(status=status)
+
         return queryset
 
     def create(self, request):
@@ -223,3 +242,74 @@ class GroupViewSet(mixins.ListModelMixin,
         except Exception as e:
             logging.error('Delete account_group_permission exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@login_required
+def list_groups(request):
+    """
+        API get list Groups to select \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - name -- text
+    """
+
+    queryset = Group.objects.all()
+
+    name = request.GET.get('name', None)
+
+    if name is not None and name != '':
+        queryset = queryset.filter(name__icontains=name)
+
+    queryset = queryset.order_by('name')[0:settings.PAGINATE_BY]
+
+    data = [{'id': group.id, 'name': group.name} for group in queryset]
+
+    return successful_response(data)
+
+
+class PermissionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+        API get list Permissions \n
+    """
+    serializer_class = PermissionSerializer
+    permission_classes = [PermissionIsAdmin]
+    ordering = ['codename']
+
+    def get_queryset(self):
+        queryset = Permission.objects.all()
+
+        name = self.request.query_params.get('name', None)
+
+        if name is not None and name != '':
+            queryset = queryset.filter(Q(name__icontains=name) | Q(codename__icontains=name))
+
+        return queryset
+
+
+@api_view(['GET'])
+@login_required
+def model_permissions(request):
+    """
+        API get list model-permissions \n
+    """
+
+    queryset = Permission.objects.all().order_by('id')
+
+    model_permissions = dict()
+
+    for permission in queryset:
+        if permission.content_type.model not in model_names:
+            continue
+        item = {
+            'id': permission.id,
+            'name': permission.name,
+            'codename': permission.codename
+        }
+        if permission.content_type.model in model_permissions:
+            permissions = model_permissions[permission.content_type.model]
+        else:
+            permissions = []
+        permissions.append(item)
+        model_permissions[permission.content_type.model] = permissions
+
+    return successful_response(collections.OrderedDict(sorted(model_permissions.items())))
