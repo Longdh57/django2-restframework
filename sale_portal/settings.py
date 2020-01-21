@@ -145,6 +145,7 @@ INSTALLED_APPS = [
     'sale_portal.shop',
     'sale_portal.shop_cube',
     'sale_portal.staff',
+    'sale_portal.staff_care',
     'sale_portal.team',
     'sale_portal.terminal',
     'sale_portal.user',
