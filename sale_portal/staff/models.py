@@ -4,9 +4,10 @@ from django.db import models
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 
+from sale_portal.user.models import User
 from sale_portal.team.models import Team
 from sale_portal.staff import StaffLogType
-from ..user.models import User
+from sale_portal.staff_care import StaffCareType
 
 
 class StaffTeamRole(models.Model):
@@ -134,6 +135,14 @@ class Staff(models.Model):
     @property
     def area(self):
         return self.team.area
+
+    @property
+    def list_care(self):
+        return {
+            'shop': self.staff_cares.filter(type=StaffCareType.STAFF_SHOP).all(),
+            'shop_chain': self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP).all(),
+            'merchant': self.staff_cares.filter(type=StaffCareType.STAFF_MERCHANT).all(),
+        }
 
 
 class StaffLog(models.Model):

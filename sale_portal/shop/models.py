@@ -1,15 +1,14 @@
 import logging
 
-from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.db import models
 from django.dispatch import receiver
-from django.db.models import Q, Count, Func, Subquery
 from django.db.models.signals import post_save
+from django.db.models import Q, Count, Func, Subquery
 from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 
 from sale_portal.area.models import Area
 from sale_portal.user.models import User
-from sale_portal.staff.models import Staff
 from sale_portal.merchant.models import Merchant
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
@@ -32,9 +31,6 @@ class Shop(models.Model):
     address = models.TextField(null=True)
     description = models.TextField(null=True)
     take_care_status = models.IntegerField(choices=ShopTakeCareStatus.CHOICES, default=ShopTakeCareStatus.CREATED_TODAY)
-    staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
-    staff_of_chain = models.ForeignKey(Staff, on_delete=models.SET_NULL, related_name='shop_chains', blank=True,
-                                       null=True)
     merchant = models.ForeignKey(Merchant, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
     province = models.ForeignKey(QrProvince, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
     district = models.ForeignKey(QrDistrict, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
@@ -70,7 +66,7 @@ class Shop(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Shop, self).__init__(*args, **kwargs)
-        self.__important_fields = ['name', 'take_care_status', 'staff_id', 'staff_of_chain_id', 'merchant_id',
+        self.__important_fields = ['name', 'take_care_status', 'merchant_id',
                                    'province_id', 'district_id', 'wards_id', 'street', 'activated']
         for field in self.__important_fields:
             setattr(self, '__original_%s' % field, getattr(self, field))
@@ -84,14 +80,11 @@ class Shop(models.Model):
             orig = '__original_%s' % field
             old_data[field] = getattr(self, field)
             new_data[field] = getattr(self, orig)
-            if field == 'staff_id' and getattr(self, orig) != getattr(self, field):
-                log_type = ShopLogType.CHANGE_STAFF
             if field == 'take_care_status' and getattr(self, orig) != getattr(self, field):
                 log_type = ShopLogType.CHANGE_TAKE_CARE_STATUS
             if field == 'activated' and getattr(self, orig) != getattr(self, field):
                 log_type = ShopLogType.CHANGE_ACTIVATED
-            if field not in ['staff_id', 'take_care_status', 'activated'] and getattr(self, orig) != getattr(self,
-                                                                                                             field):
+            if field not in ['take_care_status', 'activated'] and getattr(self, orig) != getattr(self, field):
                 log_type = ShopLogType.OTHER_UPDATE
         return old_data, new_data, log_type
 
