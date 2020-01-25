@@ -126,8 +126,16 @@ INSTALLED_APPS = [
     'rest_framework_datatables',
     'rest_framework_swagger',
 
+    # Social Auth
+    'rest_framework.authtoken',
+    'social_django',
+    'rest_social_auth',
+    'oauth2_provider',
+    'rest_framework_social_oauth2',
+
     # Module in Project
     'sale_portal.administrative_unit',
+    'sale_portal.area',
     'sale_portal.cronjob',
     'sale_portal.merchant',
     'sale_portal.qr_status',
@@ -136,6 +144,7 @@ INSTALLED_APPS = [
     'sale_portal.shop',
     'sale_portal.shop_cube',
     'sale_portal.staff',
+    'sale_portal.staff_care',
     'sale_portal.team',
     'sale_portal.terminal',
     'sale_portal.user',

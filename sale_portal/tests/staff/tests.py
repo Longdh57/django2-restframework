@@ -1,7 +1,7 @@
 import pytest
 from mixer.backend.django import mixer
 
-from sale_portal.staff.models import Staff, StaffTeamRole
+from sale_portal.staff.models import StaffTeamRole
 
 pytestmark = pytest.mark.django_db
 
