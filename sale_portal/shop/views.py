@@ -132,7 +132,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         code = self.request.query_params.get('code', None)
         merchant_id = self.request.query_params.get('merchant_id', None)
         team_id = self.request.query_params.get('team_id', None)
-        staff_id = self.request.query_params.get('staff_id', None)
+        # staff_id = self.request.query_params.get('staff_id', None)
         province_id = self.request.query_params.get('province_id', None)
         district_id = self.request.query_params.get('district_id', None)
         ward_id = self.request.query_params.get('ward_id', None)
@@ -151,8 +151,8 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             staffs = Staff.objects.filter(team=team_id)
             queryset = queryset.filter(staff__in=staffs)
 
-        if staff_id is not None and staff_id != '':
-            queryset = queryset.filter(staff=staff_id)
+        # if staff_id is not None and staff_id != '':
+        #     queryset = queryset.filter(staff=staff_id)
 
         if province_id is not None and province_id != '':
             queryset = queryset.filter(province=province_id)

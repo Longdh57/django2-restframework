@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
 
 from sale_portal.merchant import MerchantLogType
+from sale_portal.staff_care import StaffCareType
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.qr_status.models import QrStatus
 from sale_portal.staff.models import Staff, QrStaff
@@ -147,6 +148,13 @@ class Merchant(models.Model):
         except Exception as e:
             logging.ERROR("Exception merchant model get_staff: {}".format(e))
             return None
+
+    @property
+    def staff_care(self):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_MERCHANT).first()
+        if staff_care is not None:
+            return staff_care.staff
+        return None
 
     def get_type(self):
         return QrTypeMerchant.objects.filter(id=self.merchant_type).first()

@@ -52,38 +52,32 @@ class ShopSerializer(serializers.ModelSerializer):
         return shop.terminals.count()
 
     def get_shop_cube(self, shop):
-        shop_cube = shop.shop_cube()
-        voucher_code_list = ''
+        shop_cube = shop.shop_cube
 
         if shop_cube is None:
             return None
 
         return {
-            'number_of_new_customer': '{:,}'.format(shop_cube.number_of_new_customer),
-            'number_of_tran': '{:,}'.format(shop_cube.number_of_tran),
-            'number_of_tran_7d': '{:,}'.format(shop_cube.number_of_tran_7d),
-            'number_of_tran_30d': '{:,}'.format(shop_cube.number_of_tran_30d),
-            'number_of_tran_acm': '{:,}'.format(shop_cube.number_of_tran_acm),
-            'number_of_tran_last_month': shop_cube.number_of_tran_last_m_w_1_7 + shop_cube.number_of_tran_last_m_w_8_14
-                                         + shop_cube.number_of_tran_last_m_w_15_21 + shop_cube.number_of_tran_last_m_w_22_end,
-            'value_of_tran': '{:,}'.format(int(shop_cube.value_of_tran)),
-            'value_of_tran_7d': '{:,}'.format(int(shop_cube.value_of_tran_7d)),
-            'value_of_tran_acm': '{:,}'.format(int(shop_cube.value_of_tran_acm)),
             'report_date': shop_cube.report_date,
-            'number_of_tran_w_1_7': '{:,}'.format(shop_cube.number_of_tran_w_1_7),
-            'number_of_tran_w_8_14': '{:,}'.format(shop_cube.number_of_tran_w_8_14),
-            'number_of_tran_w_15_21': '{:,}'.format(shop_cube.number_of_tran_w_15_21),
-            'number_of_tran_w_22_end': '{:,}'.format(shop_cube.number_of_tran_w_22_end),
             'point_w_1_7': shop_cube.point_w_1_7,
             'point_w_8_14': shop_cube.point_w_8_14,
             'point_w_15_21': shop_cube.point_w_15_21,
             'point_w_22_end': shop_cube.point_w_22_end,
-            'bonus_point_this_m': shop_cube.bonus_point_this_m,
         }
 
     class Meta:
         model = Shop
         fields = (
-            'id', 'name', 'code', 'merchant', 'staff', 'province_name', 'street', 'address', 'activated',
-            'created_date', 'count_terminals', 'shop_cube')
-
+            'id',
+            'name',
+            'code',
+            'merchant',
+            'staff',
+            'province_name',
+            'street',
+            'address',
+            'activated',
+            'created_date',
+            'count_terminals',
+            'shop_cube'
+        )

@@ -7,8 +7,9 @@ from django.db.models import Q, Count, Func, Subquery
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 
-from sale_portal.area.models import Area
+# from sale_portal.area.models import Area
 from sale_portal.user.models import User
+from sale_portal.staff_care import StaffCareType
 from sale_portal.merchant.models import Merchant
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
@@ -107,13 +108,27 @@ class Shop(models.Model):
             shop_cube = None
         return shop_cube
 
+    # @property
+    # def area(self):
+    #     try:
+    #         area = Area.objects.filter(provinces__contains=self.province.province_code).first()
+    #     except Area.DoesNotExist:
+    #         area = None
+    #     return area
+
     @property
-    def area(self):
-        try:
-            area = Area.objects.filter(provinces__contains=self.province.province_code).first()
-        except Area.DoesNotExist:
-            area = None
-        return area
+    def staff(self):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_SHOP).first()
+        if staff_care is not None:
+            return staff_care.staff
+        return None
+
+    @property
+    def staff_of_chain(self):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP).first()
+        if staff_care is not None:
+            return staff_care.staff
+        return None
 
 
 @receiver(post_save, sender=Shop)

@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from django.utils import formats
 
-from .models import Team
-from ..shop.models import Shop
+from sale_portal.team.models import Team
+from sale_portal.staff_care import StaffCareType
+from sale_portal.staff_care.models import StaffCare
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -15,10 +16,11 @@ class TeamSerializer(serializers.ModelSerializer):
 
     def get_count_shop(self, team):
         staffs = team.staff_set.all()
-        return Shop.objects.filter(staff__in=staffs).count()
+        return StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).count()
 
     def get_created_date(self, team):
-        return formats.date_format(team.created_date, "SHORT_DATETIME_FORMAT") if team.created_date else ''
+        return formats.date_format(team.created_date, "SHORT_DATETIME_FORMAT") \
+            if team.created_date else ''
 
     class Meta:
         model = Team

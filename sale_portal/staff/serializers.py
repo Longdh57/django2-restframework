@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from django.utils import formats
 
-from .models import Staff
+from sale_portal.staff.models import Staff
 from sale_portal.staff import StaffTeamRoleType
+from sale_portal.staff_care import StaffCareType
 
 
 class StaffSerializer(serializers.ModelSerializer):
@@ -23,7 +24,7 @@ class StaffSerializer(serializers.ModelSerializer):
             else StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_STAFF][1]
 
     def get_count_shop(self, staff):
-        return staff.shops.count()
+        return staff.staff_cares.filter(type=StaffCareType.STAFF_SHOP).count()
 
     class Meta:
         model = Staff
