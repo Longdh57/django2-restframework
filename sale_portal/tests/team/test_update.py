@@ -13,8 +13,15 @@ from sale_portal.staff.models import Staff, StaffTeamRole, StaffLog, StaffLogTyp
 @pytest.fixture
 def test_data(db):
     user = mixer.blend(User, username='test_superuser', is_staff=True, is_superuser=True)
-    team = mixer.blend(Team, name='Team Test', code='TEAM_TEST', type=TeamType.TEAM_SALE,
-                       created_by=user, updated_by=user)
+    team = mixer.blend(
+        Team,
+        name='Team Test',
+        code='TEAM_TEST',
+        type=TeamType.TEAM_SALE,
+        area=None,
+        created_by=user,
+        updated_by=user
+    )
 
     role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
     role_manager = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()

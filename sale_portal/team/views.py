@@ -8,13 +8,13 @@ from django.utils import formats
 from django.db import transaction
 from django.contrib.auth.decorators import login_required, permission_required
 
-from rest_framework import viewsets, mixins
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
-from sale_portal.shop.models import Shop
+from sale_portal.staff_care.models import StaffCare
 from sale_portal.team.serializers import TeamSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
@@ -335,9 +335,8 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
             with transaction.atomic():
                 if staffs_remove:
-                    Shop.objects.filter(staff__in=staffs_remove).update(
-                        staff=None
-                    )
+                    StaffCare.objects.filter(staff__in=staffs_remove).delete()
+
                     staffs_remove.update(
                         team=None,
                         role=None
@@ -427,9 +426,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             for id in staffs.values('id'):
                 remove_ids.append(id['id'])
 
-            Shop.objects.filter(staff__in=staffs).update(
-                staff=None
-            )
+            StaffCare.objects.filter(staff__in=staffs).delete()
 
             staffs.update(
                 team=None,
