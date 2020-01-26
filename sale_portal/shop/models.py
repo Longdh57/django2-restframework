@@ -7,7 +7,7 @@ from django.db.models import Q, Count, Func, Subquery
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 
-# from sale_portal.area.models import Area
+from sale_portal.area.models import Area
 from sale_portal.user.models import User
 from sale_portal.staff_care import StaffCareType
 from sale_portal.merchant.models import Merchant
@@ -108,13 +108,13 @@ class Shop(models.Model):
             shop_cube = None
         return shop_cube
 
-    # @property
-    # def area(self):
-    #     try:
-    #         area = Area.objects.filter(provinces__contains=self.province.province_code).first()
-    #     except Area.DoesNotExist:
-    #         area = None
-    #     return area
+    @property
+    def area(self):
+        try:
+            area = Area.objects.filter(provinces__contains=self.province.province_code).first()
+        except Area.DoesNotExist:
+            area = None
+        return area
 
     @property
     def staff(self):
@@ -129,6 +129,52 @@ class Shop(models.Model):
         if staff_care is not None:
             return staff_care.staff
         return None
+
+    def staff_create(self, staff_id):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_SHOP).first()
+        if staff_care is None:
+            try:
+                staff_care = self.staff_cares.create(
+                    staff_id=staff_id,
+                    merchant_id=None,
+                    type=StaffCareType.STAFF_SHOP
+                )
+                return staff_care.staff
+            except Exception as e:
+                logging.error('Create staff-shop exception: %s', e)
+        else:
+            raise Exception('Shop already exist a staff ')
+
+    def staff_delete(self):
+        try:
+            staff_cares = self.staff_cares.filter(type=StaffCareType.STAFF_SHOP)
+            self.staff_cares.remove(*staff_cares)
+            return
+        except Exception as e:
+            logging.error('Delete staff-shop exception: %s', e)
+
+    def staff_of_chain_create(self, staff_id):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP).first()
+        if staff_care is None:
+            try:
+                staff_care = self.staff_cares.create(
+                    staff_id=staff_id,
+                    merchant_id=None,
+                    type=StaffCareType.STAFF_OF_CHAIN_SHOP
+                )
+                return staff_care.staff
+            except Exception as e:
+                logging.error('Create staff_of_chain-shop exception: %s', e)
+        else:
+            raise Exception('Shop already exist a staff_of_chain ')
+
+    def staff_of_chain_delete(self):
+        try:
+            staff_cares = self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP)
+            self.staff_cares.remove(*staff_cares)
+            return
+        except Exception as e:
+            logging.error('Delete staff_of_chain-shop exception: %s', e)
 
 
 @receiver(post_save, sender=Shop)
