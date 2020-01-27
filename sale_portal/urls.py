@@ -6,6 +6,7 @@ from rest_framework_swagger.views import get_swagger_view
 from sale_portal.user.urls import url_login_patterns as login_urls
 from sale_portal.user.urls import url_account_patterns as account_urls
 from sale_portal.merchant.urls import urlpatterns as merchant_urls
+from sale_portal.pos365.urls import urlpatterns as pos365_urls
 from sale_portal.terminal.urls import urlpatterns as terminal_urls
 from sale_portal.staff.urls import urlpatterns as staff_urls
 from sale_portal.sale_report_form.urls import urlpatterns as sale_report_form_urls
@@ -19,6 +20,7 @@ schema_view = get_swagger_view(title='Sale_Portal API')
 api_urlpatterns = [
     url(r'^login/', include(login_urls)),
     url(r'^merchants/', include((merchant_urls, 'merchant'), namespace='merchant')),
+    url(r'^pos365s/', include((pos365_urls, 'pos365'), namespace='pos365')),
     url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),
     url(r'^sale-promotion-form/',
         include((sale_promotion_form_urls, 'sale_promotion_form'), namespace='sale_promotion_form')),
