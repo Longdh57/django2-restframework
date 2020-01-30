@@ -1,4 +1,6 @@
+from django.urls import path
 from django.conf import settings
+from django.contrib import admin
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from rest_framework_swagger.views import get_swagger_view
@@ -32,6 +34,7 @@ api_urlpatterns = [
     url(r'^generate-csrf/$', CSRFGeneratorView.as_view()),
 ]
 urlpatterns = [
+    path('admin/', admin.site.urls),
     url(r'^$', schema_view),
     url(r'^auth/', include('rest_framework_social_oauth2.urls')),
     url(r'^api/', include((api_urlpatterns, 'api'), namespace='api')),
