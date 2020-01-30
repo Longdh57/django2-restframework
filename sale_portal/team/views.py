@@ -12,6 +12,7 @@ from rest_framework import permissions
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
+from sale_portal.area.models import Area
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
 from sale_portal.staff_care.models import StaffCare
@@ -86,6 +87,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     "name": "Team Da Nang",
                     "type": 2, (type in {0,1,2} )
                     "description": "description",
+                    "area_id": 1
                     "staffs": [
                         {
                             "id": 11732,
@@ -104,6 +106,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             name = body.get('name')
             code = body.get('code')
             type = body.get('type')
+            area_id = body.get('area_id')
             description = body.get('description')
             staffs = body.get('staffs')
 
@@ -124,6 +127,12 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
             if Team.objects.filter(Q(name__iexact=name) | Q(code__iexact=code)):
                 return custom_response(Code.BAD_REQUEST, 'name or code be used by other Team')
+
+            if not isinstance(area_id, int):
+                return custom_response(Code.INVALID_BODY, 'area_id not valid')
+            area = Area.objects.filter(pk=area_id).first()
+            if area is None:
+                return custom_response(Code.AREA_NOT_FOUND)
 
             # validate staff_list
             staff_ids = []
@@ -159,6 +168,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 code=code.upper(),
                 name=name,
                 type=type,
+                area=area,
                 description=description,
                 created_by=request.user,
                 updated_by=request.user
@@ -229,6 +239,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'code': team.code,
             'type': TeamType.CHOICES[team.type][1],
             'description': team.description,
+            'area': team.area.name if team.area else '',
             'members': members,
             'created_date': formats.date_format(team.created_date,
                                                 "SHORT_DATETIME_FORMAT") if team.created_date else '',

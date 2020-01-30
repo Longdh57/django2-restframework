@@ -17,9 +17,11 @@ url_login_patterns = [
         views.SocialJWTUserAuthView.as_view(),
         name='login_social_jwt_user'),
 ]
-url_account_patterns = [
-    url(r'^groups/', include(router_groups.urls), name='Restful API Group'),
-    url(r'^groups/list', list_groups, name='get_list_groups'),
-    url(r'^permissions/', include(router_permissions.urls), name='List view permission'),
+url_group_patterns = [
+    url(r'^', include(router_groups.urls), name='Restful API Group'),
+    url(r'^list', list_groups, name='get_list_groups'),
+]
+url_permission_patterns = [
+    url(r'^', include(router_permissions.urls), name='List view permission'),
     url(r'^model-permissions/', model_permissions, name='get_model_permissions'),
 ]

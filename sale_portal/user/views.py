@@ -46,6 +46,7 @@ class CSRFGeneratorView(APIView):
             'csrf_token':csrf_token
         }, status=200)
 
+
 def get_user_info(user):
     user_info = {
         'is_superuser': user.is_superuser,
@@ -253,7 +254,7 @@ def list_groups(request):
         - name -- text
     """
 
-    queryset = Group.objects.all()
+    queryset = CustomGroup.objects.all()
 
     name = request.GET.get('name', None)
 
@@ -262,7 +263,7 @@ def list_groups(request):
 
     queryset = queryset.order_by('name')[0:settings.PAGINATE_BY]
 
-    data = [{'id': group.id, 'name': group.name} for group in queryset]
+    data = [{'id': custom_group.id, 'name': custom_group.name} for custom_group in queryset]
 
     return successful_response(data)
 
@@ -270,6 +271,8 @@ def list_groups(request):
 class PermissionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
         API get list Permissions \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - name -- text
     """
     serializer_class = PermissionSerializer
     permission_classes = [PermissionIsAdmin]
