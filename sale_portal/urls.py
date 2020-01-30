@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 from rest_framework_swagger.views import get_swagger_view
 
 from sale_portal.user.urls import url_login_patterns as login_urls
-from sale_portal.user.urls import url_account_patterns as account_urls
+
 from sale_portal.area.urls import urlpatterns as area_urls
 from sale_portal.config_kpi.urls import urlpatterns as config_kpi_urls
 from sale_portal.merchant.urls import urlpatterns as merchant_urls
@@ -17,6 +17,8 @@ from sale_portal.sale_report_form.urls import urlpatterns as sale_report_form_ur
 from sale_portal.sale_promotion_form.urls import urlpatterns as sale_promotion_form_urls
 from sale_portal.team.urls import urlpatterns as team_urls
 from sale_portal.shop.urls import urlpatterns as shop_urls
+from sale_portal.user.urls import url_group_patterns as group_urls
+from sale_portal.user.urls import url_permission_patterns as permission_urls
 from sale_portal.user.views import CSRFGeneratorView
 
 schema_view = get_swagger_view(title='Sale_Portal API')
@@ -34,7 +36,8 @@ api_urlpatterns = [
     url(r'^teams/', include((team_urls, 'team'), namespace='team')),
     url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
     url(r'^shop/', include((shop_urls, 'shop'), namespace='shop')),
-    url(r'^users/', include((account_urls, 'account'), namespace='account')),
+    url(r'^groups/', include((group_urls, 'group'), namespace='group')),
+    url(r'^permissions/', include((permission_urls, 'permission'), namespace='permission')),
     url(r'^generate-csrf/$', CSRFGeneratorView.as_view()),
 ]
 urlpatterns = [
