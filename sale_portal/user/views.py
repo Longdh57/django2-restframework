@@ -254,7 +254,7 @@ def list_groups(request):
         - name -- text
     """
 
-    queryset = Group.objects.all()
+    queryset = CustomGroup.objects.all()
 
     name = request.GET.get('name', None)
 
@@ -263,7 +263,7 @@ def list_groups(request):
 
     queryset = queryset.order_by('name')[0:settings.PAGINATE_BY]
 
-    data = [{'id': group.id, 'name': group.name} for group in queryset]
+    data = [{'id': custom_group.id, 'name': custom_group.name} for custom_group in queryset]
 
     return successful_response(data)
 
