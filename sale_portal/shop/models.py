@@ -124,6 +124,13 @@ class Shop(models.Model):
         return None
 
     @property
+    def team(self):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_SHOP).first()
+        if staff_care is not None:
+            return staff_care.staff.team
+        return None
+
+    @property
     def staff_of_chain(self):
         staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP).first()
         if staff_care is not None:
