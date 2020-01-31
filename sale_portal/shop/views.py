@@ -1,24 +1,25 @@
 from datetime import datetime
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.db import connection
-
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
-from rest_framework import viewsets, mixins
-from django.db.models import F, Subquery, Q, Count, FilteredRelation
+from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.search import SearchQuery, SearchRank
+
 from unidecode import unidecode
-from ..utils.field_formatter import format_string
-from ..staff.models import Staff
-from ..terminal.models import Terminal
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 
-from .serializers import ShopSerializer
-
-from sale_portal.shop.models import Shop, vn_unaccent
-from sale_portal.shop_cube.models import ShopCube
-from sale_portal.utils.geo_utils import findDistance
+from sale_portal.shop.models import Shop
+from sale_portal.staff.models import Staff
 from sale_portal.shop import ShopActivateType
-from ..common.standard_response import successful_response
+from sale_portal.terminal.models import Terminal
+from sale_portal.shop_cube.models import ShopCube
+from sale_portal.staff_care import StaffCareType
+from sale_portal.staff_care.models import StaffCare
+from sale_portal.utils.geo_utils import findDistance
+from sale_portal.shop.serializers import ShopSerializer
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.common.standard_response import successful_response
 
 
 @api_view(['GET'])
@@ -132,7 +133,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         code = self.request.query_params.get('code', None)
         merchant_id = self.request.query_params.get('merchant_id', None)
         team_id = self.request.query_params.get('team_id', None)
-        # staff_id = self.request.query_params.get('staff_id', None)
+        staff_id = self.request.query_params.get('staff_id', None)
         province_id = self.request.query_params.get('province_id', None)
         district_id = self.request.query_params.get('district_id', None)
         ward_id = self.request.query_params.get('ward_id', None)
@@ -151,8 +152,13 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             staffs = Staff.objects.filter(team=team_id)
             queryset = queryset.filter(staff__in=staffs)
 
-        # if staff_id is not None and staff_id != '':
-        #     queryset = queryset.filter(staff=staff_id)
+        if staff_id is not None and staff_id != '':
+            shop_list = []
+            staff_cares = StaffCare.objects.filter(staff=staff_id, type=StaffCareType.STAFF_SHOP).values('shop_id')
+            for shop in staff_cares:
+                shop_list.append(shop['shop_id'])
+            print(f'STAFF_CARE: {shop_list}')
+            queryset = queryset.filter(pk__in=shop_list)
 
         if province_id is not None and province_id != '':
             queryset = queryset.filter(province=province_id)

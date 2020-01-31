@@ -18,6 +18,7 @@ class MerchantSerializer(serializers.ModelSerializer):
 class ShopSerializer(serializers.ModelSerializer):
     merchant = MerchantSerializer()
     staff = serializers.SerializerMethodField()
+    team = serializers.SerializerMethodField()
     province_name = serializers.SerializerMethodField()
     street = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
@@ -32,8 +33,13 @@ class ShopSerializer(serializers.ModelSerializer):
             'staff_code': staff.staff_code if staff else '',
             'full_name': staff.full_name if staff else '',
             'email': staff.email if staff else '',
-            'team_name': staff.team.name if staff and staff.team else '',
-            'team_code': staff.team.code if staff and staff.team else ''
+        }
+
+    def get_team(self, shop):
+        team = shop.team
+        return {
+            'name': team.name if team else '',
+            'code': team.code if team else ''
         }
 
     def get_province_name(self, shop):
@@ -73,6 +79,7 @@ class ShopSerializer(serializers.ModelSerializer):
             'code',
             'merchant',
             'staff',
+            'team',
             'province_name',
             'street',
             'address',
