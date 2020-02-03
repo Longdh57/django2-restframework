@@ -26,6 +26,7 @@ class TerminalViewSet(mixins.ListModelMixin,
     """
         API get list Terminal \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - shop_id -- text
         - terminal_id -- text
         - terminal_name -- text
         - merchant_id -- number
@@ -44,6 +45,7 @@ class TerminalViewSet(mixins.ListModelMixin,
 
         queryset = Terminal.objects.all()
 
+        shop_id = self.request.query_params.get('shop_id', None)
         terminal_id = self.request.query_params.get('terminal_id', None)
         terminal_name = self.request.query_params.get('terminal_name', None)
         merchant_id = self.request.query_params.get('merchant_id', None)
@@ -55,6 +57,10 @@ class TerminalViewSet(mixins.ListModelMixin,
         ward_code = self.request.query_params.get('ward_code', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
+
+        if shop_id is not None and shop_id != '':
+            shop_id = format_string(shop_id)
+            queryset = queryset.filter(shop_id=shop_id)
 
         if terminal_id is not None and terminal_id != '':
             terminal_id = format_string(terminal_id)
