@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, UserManager, Group
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class CustomUserManager(UserManager):
@@ -41,3 +43,16 @@ class CustomGroup(Group):
 # class CustomGroup(models.Model):
 #     group = models.OneToOneField('auth.Group', unique=True, on_delete=models.SET_NULL, null=True)
 # #     your fields
+
+@receiver(post_save, sender=User)
+def assign_role_to_user(sender, instance, created, **kwargs):
+    if not created:
+        from sale_portal.staff.models import Staff
+        staff = Staff.objects.filter(email=instance.email).first()
+        if staff is not None:
+            if str(staff.role_id) == '1':
+                sale_group = Group.objects.get(name='Sale staff')
+                instance.groups.add(sale_group)
+            if str(staff.role_id) == '2':
+                sale_group = Group.objects.get(name='Sale manager')
+                instance.groups.add(sale_group)

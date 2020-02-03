@@ -492,7 +492,7 @@ def get_raw_query_statistic(user=None, report_date=None, report_month=None, team
         filter_time += "and created_date :: date = '" + str(report_date) + "'"
 
     user = get_user_info(user)  # for filter by permission
-    if team_id is not None:
+    if team_id is not None and team_id != '':
         staffs = Staff.objects.all().filter(team_id=team_id)
         staff_emails = [x.email for x in staffs]
         users = User.objects.filter(email__in=staff_emails)
@@ -685,7 +685,6 @@ def export_excel(request):
         \t "count_standee_qr","count_sticker_door","count_sticker_table","count_guide", \n
         \t "count_wobbler","count_poster","count_standee_ctkm","count_tentcard"]\n
     """
-    post_options = ast.literal_eval(request.GET.get('options', None))
     full_options = ['full_name', 'email', 'count_total', 'count_care', 'count_impl',
 
                     'count_new', 'count_new_signed', 'count_new_unsigned',
@@ -697,7 +696,12 @@ def export_excel(request):
                     'count_standee_qr', 'count_sticker_door', 'count_sticker_table', 'count_guide',
 
                     'count_wobbler', 'count_poster', 'count_standee_ctkm', 'count_tentcard']
-    if post_options is None:
+    post_options = request.GET.get('options', None)
+    try:
+        post_options = ast.literal_eval(post_options)
+    except Exception as e:
+        post_options = []
+    if len(post_options) == 0:
         options = full_options
     else:
         options = []
