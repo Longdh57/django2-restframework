@@ -12,6 +12,7 @@ from rest_framework import permissions
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
+from sale_portal.area.models import Area
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
 from sale_portal.staff_care.models import StaffCare
@@ -127,11 +128,11 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             if Team.objects.filter(Q(name__iexact=name) | Q(code__iexact=code)):
                 return custom_response(Code.BAD_REQUEST, 'name or code be used by other Team')
 
-            # if not isinstance(area_id, int):
-            #     return custom_response(Code.INVALID_BODY, 'area_id not valid')
-            # area = Area.objects.filter(pk=area_id).first()
-            # if area is None:
-            #     return custom_response(Code.AREA_NOT_FOUND)
+            if not isinstance(area_id, int):
+                return custom_response(Code.INVALID_BODY, 'area_id not valid')
+            area = Area.objects.filter(pk=area_id).first()
+            if area is None:
+                return custom_response(Code.AREA_NOT_FOUND)
 
             # validate staff_list
             staff_ids = []
@@ -167,7 +168,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 code=code.upper(),
                 name=name,
                 type=type,
-                # area=area,
+                area=area,
                 description=description,
                 created_by=request.user,
                 updated_by=request.user

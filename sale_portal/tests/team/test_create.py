@@ -25,11 +25,13 @@ def data(request):
     name = request.param.get('name')
     code = request.param.get('code')
     type = request.param.get('type')
+    area_id = request.param.get('area_id')
     staffs = request.param.get('staffs')
     return {
         'name': name if name is not None else 'Team Test with Pytest',
         'code': code if code is not None else 'TEAM_TEST',
         'type': type if type is not None else 1,
+        'area_id': area_id if area_id is not None else 1,
         'description': 'Mo ta team Test',
         'staffs': staffs if staffs is not None else [
             {
@@ -61,6 +63,8 @@ def response_message(request):
                              ({'type': 3}, 400, 'type Invalid'),
                              ({'code': ''}, 400, 'name or code Invalid'),
                              ({'name': ''}, 400, 'name or code Invalid'),
+                             ({'area_id': ''}, 400, 'area_id not valid'),
+                             ({'area_id': 0}, 404, 'AREA NOT FOUND'),
                              ({'staffs': [
                                  {
                                      'id': '1149',

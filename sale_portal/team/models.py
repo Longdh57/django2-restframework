@@ -35,7 +35,7 @@ class Team(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Team, self).__init__(*args, **kwargs)
-        self.__important_fields = ['name', 'code', 'description', 'area', 'created_date', 'updated_date', 'type']
+        self.__important_fields = ['name', 'code', 'description', 'area_id', 'created_date', 'updated_date', 'type']
         for field in self.__important_fields:
             setattr(self, '__original_%s' % field, getattr(self, field))
 
