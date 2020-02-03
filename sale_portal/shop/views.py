@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.utils import formats
 from django.db import connection
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
@@ -214,3 +215,47 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
         return queryset
+
+    def retrieve(self, request, pk):
+        """
+            API get detail Shop
+        """
+        shop = Shop.objects.filter(pk=pk).first()
+        first_terminal = shop.terminals.order_by('created_date').first()
+
+        data = {
+            'name': shop.name,
+            'code': shop.code,
+            'address': shop.address,
+            'created_date': formats.date_format(shop.created_date,
+                                                "SHORT_DATETIME_FORMAT") if shop.created_date else '',
+            'first_terminal_created_date': formats.date_format(
+                first_terminal.created_date,
+                "SHORT_DATETIME_FORMAT") if first_terminal.created_date else None,
+            'merchant': {
+                'merchant_code': shop.merchant.merchant_code if shop.merchant else None,
+                'merchant_name': shop.merchant.merchant_name if shop.merchant else None,
+                'merchant_brand': shop.merchant.merchant_brand if shop.merchant else None
+            },
+            'staff': {
+                'full_name': shop.staff.full_name if shop.staff else None,
+                'email': shop.staff.email if shop.staff else None,
+                'phone': shop.staff.mobile if shop.staff else None,
+            },
+            'team': {
+                'name': shop.team.name if shop.team else None,
+                'code': shop.team.code if shop.team else None
+            },
+            'staff_of_chain': {
+                'full_name': shop.staff_of_chain.full_name if shop.staff_of_chain else None,
+                'email': shop.staff_of_chain.email if shop.staff_of_chain else None,
+                'phone': shop.staff_of_chain.mobile if shop.staff_of_chain else None,
+            },
+            'team_of_chain': {
+                'name': shop.team_of_chain.name if shop.team_of_chain else None,
+                'code': shop.team_of_chain.code if shop.team_of_chain else None
+            },
+            'shop_cube': None
+        }
+
+        return successful_response(data)
