@@ -8,7 +8,8 @@ from rest_framework.decorators import api_view
 from django.conf import settings
 from django.db.models import Q
 
-from ..user.models import CustomGroup
+from ..user.models import CustomGroup, User
+from ..user.serializers import ROLE
 from ..user import model_names
 from django.http import JsonResponse
 from rest_framework import permissions
@@ -16,7 +17,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView
 from rest_social_auth.serializers import JWTSerializer
-from .serializers import UserSerializer, GroupSerializer, PermissionSerializer
+from .serializers import UserSerializer, GroupSerializer, PermissionSerializer, UserListViewSerializer
 from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
 from ..common.standard_response import successful_response, custom_response, Code
@@ -107,6 +108,56 @@ class PermissionIsAdmin(permissions.BasePermission):
         if request.user.is_authenticated and request.user.is_superuser:
             return True
         return False
+
+
+class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+        API get list User \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - username -- text
+        - email -- text
+        - role: text in { 'ADMIN', 'AREA MANAGER', 'TEAM MANAGER', 'SALE' }
+    """
+    serializer_class = UserListViewSerializer
+    permission_classes = [PermissionIsAdmin]
+    ordering = ['username']
+
+    def get_queryset(self):
+        queryset = User.objects.all()
+
+        username = self.request.query_params.get('username', None)
+        email = self.request.query_params.get('email', None)
+        role = self.request.query_params.get('role', None)
+
+        if username is not None and username != '':
+            queryset = queryset.filter(username__icontains=username)
+        if email is not None and email != '':
+            queryset = queryset.filter(email__icontains=email)
+        if role is not None and role != '':
+            role = role.upper()
+            if role in ROLE.values():
+                if role == ROLE[0]:
+                    queryset = queryset.filter(is_superuser=True)
+                if role == ROLE[1]:
+                    queryset = queryset.filter(is_area_manager=True)
+                if role == ROLE[2]:
+                    queryset = queryset.filter(is_sale_admin=True)
+                if role == ROLE[3]:
+                    staff_emails = Staff.objects.filter(role__code__iexact='TEAM_MANAGEMENT').values('email')
+                    queryset = queryset.filter(email__in=staff_emails, is_superuser=False,
+                                               is_area_manager=False, is_sale_admin=False)
+                if role == ROLE[4]:
+                    staff_emails = Staff.objects.exclude(role__code__iexact='TEAM_MANAGEMENT').values('email')
+                    queryset = queryset.filter(email__in=staff_emails, is_superuser=False,
+                                               is_area_manager=False, is_sale_admin=False)
+                if role == ROLE[5]:
+                    staff_emails = Staff.objects.all().values('email')
+                    queryset = queryset.filter(is_superuser=False, is_area_manager=False,
+                                               is_sale_admin=False).exclude(email__in=staff_emails)
+            else:
+                queryset = User.objects.none()
+
+        return queryset
 
 
 class GroupViewSet(mixins.ListModelMixin,

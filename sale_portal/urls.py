@@ -18,6 +18,7 @@ from sale_portal.sale_report_form.urls import urlpatterns as sale_report_form_ur
 from sale_portal.sale_promotion_form.urls import urlpatterns as sale_promotion_form_urls
 from sale_portal.team.urls import urlpatterns as team_urls
 from sale_portal.shop.urls import urlpatterns as shop_urls
+from sale_portal.user.urls import url_user_patterns as user_urls
 from sale_portal.user.urls import url_group_patterns as group_urls
 from sale_portal.user.urls import url_permission_patterns as permission_urls
 from sale_portal.user.views import CSRFGeneratorView
@@ -39,6 +40,7 @@ api_urlpatterns = [
     url(r'^teams/', include((team_urls, 'team'), namespace='team')),
     url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
     url(r'^shop/', include((shop_urls, 'shop'), namespace='shop')),
+    url(r'^users/', include((user_urls, 'user'), namespace='user')),
     url(r'^groups/', include((group_urls, 'group'), namespace='group')),
     url(r'^permissions/', include((permission_urls, 'permission'), namespace='permission')),
     url(r'^generate-csrf/$', CSRFGeneratorView.as_view()),
