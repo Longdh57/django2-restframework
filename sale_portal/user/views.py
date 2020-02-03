@@ -116,6 +116,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - username -- text
         - email -- text
+        - status -- true/false (trạng thái)
         - role: text in { 'ADMIN', 'AREA MANAGER', 'TEAM MANAGER', 'SALE' }
     """
     serializer_class = UserListViewSerializer
@@ -127,12 +128,16 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         username = self.request.query_params.get('username', None)
         email = self.request.query_params.get('email', None)
+        status = self.request.query_params.get('status', None)
         role = self.request.query_params.get('role', None)
 
         if username is not None and username != '':
             queryset = queryset.filter(username__icontains=username)
         if email is not None and email != '':
             queryset = queryset.filter(email__icontains=email)
+        if status is not None and status != '':
+            status = True if status == 'true' else False
+            queryset = queryset.filter(is_active=status)
         if role is not None and role != '':
             role = role.upper()
             if role in ROLE.values():
