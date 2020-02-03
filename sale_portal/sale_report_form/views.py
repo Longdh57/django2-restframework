@@ -685,7 +685,6 @@ def export_excel(request):
         \t "count_standee_qr","count_sticker_door","count_sticker_table","count_guide", \n
         \t "count_wobbler","count_poster","count_standee_ctkm","count_tentcard"]\n
     """
-    post_options = ast.literal_eval(request.GET.get('options', None))
     full_options = ['full_name', 'email', 'count_total', 'count_care', 'count_impl',
 
                     'count_new', 'count_new_signed', 'count_new_unsigned',
@@ -697,7 +696,12 @@ def export_excel(request):
                     'count_standee_qr', 'count_sticker_door', 'count_sticker_table', 'count_guide',
 
                     'count_wobbler', 'count_poster', 'count_standee_ctkm', 'count_tentcard']
-    if post_options is None:
+    post_options = request.GET.get('options', None)
+    try:
+        post_options = ast.literal_eval(post_options)
+    except Exception as e:
+        post_options = []
+    if len(post_options) == 0:
         options = full_options
     else:
         options = []
