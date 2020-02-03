@@ -8,6 +8,7 @@ class CustomUserManager(UserManager):
 
 class User(AbstractUser):
     is_area_manager = models.BooleanField(default=False)
+    is_sale_admin = models.BooleanField(default=False)
     send_disable_shop_email = models.BooleanField(default=False)
 
     objects = CustomUserManager()

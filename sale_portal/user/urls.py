@@ -1,8 +1,11 @@
 from django.conf.urls import url, include
 from rest_framework_jwt.views import obtain_jwt_token
 from rest_framework import routers
-from .views import GroupViewSet, list_groups, PermissionViewSet, model_permissions
+from .views import GroupViewSet, list_groups, PermissionViewSet, model_permissions, UserViewSet
 from . import views
+
+router_users = routers.DefaultRouter()
+router_users.register(r'', UserViewSet, 'User')
 
 router_groups = routers.DefaultRouter()
 router_groups.register(r'', GroupViewSet, 'Group')
@@ -16,6 +19,9 @@ url_login_patterns = [
     url(r'social/jwt_user/(?:(?P<provider>[a-zA-Z0-9_-]+)/?)?$',
         views.SocialJWTUserAuthView.as_view(),
         name='login_social_jwt_user'),
+]
+url_user_patterns = [
+    url(r'^', include(router_users.urls), name='Restful API User'),
 ]
 url_group_patterns = [
     url(r'^', include(router_groups.urls), name='Restful API Group'),

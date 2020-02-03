@@ -8,11 +8,12 @@ from django.utils import formats
 from sale_portal.staff.models import Staff
 
 ROLE = {
-    0: 'AREA MANAGER',
-    1: 'TEAM MANAGER',
-    2: 'SALE',
-    3: 'OTHER',
-    4: 'admin',
+    0: 'ADMIN',
+    1: 'SALE MANAGER',
+    2: 'SALE ADMIN',
+    3: 'SALE LEADER',
+    4: 'SALE',
+    5: 'OTHER',
 }
 
 
@@ -28,20 +29,48 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_role(self, user):
         if user.is_superuser:
-            return ROLE[4]
-        if user.is_area_manager:
             return ROLE[0]
+        if user.is_area_manager:
+            return ROLE[1]
+        if user.is_sale_admin:
+            return ROLE[2]
         else:
             staff = Staff.objects.filter(email=user.email).order_by('id').first()
             if staff is not None:
-                return ROLE[2]
-            return ROLE[3]
+                if staff.role.code == 'TEAM_MANAGEMENT':
+                    return ROLE[3]
+                return ROLE[4]
+            return ROLE[5]
 
     class Meta:
         model = get_user_model()
         exclude = (
             'password', 'last_login', 'groups', 'is_staff', 'send_disable_shop_email', 'user_permissions'
         )
+
+
+class UserListViewSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
+    def get_role(self, user):
+        if user.is_superuser:
+            return ROLE[0]
+        if user.is_area_manager:
+            return ROLE[1]
+        if user.is_sale_admin:
+            return ROLE[2]
+        else:
+            staff = Staff.objects.filter(email=user.email).order_by('id').first()
+            if staff is not None:
+                if staff.role.code == 'TEAM_MANAGEMENT':
+                    return ROLE[3]
+                return ROLE[4]
+            return ROLE[5]
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_active', 'date_joined', 'last_login',
+                  'role')
 
 
 class GroupSerializer(serializers.ModelSerializer):
