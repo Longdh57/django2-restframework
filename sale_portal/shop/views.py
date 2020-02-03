@@ -70,32 +70,25 @@ def list_recommend_shops(request, pk):
     else:
         current_shop_number_of_tran = 'N/A'
 
-    nearly_shops_by_ward = []
-    if current_shop.wards != '' and current_shop.wards is not None:
-        for shop in Shop.objects.filter(wards=current_shop.wards).exclude(pk=pk):
+    nearly_shops_by_latlong = []
+    if current_shop.district != '' and current_shop.district is not None:
+        for shop in Shop.objects.filter(district=current_shop.district).exclude(pk=pk):
             code = shop.code if shop.code is not None else 'N/A'
             address = shop.address if shop.address is not None else 'N/A'
             merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
-            if shop.latitude is None or shop.longitude is None \
-                    or current_shop.latitude is None or current_shop.longitude is None:
-                distance = None
-            else:
+            if shop.latitude and shop.longitude and current_shop.latitude and current_shop.longitude:
                 distance = findDistance(shop.latitude, shop.longitude, current_shop.latitude, current_shop.longitude)
-            nearly_shops_by_ward.append({
-                'id': shop.id,
-                'shop_info': code + ' - ' + address + ' - ' + merchant_brand,
-                'address': shop.address,
-                'latitude': shop.latitude,
-                'longitude': shop.longitude,
-                'distance_value': distance.get('value') if distance is not None else None,
-                'distance_text': distance.get('text') if distance is not None else None
-            })
+                nearly_shops_by_latlong.append({
+                    'id': shop.id,
+                    'shop_info': code + ' - ' + address + ' - ' + merchant_brand,
+                    'address': shop.address,
+                    'latitude': shop.latitude,
+                    'longitude': shop.longitude,
+                    'distance_value': distance.get('value') if distance is not None else None,
+                    'distance_text': distance.get('text') if distance is not None else None
+                })
 
-        nearly_shops_by_latlong = []
-        for s_have_distance in nearly_shops_by_ward:
-            if s_have_distance.get('distance_value') is not None:
-                nearly_shops_by_latlong.append(s_have_distance)
-        nearly_shops_by_latlong_sorted = sorted(nearly_shops_by_latlong, key=lambda k: k['distance_value'])
+    nearly_shops_by_latlong_sorted = sorted(nearly_shops_by_latlong, key=lambda k: k['distance_value'])
 
     data = {
         'address': current_shop.address if current_shop.address != '' and current_shop.address is not None else 'N/A',
@@ -103,8 +96,7 @@ def list_recommend_shops(request, pk):
         'number_of_tran': current_shop_number_of_tran,
         'latitude': current_shop.latitude,
         'longitude': current_shop.longitude,
-        'nearly_shops_by_ward': nearly_shops_by_ward[:3],
-        'nearly_shops_by_latlong': nearly_shops_by_latlong_sorted[:3]
+        'nearly_shops': nearly_shops_by_latlong_sorted[:3]
     }
     return successful_response(data)
 
