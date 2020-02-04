@@ -62,7 +62,7 @@ class UserListViewSerializer(serializers.ModelSerializer):
         else:
             staff = Staff.objects.filter(email=user.email).order_by('id').first()
             if staff is not None:
-                if staff.role.code == 'TEAM_MANAGEMENT':
+                if staff.role is not None and staff.role.code == 'TEAM_MANAGEMENT':
                     return ROLE[3]
                 return ROLE[4]
             return ROLE[5]
