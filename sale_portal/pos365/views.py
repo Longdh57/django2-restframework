@@ -11,6 +11,7 @@ from sale_portal.pos365.serializers import Pos365Serializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.common.standard_response import successful_response
 
+
 class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
         API get list Pos365 \n
@@ -60,6 +61,6 @@ def list_contract_durations(request):
     """
     data = []
     for item in Pos365ContractDuration.CHOICES:
-        data.append({"code":item[0], "description":item[1]})
+        data.append({"code": item[0], "description": item[1]})
 
     return successful_response(data)
