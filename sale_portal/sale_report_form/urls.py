@@ -12,8 +12,8 @@ router_statistic = routers.DefaultRouter()
 router_statistic.register(r'', SaleReportStatisticViewSet, 'SaleReportStatistic')
 
 urlpatterns = [
-    url(r'^', include(router.urls), name='SaleReport'),
     url(r'^statistic', include(router_statistic.urls), name='SaleReportStatistic'),
     url(r'^list-draff', list_draff, name='list_draff'),
     url(r'^export-statistic-to-excel', export_excel, name='export_excel'),
+    url(r'^', include(router.urls), name='SaleReport'),
 ]
