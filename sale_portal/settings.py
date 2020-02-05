@@ -228,7 +228,6 @@ AUTHENTICATION_BACKENDS = (
     'rest_framework_social_oauth2.backends.DjangoOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
-# Google Social OAuth2
 
 # Config send email
 EMAIL_USE_TLS = True
