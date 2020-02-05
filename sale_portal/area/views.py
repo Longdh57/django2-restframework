@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 
@@ -8,7 +10,7 @@ from sale_portal.area.models import Area
 from sale_portal.area.serializers import AreaSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.administrative_unit.models import QrProvince
-from sale_portal.common.standard_response import successful_response
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 
 
 class AreaViewSet(mixins.ListModelMixin,
@@ -36,6 +38,39 @@ class AreaViewSet(mixins.ListModelMixin,
             queryset = queryset.filter(provinces__icontains=province)
 
         return queryset
+
+    def retrieve(self, request, pk):
+        """
+            API get detail Area
+        """
+        try:
+            area = Area.objects.filter(pk=pk).first()
+            if area is None:
+                return custom_response(Code.AREA_NOT_FOUND)
+
+            province_lists, proportion_kpi_lists = [], []
+            province_code_lists = area.provinces.split(',')
+            for item in QrProvince.objects.filter(province_code__in=province_code_lists).values('province_name'):
+                province_lists.append({
+                    'province_name': item['province_name'],
+                })
+
+            for proportion_kpi in area.proportion_kpi.all().values('type', 'leader_coefficient'):
+                proportion_kpi_lists.append({
+                    'type': proportion_kpi['type'],
+                    'leader_coefficient': proportion_kpi['leader_coefficient'],
+                })
+
+            data = {
+                'name': area.name,
+                'code': area.code,
+                'provinces': province_lists,
+                'proportion_kpi_team': proportion_kpi_lists
+            }
+            return successful_response(data)
+        except Exception as e:
+            logging.error('Get detail area exception: %s', e)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
 @login_required
