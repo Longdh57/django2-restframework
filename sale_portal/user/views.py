@@ -2,20 +2,26 @@ import json
 import logging
 import collections
 
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, Permission
+from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.conf import settings
 from django.db.models import Q
+from rest_framework_jwt.settings import api_settings
+from rest_framework_jwt.serializers import JSONWebTokenSerializer
+from rest_framework_jwt.views import JSONWebTokenAPIView
+from social_core.exceptions import AuthException
 
 from ..user.models import CustomGroup, User
 from ..user.serializers import ROLE
 from ..user import model_names
 from django.http import JsonResponse
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
-from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView
+from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView, decorate_request
 from rest_social_auth.serializers import JWTSerializer
 from .serializers import UserSerializer, GroupSerializer, PermissionSerializer, UserListViewSerializer
 from ..staff.models import Staff
@@ -24,6 +30,10 @@ from ..common.standard_response import successful_response, custom_response, Cod
 from django.middleware.csrf import get_token
 from django.utils import formats
 
+from requests.exceptions import HTTPError
+from django.http import HttpResponse
+from social_core.utils import parse_qs
+
 
 class UserJWTSerializer(JWTSerializer, UserSerializer):
     pass
@@ -31,6 +41,92 @@ class UserJWTSerializer(JWTSerializer, UserSerializer):
 
 class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
     serializer_class = UserJWTSerializer
+
+    def post(self, request, *args, **kwargs):
+        input_data = self.get_serializer_in_data()
+        provider_name = self.get_provider_name(input_data)
+        if not provider_name:
+            return self.respond_error("Provider is not specified")
+        self.set_input_data(request, input_data)
+        decorate_request(request, provider_name)
+        serializer_in = self.get_serializer_in(data=input_data)
+        if self.oauth_v1() and request.backend.OAUTH_TOKEN_PARAMETER_NAME not in input_data:
+            # oauth1 first stage (1st is get request_token, 2nd is get access_token)
+            manual_redirect_uri = self.request.auth_data.pop('redirect_uri', None)
+            manual_redirect_uri = self.get_redirect_uri(manual_redirect_uri)
+            if manual_redirect_uri:
+                self.request.backend.redirect_uri = manual_redirect_uri
+            request_token = parse_qs(request.backend.set_unauthorized_token())
+            return Response(request_token)
+        serializer_in.is_valid(raise_exception=True)
+        try:
+            user = self.get_object()
+        except (AuthException, HTTPError) as e:
+            return self.respond_error(e)
+        if isinstance(user, HttpResponse):  # An error happened and pipeline returned HttpResponse instead of user
+            return user
+        resp_data = self.get_serializer(instance=user)
+        # self.do_login(request.backend, user)
+        if user.is_active is False:
+            return Response({
+                'Unauthorized': 'User has been disable'
+            }, status=401)
+        if not user.groups.all():
+            if not user.is_superuser:
+                return Response({'message': 'Bạn không có bất kì nhóm quyền nào'},
+                                status=status.HTTP_403_FORBIDDEN)
+        elif len(user.groups.all()) > 1:
+            return Response({'message': 'Bạn có nhiều hơn 1 nhóm quyền, liên hệ admin để được giải quyết'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            group = user.get_group()
+            if group is None:
+                return Response(
+                    {'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            elif not group.status:
+                return Response({
+                                    'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
+                                status=status.HTTP_403_FORBIDDEN)
+        return Response(resp_data.data)
+
+
+class AccountJWTUserAuthView(JSONWebTokenAPIView):
+    serializer_class = JSONWebTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.object.get('user') or request.user
+            token = serializer.object.get('token')
+            if not user.groups.all():
+                if not user.is_superuser:
+                    return Response({'message': 'Bạn không có bất kì nhóm quyền nào'},
+                                    status=status.HTTP_403_FORBIDDEN)
+            elif len(user.groups.all()) > 1:
+                return Response({'message': 'Bạn có nhiều hơn 1 nhóm quyền, liên hệ admin để được giải quyết'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                group = user.get_group()
+                if group is None:
+                    return Response({'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                elif not group.status:
+                    return Response({'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
+                                status=status.HTTP_403_FORBIDDEN)
+            response_data = jwt_response_payload_handler(token, user, request)
+            response = Response(response_data)
+            if api_settings.JWT_AUTH_COOKIE:
+                expiration = (datetime.utcnow() +
+                              api_settings.JWT_EXPIRATION_DELTA)
+                response.set_cookie(api_settings.JWT_AUTH_COOKIE,
+                                    token,
+                                    expires=expiration,
+                                    httponly=True)
+            return response
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def jwt_response_payload_handler(token, user=None, request=None):

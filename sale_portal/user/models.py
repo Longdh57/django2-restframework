@@ -21,6 +21,14 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    def get_group(self):
+        group = self.groups.first()
+        if group is None:
+            return None
+        else:
+            custom_group = CustomGroup.objects.filter(group_ptr=group).first()
+            return custom_group
+
 
 class CustomGroup(Group):
     status = models.BooleanField(default=True)
