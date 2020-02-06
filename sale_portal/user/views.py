@@ -23,7 +23,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView, decorate_request
 from rest_social_auth.serializers import JWTSerializer
-from .serializers import UserSerializer, GroupSerializer, PermissionSerializer, UserListViewSerializer
+from .serializers import UserSerializer, GroupSerializer, PermissionSerializer, AccountSerializer
 from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
 from ..common.standard_response import successful_response, custom_response, Code
@@ -215,7 +215,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - status -- true/false (trạng thái)
         - role: text in { 'ADMIN', 'AREA MANAGER', 'TEAM MANAGER', 'SALE' }
     """
-    serializer_class = UserListViewSerializer
+    serializer_class = AccountSerializer
     permission_classes = [PermissionIsAdmin]
     ordering = ['username']
 
@@ -236,29 +236,34 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             queryset = queryset.filter(is_active=status)
         if role is not None and role != '':
             role = role.upper()
-            if role in ROLE.values():
-                if role == ROLE[0]:
-                    queryset = queryset.filter(is_superuser=True)
-                if role == ROLE[1]:
-                    queryset = queryset.filter(is_area_manager=True)
-                if role == ROLE[2]:
-                    queryset = queryset.filter(is_sale_admin=True)
-                if role == ROLE[3]:
-                    staff_emails = Staff.objects.filter(role__code__iexact='TEAM_MANAGEMENT').values('email')
-                    queryset = queryset.filter(email__in=staff_emails, is_superuser=False,
-                                               is_area_manager=False, is_sale_admin=False)
-                if role == ROLE[4]:
-                    staff_emails = Staff.objects.exclude(role__code__iexact='TEAM_MANAGEMENT').values('email')
-                    queryset = queryset.filter(email__in=staff_emails, is_superuser=False,
-                                               is_area_manager=False, is_sale_admin=False)
-                if role == ROLE[5]:
-                    staff_emails = Staff.objects.all().values('email')
-                    queryset = queryset.filter(is_superuser=False, is_area_manager=False,
-                                               is_sale_admin=False).exclude(email__in=staff_emails)
+            # ROLE ADMIN
+            if role == ROLE[0]:
+                queryset = queryset.filter(is_superuser=True)
+            # ROLE OTHER
+            elif role == ROLE[1]:
+                staff_emails = Staff.objects.all().values('email')
+                queryset = queryset.filter(is_superuser=False).filter(groups__isnull=True)
             else:
-                queryset = User.objects.none()
+                queryset = queryset.filter(groups__name=role)
 
         return queryset
+
+    def retrieve(self, request, pk):
+        """
+            API get detail user
+        """
+        user = User.objects.filter(pk=pk).first()
+        if user is None:
+            return custom_response(Code.USER_NOT_FOUND)
+
+        permissons = Permission.objects.filter(Q(user=user) | Q(group__user=user)).all().distinct()
+
+        data = {
+            'user': AccountSerializer(user).data,
+            'permissions': PermissionSerializer(permissons, many=True).data,
+        }
+
+        return successful_response(data)
 
 
 class GroupViewSet(mixins.ListModelMixin,
@@ -310,7 +315,7 @@ class GroupViewSet(mixins.ListModelMixin,
                 return custom_response(Code.BAD_REQUEST, 'Group_name have been used')
 
             custom_group = CustomGroup(
-                name=group_name,
+                name=group_name.upper(),
                 created_by=request.user,
                 updated_by=request.user
             )
