@@ -50,8 +50,10 @@ class AreaViewSet(mixins.ListModelMixin,
 
             province_lists, proportion_kpi_lists = [], []
             province_code_lists = area.provinces.split(',')
-            for item in QrProvince.objects.filter(province_code__in=province_code_lists).values('province_name'):
+            for item in QrProvince.objects.filter(province_code__in=province_code_lists).values('province_code',
+                                                                                                'province_name'):
                 province_lists.append({
+                    'province_code': item['province_code'],
                     'province_name': item['province_name'],
                 })
 
