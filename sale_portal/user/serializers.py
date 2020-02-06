@@ -9,11 +9,7 @@ from sale_portal.staff.models import Staff
 
 ROLE = {
     0: 'ADMIN',
-    1: 'SALE MANAGER',
-    2: 'SALE ADMIN',
-    3: 'SALE LEADER',
-    4: 'SALE',
-    5: 'OTHER',
+    1: 'OTHER',
 }
 
 
@@ -30,17 +26,10 @@ class UserSerializer(serializers.ModelSerializer):
     def get_role(self, user):
         if user.is_superuser:
             return ROLE[0]
-        if user.is_area_manager:
+        group = user.groups.first()
+        if group is None:
             return ROLE[1]
-        if user.is_sale_admin:
-            return ROLE[2]
-        else:
-            staff = Staff.objects.filter(email=user.email).order_by('id').first()
-            if staff is not None:
-                if staff.role.code == 'TEAM_MANAGEMENT':
-                    return ROLE[3]
-                return ROLE[4]
-            return ROLE[5]
+        return group.name
 
     class Meta:
         model = get_user_model()
