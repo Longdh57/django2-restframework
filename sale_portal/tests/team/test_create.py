@@ -121,7 +121,7 @@ def test_create_success(user, factory, data):
     team_log = TeamLog.objects.filter(
         new_data__icontains=data['code'], type=TeamLogType.CREATED).first()
     staff = Staff.objects.get(pk=1149)
-    staff_log = StaffLog.objects.filter(staff_id=1149, type=StaffLogType.JOIN_TEAM).first()
+    staff_log = StaffLog.objects.filter(staff_id=1149, type=StaffLogType.JOIN_TEAM).order_by('-created_date').first()
     role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
 
     assert team.name == data['name'] and team.type == data['type']
