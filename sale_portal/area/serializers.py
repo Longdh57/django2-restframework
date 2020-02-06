@@ -10,7 +10,7 @@ class AreaSerializer(serializers.ModelSerializer):
 
     def get_provinces(self, area):
         province_code_lists = area.provinces.split(',')
-        data = QrProvince.objects.filter(province_code__in=province_code_lists).values('province_name')
+        data = QrProvince.objects.filter(province_code__in=province_code_lists).values('province_code', 'province_name')
         return data
 
     def get_proportion_kpi_team(self, area):
