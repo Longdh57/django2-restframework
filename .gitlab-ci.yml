@@ -29,7 +29,7 @@ deploy:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - ssh "$SEVER_UNAME"@"SEVER_HOST"
+    - ssh "$SEVER_UNAME"@"$SEVER_HOST"
     - cd /home/khdn
     - touch test_gitlabci.txt
   only:
