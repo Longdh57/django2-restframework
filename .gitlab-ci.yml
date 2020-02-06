@@ -1,6 +1,7 @@
 image: python:3.6
 
 stages:
+  - test
   - deploy
 
 test:
@@ -15,6 +16,8 @@ test:
     - pytest
   only:
     - master
+  tags:
+    - marketing-portal
 
 deploy:
   stage: deploy
@@ -31,3 +34,5 @@ deploy:
     - touch test_gitlabci.txt
   only:
     - master
+  tags:
+    - marketing-portal
