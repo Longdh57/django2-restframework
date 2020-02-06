@@ -5,15 +5,9 @@ from django.contrib.auth.models import Permission, ContentType
 from ..user.models import CustomGroup
 from django.utils import formats
 
-from sale_portal.staff.models import Staff
-
 ROLE = {
     0: 'ADMIN',
-    1: 'SALE MANAGER',
-    2: 'SALE ADMIN',
-    3: 'SALE LEADER',
-    4: 'SALE',
-    5: 'OTHER',
+    1: 'OTHER',
 }
 
 
@@ -23,24 +17,17 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_permissions(self, user):
         permissions = []
-        for x in Permission.objects.filter(Q(user=user) | Q(group__user=user)).all():
+        for x in Permission.objects.filter(Q(user=user) | Q(group__user=user)).all().distinct():
             permissions.append(x.codename)
         return permissions
 
     def get_role(self, user):
         if user.is_superuser:
             return ROLE[0]
-        if user.is_area_manager:
+        group = user.groups.first()
+        if group is None:
             return ROLE[1]
-        if user.is_sale_admin:
-            return ROLE[2]
-        else:
-            staff = Staff.objects.filter(email=user.email).order_by('id').first()
-            if staff is not None:
-                if staff.role.code == 'TEAM_MANAGEMENT':
-                    return ROLE[3]
-                return ROLE[4]
-            return ROLE[5]
+        return group.name
 
     class Meta:
         model = get_user_model()
@@ -49,23 +36,16 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-class UserListViewSerializer(serializers.ModelSerializer):
+class AccountSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
 
     def get_role(self, user):
         if user.is_superuser:
             return ROLE[0]
-        if user.is_area_manager:
+        group = user.groups.first()
+        if group is None:
             return ROLE[1]
-        if user.is_sale_admin:
-            return ROLE[2]
-        else:
-            staff = Staff.objects.filter(email=user.email).order_by('id').first()
-            if staff is not None:
-                if staff.role is not None and staff.role.code == 'TEAM_MANAGEMENT':
-                    return ROLE[3]
-                return ROLE[4]
-            return ROLE[5]
+        return group.name
 
     class Meta:
         model = get_user_model()
