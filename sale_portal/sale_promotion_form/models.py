@@ -33,17 +33,9 @@ class SalePromotion(models.Model):
     wobbler_ctkm = models.BooleanField(default=False)
     status = models.IntegerField(choices=PromotionStatus.CHOICES, null=False, default=0)
 
-    image = models.ImageField(
-        upload_to='sale_promotion_form',
-        help_text='Anh nghiem thu',
-        blank=True
-    )
+    image = models.TextField(null=True, blank=True)
 
-    sub_image = models.ImageField(
-        upload_to='sale_promotion_form',
-        help_text='Anh nghiem thu (ảnh phụ)',
-        blank=True
-    )
+    sub_image = models.TextField(null=True, blank=True)
 
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -100,7 +92,7 @@ class SalePromotion(models.Model):
     def get_title(self):
         return {
             'code': self.title.code if self.title else '',
-            'description': self.title.description if self.title else ''
+            'description': self.title.description if self.title and self.title.description else ''
         }
 
     def get_status(self):

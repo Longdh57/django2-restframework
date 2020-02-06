@@ -82,8 +82,8 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'tentcard_ctkm': sale_promotion.tentcard_ctkm,
             'wobbler_ctkm': sale_promotion.wobbler_ctkm,
             'status': sale_promotion.get_status(),
-            'image': sale_promotion.image.url if sale_promotion.image else '',
-            'sub_image': sale_promotion.sub_image.url if sale_promotion.sub_image else '',
+            'image': sale_promotion.image if sale_promotion.image else '',
+            'sub_image': sale_promotion.sub_image if sale_promotion.sub_image else '',
             'created_date': formats.date_format(sale_promotion.created_date,
                                                 "SHORT_DATETIME_FORMAT") if sale_promotion.created_date else '',
             'updated_date': formats.date_format(sale_promotion.updated_date,
@@ -95,31 +95,26 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     def update(self, request, pk):
         """
             API update SalePromotion \n
-            Request body for this api : Định dạng form-data \n
-                "tentcard_ctkm": true/false,
-                "wobbler_ctkm": true/false,
-                "status": 2 (status in {0,1,2,3} ),
-                "image_file": file_image_upload,
-                "sub_image_file": file_sub_image_upload \n
+            Request body for this api : Định dạng json \n
+                {
+                    "tentcard_ctkm": true/false,
+                    "wobbler_ctkm": true/false,
+                    "status": 2 (status in {0,1,2,3} ),
+                    "image_file": "text",
+                    "sub_image_file": "text"
+                }
         """
         sale_promotion = SalePromotion.objects.filter(pk=pk).first()
         if sale_promotion is None:
             return custom_response(Code.PROMOTION_NOT_FOUND)
 
-        image = request.FILES['image_file'] if 'image_file' in request.FILES else None
-        sub_image = request.FILES['sub_image_file'] if 'sub_image_file' in request.FILES else None
-        data = request.POST.get('data', None)
-        if data is None:
-            return custom_response(Code.CANNOT_READ_DATA_BODY)
-        try:
-            data_json = json.loads(data)
-        except Exception as e:
-            logging.error(e)
-            return custom_response(Code.CANNOT_CONVERT_DATA_BODY)
+        body = json.loads(request.body)
 
-        status = data_json['status'] if 'status' in data_json else None
-        tentcard_ctkm = data_json['tentcard_ctkm'] if 'tentcard_ctkm' in data_json else None
-        wobbler_ctkm = data_json['wobbler_ctkm'] if 'wobbler_ctkm' in data_json else None
+        status = body.get('status')
+        tentcard_ctkm = body.get('tentcard_ctkm')
+        wobbler_ctkm = body.get('wobbler_ctkm')
+        image = body.get('image')
+        sub_image = body.get('sub_image')
 
         try:
             status = int(status) if status is not None else None
@@ -132,23 +127,14 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         tentcard_ctkm = True if tentcard_ctkm is not None and tentcard_ctkm == 'true' else False
         wobbler_ctkm = True if wobbler_ctkm is not None and wobbler_ctkm == 'true' else False
 
-        fs = FileSystemStorage(
-            location=settings.FS_IMAGE_UPLOADS + datetime.date.today().isoformat(),
-            base_url=settings.FS_IMAGE_URL + datetime.date.today().isoformat()
-        )
-
         if image is not None and image != '':
-            image_filename = fs.save(image.name, image)
-            image_url = fs.url(image_filename)
-            sale_promotion.image = image_url
+            sale_promotion.image = image
 
         elif status != 0 and (sale_promotion.image is None or sale_promotion.image == ''):
             return custom_response(Code.BAD_REQUEST, 'Cần upload ảnh nghiệm thu với trạng thái hiện tại của shop')
 
         if sub_image is not None and sub_image != '':
-            sub_image_filename = fs.save(sub_image.name, sub_image)
-            sub_image_url = fs.url(sub_image_filename)
-            sale_promotion.sub_image = sub_image_url
+            sale_promotion.sub_image = sub_image
 
         sale_promotion.status = status
         sale_promotion.tentcard_ctkm = tentcard_ctkm
