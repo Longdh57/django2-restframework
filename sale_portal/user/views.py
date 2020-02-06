@@ -256,11 +256,13 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         if user is None:
             return custom_response(Code.USER_NOT_FOUND)
 
-        permissons = Permission.objects.filter(Q(user=user) | Q(group__user=user)).all().distinct()
+        user_permissions = user.user_permissions.all()
+        group_permissions = Permission.objects.filter(group__user=user).all()
 
         data = {
             'user': AccountSerializer(user).data,
-            'permissions': PermissionSerializer(permissons, many=True).data,
+            'user_permissions': PermissionSerializer(user_permissions, many=True).data,
+            'group_permissions': PermissionSerializer(group_permissions, many=True).data,
         }
 
         return successful_response(data)
