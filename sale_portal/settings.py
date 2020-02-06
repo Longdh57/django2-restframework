@@ -313,8 +313,8 @@ JWT_AUTH = {
     'JWT_PAYLOAD_GET_USER_ID_HANDLER':
         'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
 
-    'JWT_RESPONSE_PAYLOAD_HANDLER':
-        'sale_portal.user.views.jwt_response_payload_handler',
+    # 'JWT_RESPONSE_PAYLOAD_HANDLER':
+    #     'sale_portal.user.views.jwt_response_payload_handler',
 
     'JWT_SECRET_KEY': SECRET_KEY,
     'JWT_GET_USER_SECRET_KEY': None,

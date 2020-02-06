@@ -2,19 +2,23 @@ import json
 import logging
 import collections
 
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, Permission
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.conf import settings
 from django.db.models import Q
+from rest_framework_jwt.settings import api_settings
+from rest_framework_jwt.serializers import JSONWebTokenSerializer
+from rest_framework_jwt.views import JSONWebTokenAPIView
 from social_core.exceptions import AuthException
 
 from ..user.models import CustomGroup, User
 from ..user.serializers import ROLE
 from ..user import model_names
 from django.http import JsonResponse
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView, decorate_request
@@ -65,9 +69,64 @@ class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
         # self.do_login(request.backend, user)
         if user.is_active is False:
             return Response({
-                'Unauthorized': 'User have been disable'
+                'Unauthorized': 'User has been disable'
             }, status=401)
+        if not user.groups.all():
+            if not user.is_superuser:
+                return Response({'message': 'Bạn không có bất kì nhóm quyền nào'},
+                                status=status.HTTP_403_FORBIDDEN)
+        elif len(user.groups.all()) > 1:
+            return Response({'message': 'Bạn có nhiều hơn 1 nhóm quyền, liên hệ admin để được giải quyết'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            group = user.get_group()
+            if group is None:
+                return Response(
+                    {'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            elif not group.status:
+                return Response({
+                                    'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
+                                status=status.HTTP_403_FORBIDDEN)
         return Response(resp_data.data)
+
+
+class AccountJWTUserAuthView(JSONWebTokenAPIView):
+    serializer_class = JSONWebTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.object.get('user') or request.user
+            token = serializer.object.get('token')
+            if not user.groups.all():
+                if not user.is_superuser:
+                    return Response({'message': 'Bạn không có bất kì nhóm quyền nào'},
+                                    status=status.HTTP_403_FORBIDDEN)
+            elif len(user.groups.all()) > 1:
+                return Response({'message': 'Bạn có nhiều hơn 1 nhóm quyền, liên hệ admin để được giải quyết'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                group = user.get_group()
+                if group is None:
+                    return Response({'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                elif not group.status:
+                    return Response({'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
+                                status=status.HTTP_403_FORBIDDEN)
+            response_data = jwt_response_payload_handler(token, user, request)
+            response = Response(response_data)
+            if api_settings.JWT_AUTH_COOKIE:
+                expiration = (datetime.utcnow() +
+                              api_settings.JWT_EXPIRATION_DELTA)
+                response.set_cookie(api_settings.JWT_AUTH_COOKIE,
+                                    token,
+                                    expires=expiration,
+                                    httponly=True)
+            return response
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def jwt_response_payload_handler(token, user=None, request=None):
