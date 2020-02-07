@@ -1,11 +1,13 @@
 from django.db import models
 from sale_portal.administrative_unit.models import QrProvince
+from sale_portal.user.models import User
 
 
 class Area(models.Model):
     name = models.CharField(max_length=100, null=False)
     code = models.CharField(max_length=10, null=False)
     provinces = models.TextField()
+    user = models.ManyToManyField(User)
 
     class Meta:
         db_table = 'area'

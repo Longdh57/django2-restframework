@@ -6,3 +6,5 @@ ROLE = {
     0: 'ADMIN',
     1: 'OTHER',
 }
+
+ROLE_SALE_MANAGER = 'SALE MANAGER'
