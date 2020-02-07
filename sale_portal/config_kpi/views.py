@@ -156,9 +156,9 @@ def update_proportion_kpi_team(request, pk):
         data = body.get('data')
 
         for i in data:
-            if not isinstance(i.type, int) or i.type < 0 or i.type > 6:
+            if not isinstance(i['type'], int) or i.type < 0 or i.type > 6:
                 return custom_response(Code.INVALID_BODY, 'type Invalid')
-            if not isinstance(i.leader_coefficient, int) or i.leader_coefficient < 0 or i.leader_coefficient > 100:
+            if not isinstance(i['leader_coefficient'], int) or i.leader_coefficient < 0 or i.leader_coefficient > 100:
                 return custom_response(Code.INVALID_BODY, 'leader_coefficient Invalid')
 
         for update_item in data:
