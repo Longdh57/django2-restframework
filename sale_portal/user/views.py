@@ -15,8 +15,7 @@ from rest_framework_jwt.views import JSONWebTokenAPIView
 from social_core.exceptions import AuthException
 
 from ..user.models import CustomGroup, User
-from ..user.serializers import ROLE
-from ..user import model_names
+from ..user import model_names, ROLE
 from django.http import JsonResponse
 from rest_framework import permissions, status
 from rest_framework import viewsets, mixins
@@ -266,6 +265,53 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         }
 
         return successful_response(data)
+
+    def update(self, request, pk):
+        """
+            API update user info \n
+            Request body for this api : Không được bỏ trống \n
+                {
+                    "is_active": boolean true/false,
+                    "role_name": text,
+                    "user_permissions": [1,2,3,4,5,6...],
+
+                }
+        """
+        user = User.objects.filter(pk=pk).first()
+        if user is None:
+            return custom_response(Code.USER_NOT_FOUND)
+
+        try:
+            body = json.loads(request.body)
+
+            is_active = body.get('is_active')
+            role_name = body.get('role_name')
+            user_permissions = body.get('user_permissions')
+
+            if role_name is not None and role_name != '' and user.get_role_name() != role_name.upper():
+                if role_name == ROLE[0]:
+                    user.groups.set(None)
+                    user.is_superuser = True
+                else:
+                    group = Group.objects.filter(name=role_name.upper())
+                    if not group:
+                        return custom_response(Code.INVALID_BODY, 'group_name not valid')
+                    else:
+                        if user.is_superuser:
+                            user.is_superuser = False
+                        user.groups.set(group)
+
+            user.is_active = (is_active == 'true')
+            user.user_permissions.set(user_permissions)
+
+            user.save()
+
+            return successful_response()
+
+        except Exception as e:
+            logging.error('Create team exception: %s', e)
+            print(e)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
 class GroupViewSet(mixins.ListModelMixin,

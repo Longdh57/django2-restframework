@@ -5,11 +5,6 @@ from django.contrib.auth.models import Permission, ContentType
 from ..user.models import CustomGroup
 from django.utils import formats
 
-ROLE = {
-    0: 'ADMIN',
-    1: 'OTHER',
-}
-
 
 class UserSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
@@ -22,12 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
         return permissions
 
     def get_role(self, user):
-        if user.is_superuser:
-            return ROLE[0]
-        group = user.groups.first()
-        if group is None:
-            return ROLE[1]
-        return group.name
+        return user.get_role_name()
 
     class Meta:
         model = get_user_model()
@@ -40,12 +30,7 @@ class AccountSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
 
     def get_role(self, user):
-        if user.is_superuser:
-            return ROLE[0]
-        group = user.groups.first()
-        if group is None:
-            return ROLE[1]
-        return group.name
+        return user.get_role_name()
 
     class Meta:
         model = get_user_model()

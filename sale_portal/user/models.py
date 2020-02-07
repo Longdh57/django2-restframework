@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from sale_portal.user import ROLE
+
 
 class CustomUserManager(UserManager):
     pass
@@ -28,6 +30,14 @@ class User(AbstractUser):
         else:
             custom_group = CustomGroup.objects.filter(group_ptr=group).first()
             return custom_group
+
+    def get_role_name(self):
+        if self.is_superuser:
+            return ROLE[0]
+        group = self.groups.first()
+        if group is None:
+            return ROLE[1]
+        return group.name
 
 
 class CustomGroup(Group):
