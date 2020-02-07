@@ -14,9 +14,9 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.views import JSONWebTokenAPIView
 from social_core.exceptions import AuthException
 
+from sale_portal.area.models import Area
 from ..user.models import CustomGroup, User
-from ..user.serializers import ROLE
-from ..user import model_names
+from ..user import model_names, ROLE, ROLE_SALE_MANAGER
 from django.http import JsonResponse
 from rest_framework import permissions, status
 from rest_framework import viewsets, mixins
@@ -256,14 +256,81 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         if user is None:
             return custom_response(Code.USER_NOT_FOUND)
 
-        permissons = Permission.objects.filter(Q(user=user) | Q(group__user=user)).all().distinct()
+        user_permissions = user.user_permissions.all()
+        group_permissions = Permission.objects.filter(group__user=user).all()
 
         data = {
             'user': AccountSerializer(user).data,
-            'permissions': PermissionSerializer(permissons, many=True).data,
+            'user_permissions': PermissionSerializer(user_permissions, many=True).data,
+            'group_permissions': PermissionSerializer(group_permissions, many=True).data,
         }
 
         return successful_response(data)
+
+    def update(self, request, pk):
+        """
+            API update user info \n
+            Request body for this api : Không được bỏ trống \n
+                {
+                    "is_active": boolean true/false,
+                    "role_name": text,
+                    "area_ids": [1,2..],
+                    "user_permissions": [1,2,3,4,5,6...],
+                }
+        """
+        user = User.objects.filter(pk=pk).first()
+        if user is None:
+            return custom_response(Code.USER_NOT_FOUND)
+
+        try:
+            body = json.loads(request.body)
+
+            is_active = body.get('is_active')
+            role_name = body.get('role_name')
+            area_ids = body.get('area_ids')
+            user_permissions = body.get('user_permissions')
+
+            if user_permissions is None or not isinstance(user_permissions, list):
+                return custom_response(Code.INVALID_BODY, 'List user-permission not valid')
+            if Permission.objects.filter(pk__in=user_permissions).count() != len(user_permissions):
+                return custom_response(Code.PERMISSION_NOT_FOUND)
+
+            old_role_name = user.get_role_name()
+            if role_name is not None and role_name != '' and old_role_name != role_name.upper():
+                role_name = role_name.upper()
+                if role_name == ROLE[0]:
+                    user.groups.clear()
+                    user.is_superuser = True
+                else:
+                    group = Group.objects.filter(name=role_name)
+                    if not group:
+                        return custom_response(Code.INVALID_BODY, 'group_name not valid')
+                    else:
+                        if role_name == ROLE_SALE_MANAGER:
+                            if not area_ids or not isinstance(area_ids, list):
+                                return custom_response(Code.INVALID_BODY, 'List Area not valid')
+                            if Area.objects.filter(pk__in=area_ids).count() != len(area_ids):
+                                return custom_response(Code.AREA_NOT_FOUND)
+                            user.area_set.clear()
+                            user.area_set.set(area_ids)
+
+                        user.groups.set(group)
+
+                if old_role_name == ROLE[0]:
+                    user.is_superuser = False
+                if old_role_name == ROLE_SALE_MANAGER:
+                    user.area_set.clear()
+
+            user.is_active = (is_active == 'true')
+            user.save()
+            user.user_permissions.set(user_permissions)
+
+            return successful_response()
+
+        except Exception as e:
+            logging.error('Create team exception: %s', e)
+            print(e)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
 class GroupViewSet(mixins.ListModelMixin,
