@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -195,6 +196,7 @@ def create_staff_log(shop, staff_id, type, request):
         staff_id=staff_id,
         shop_id=shop.id,
         type=type,
+        is_caring=True,
         created_by=request.user if request else None,
         updated_by=request.user if request else None
     )
@@ -205,10 +207,12 @@ def remove_staff_care(shop, type, request):
     if staff_care is not None:
         staff = staff_care.staff
         staff_care.delete()
-        staff_care_log = shop.staff_care_logs.filter(staff=staff, type=type).latest('created_date')
-        if staff_care_log is not None:
-            staff_care_log.updated_by = request.user
-            staff_care_log.save()
+
+        shop.staff_care_logs.filter(staff=staff, type=type, is_caring=True).update(
+            is_caring=False,
+            updated_by=request.user,
+            updated_date=datetime.now()
+        )
 
 
 @receiver(post_save, sender=Shop)

@@ -31,6 +31,7 @@ class StaffCareLog(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='staff_care_logs_created', null=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='staff_care_logs_updated', null=True)
+    is_caring = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'staff_care_log'
