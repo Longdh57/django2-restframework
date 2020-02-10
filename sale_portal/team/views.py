@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view
 from sale_portal.area.models import Area
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
-from sale_portal.staff_care.models import StaffCare
+from sale_portal.staff_care.models import StaffCare, StaffCareLog
 from sale_portal.team.serializers import TeamSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
@@ -347,6 +347,11 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             with transaction.atomic():
                 if staffs_remove:
                     StaffCare.objects.filter(staff__in=staffs_remove).delete()
+                    StaffCareLog.objects.filter(staff__in=staffs_remove, is_caring=True).update(
+                        is_caring=False,
+                        updated_by=request.user,
+                        updated_date=datetime.now(),
+                    )
 
                     staffs_remove.update(
                         team=None,
@@ -438,6 +443,11 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 remove_ids.append(id['id'])
 
             StaffCare.objects.filter(staff__in=staffs).delete()
+            StaffCareLog.objects.filter(staff__in=staffs, is_caring=True).update(
+                is_caring=False,
+                updated_by=request.user,
+                updated_date=datetime.now(),
+            )
 
             staffs.update(
                 team=None,
