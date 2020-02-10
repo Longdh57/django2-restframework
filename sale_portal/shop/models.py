@@ -144,7 +144,7 @@ class Shop(models.Model):
             return staff_care.staff.team
         return None
 
-    def staff_create(self, staff_id):
+    def staff_create(self, staff_id, request=None):
         staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_SHOP).first()
         if staff_care is None:
             try:
@@ -153,21 +153,22 @@ class Shop(models.Model):
                     merchant_id=None,
                     type=StaffCareType.STAFF_SHOP
                 )
+                create_staff_log(self, staff_id, StaffCareType.STAFF_SHOP, request)
                 return staff_care.staff
             except Exception as e:
                 logging.error('Create staff-shop exception: %s', e)
         else:
             raise Exception('Shop already exist a staff ')
 
-    def staff_delete(self):
+    def staff_delete(self, request=None):
         try:
-            staff_cares = self.staff_cares.filter(type=StaffCareType.STAFF_SHOP)
-            self.staff_cares.remove(*staff_cares)
-            return
+            print("sdfjsdlf")
+            remove_staff_care(self, StaffCareType.STAFF_SHOP, request)
+
         except Exception as e:
             logging.error('Delete staff-shop exception: %s', e)
 
-    def staff_of_chain_create(self, staff_id):
+    def staff_of_chain_create(self, staff_id, request=None):
         staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP).first()
         if staff_care is None:
             try:
@@ -176,19 +177,40 @@ class Shop(models.Model):
                     merchant_id=None,
                     type=StaffCareType.STAFF_OF_CHAIN_SHOP
                 )
+                create_staff_log(self, staff_id, StaffCareType.STAFF_OF_CHAIN_SHOP, request)
                 return staff_care.staff
             except Exception as e:
                 logging.error('Create staff_of_chain-shop exception: %s', e)
         else:
             raise Exception('Shop already exist a staff_of_chain ')
 
-    def staff_of_chain_delete(self):
+    def staff_of_chain_delete(self, request=None):
         try:
-            staff_cares = self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP)
-            self.staff_cares.remove(*staff_cares)
-            return
+            remove_staff_care(self, StaffCareType.STAFF_OF_CHAIN_SHOP, request)
         except Exception as e:
             logging.error('Delete staff_of_chain-shop exception: %s', e)
+
+
+def create_staff_log(shop, staff_id, type, request):
+    shop.staff_care_logs.create(
+        staff_id=staff_id,
+        shop_id=shop.id,
+        type=type,
+        created_by=request.user if request else None,
+        updated_by=request.user if request else None
+    )
+
+
+def remove_staff_care(shop, type, request):
+    print("vào hàm")
+    staff_care = shop.staff_cares.filter(type=type).first()
+    if staff_care is not None:
+        staff = staff_care.staff
+        staff_care.delete()
+        staff_care_log = shop.staff_care_logs.filter(staff=staff, type=type).latest('created_date')
+        if staff_care_log is not None:
+            staff_care_log.updated_by = request.user
+            staff_care_log.save()
 
 
 @receiver(post_save, sender=Shop)

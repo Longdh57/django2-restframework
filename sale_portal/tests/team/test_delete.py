@@ -66,8 +66,8 @@ def test_delete_success(test_data, factory, response_message):
     staff1 = Staff.objects.get(pk=1149)
     staff2 = Staff.objects.get(pk=1160)
 
-    staff_log1 = StaffLog.objects.filter(staff_id=staff1.id).order_by('-created_date').first()
-    staff_log2 = StaffLog.objects.filter(staff_id=staff2.id).order_by('-created_date').first()
+    staff_log1 = StaffLog.objects.filter(staff_id=staff1.id).first()
+    staff_log2 = StaffLog.objects.filter(staff_id=staff2.id).first()
 
     count_staff_care_1 = StaffCare.objects.filter(staff=staff1).count()
     count_staff_care_2 = StaffCare.objects.filter(staff=staff2).count()
