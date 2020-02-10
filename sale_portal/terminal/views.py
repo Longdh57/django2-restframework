@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
+from sale_portal.staff_care import StaffCareType
+from sale_portal.staff_care.models import StaffCare
 from .models import Terminal
 from ..shop.models import Shop
 from ..staff.models import Staff
@@ -74,12 +76,12 @@ class TerminalViewSet(mixins.ListModelMixin,
             queryset = queryset.filter(merchant_id=merchant_id)
 
         if staff_id is not None and staff_id != '':
-            shops = Shop.objects.filter(staff=staff_id)
+            shops = StaffCare.objects.filter(staff_id=staff_id, type=StaffCareType.STAFF_SHOP).values('shop')
             queryset = queryset.filter(shop__in=shops)
 
         if team_id is not None and team_id != '':
             staffs = Staff.objects.filter(team_id=team_id)
-            shops = Shop.objects.filter(staff__in=staffs)
+            shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
             queryset = queryset.filter(shop__in=shops)
 
         if status is not None and status != '':
