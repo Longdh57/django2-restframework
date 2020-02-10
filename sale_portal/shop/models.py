@@ -162,7 +162,6 @@ class Shop(models.Model):
 
     def staff_delete(self, request=None):
         try:
-            print("sdfjsdlf")
             remove_staff_care(self, StaffCareType.STAFF_SHOP, request)
 
         except Exception as e:
@@ -202,7 +201,6 @@ def create_staff_log(shop, staff_id, type, request):
 
 
 def remove_staff_care(shop, type, request):
-    print("vào hàm")
     staff_care = shop.staff_cares.filter(type=type).first()
     if staff_care is not None:
         staff = staff_care.staff
