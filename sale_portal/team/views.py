@@ -349,7 +349,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     StaffCare.objects.filter(staff__in=staffs_remove).delete()
                     StaffCareLog.objects.filter(staff__in=staffs_remove, is_caring=True).update(
                         is_caring=False,
-                        created_by=request.user,
+                        updated_by=request.user,
                         updated_date=datetime.now(),
                     )
 
@@ -445,7 +445,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             StaffCare.objects.filter(staff__in=staffs).delete()
             StaffCareLog.objects.filter(staff__in=staffs, is_caring=True).update(
                 is_caring=False,
-                created_by=request.user,
+                updated_by=request.user,
                 updated_date=datetime.now(),
             )
 
