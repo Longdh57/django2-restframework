@@ -13,6 +13,12 @@ class Area(models.Model):
         db_table = 'area'
         ordering = ['code']
         default_permissions = ()
+        permissions = (
+            ('area_list_data', 'Can get area list data'),
+            ('area_detail', 'Can get area detail'),
+            ('area_create', 'Can create area'),
+            ('area_edit', 'Can edit area'),
+        )
 
     def __str__(self):
         return self.name

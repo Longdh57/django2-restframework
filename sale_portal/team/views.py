@@ -13,6 +13,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
+from sale_portal.common.permission import get_user_permission_classes
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
 from sale_portal.staff_care.models import StaffCare, StaffCareLog
@@ -21,22 +22,6 @@ from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
 
 from ..common.standard_response import successful_response, custom_response, Code
-
-
-class PermissionReadData(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            list_permission = ['team.team_list_data', 'team.team_detail']
-            return any(request.user.has_perm(permission) for permission in list_permission)
-        return False
-
-
-class PermissionWriteData(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            list_permission = ['team.team_create', 'team.team_edit', 'team.team_delete']
-            return any(request.user.has_perm(permission) for permission in list_permission)
-        return False
 
 
 class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -48,10 +33,16 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = TeamSerializer
 
     def get_permissions(self):
-        if self.action == 'list' or self.action == 'retrieve':
-            permission_classes = [PermissionReadData]
-        else:
-            permission_classes = [PermissionWriteData]
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('team.team_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('team.team_detail', self.request)
+        if self.action == 'create':
+            permission_classes = get_user_permission_classes('team.team_create', self.request)
+        if self.action == 'update':
+            permission_classes = get_user_permission_classes('team.team_edit', self.request)
+        if self.action == 'destroy':
+            permission_classes = get_user_permission_classes('team.team_delete', self.request)
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
