@@ -1,23 +1,85 @@
+from datetime import datetime
+
+from django.contrib.auth.decorators import login_required
+from django.core import management
+from django.http import JsonResponse
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
+
+from sale_portal.common.standard_response import successful_response
 from sale_portal.cronjob.models import CronjobLog
+from sale_portal.cronjob.serializers import CronjobLogSerializer
+
+jobName = [
+    'repair_id_seq', 'administrative_unit_sync',
+    'merchant_synchronize_change', 'qr_merchant_info_sync',
+    'qr_merchant_sync_daily', 'qr_type_merchant_sync',
+    'qr_status_sync', 'auto_create_shop_daily',
+    'shop_cube_sync_daily', 'qr_staff_sync_daily',
+    'staff_synchronize_change', 'qr_terminal_contact_sync_daily',
+    'qr_terminal_sync_daily', 'terminal_synchronize_change'
+]
 
 
-def cron_create(name='default', type='default', status=0, description=None):
-    cron_log = CronjobLog(
-        name=name,
-        type=type,
-        status=status,
-        description=description
-    )
-    cron_log.save()
-    return cron_log
+class CronjobLogViewSet(mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
+    """
+        API get list Area \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - name -- text
+        - province -- text
+    """
+    serializer_class = CronjobLogSerializer
+
+    def get_queryset(self):
+        queryset = CronjobLog.objects.all()
+        date = self.request.query_params.get('date', None)
+
+        if date is not None and date != '':
+            queryset = queryset.filter(
+                created_date__date=(datetime.strptime(date, '%d/%m/%Y').strftime('%Y-%m-%d')))
+
+        return queryset
 
 
-def cron_update(cronjob, status=0, description=None):
-    cronjob.status = status
-    if cronjob.description is not None:
-        cronjob.description = str(cronjob.description) + (
-            ('<br/>' + str(description)) if description is not None else None)
-    else:
-        cronjob.description = description
-    cronjob.save()
-    return
+@api_view(['GET'])
+@login_required
+def getAllJobName(request):
+    data = [{"jobName": n} for n in jobName]
+    return successful_response(data)
+
+
+@api_view(['GET'])
+@login_required
+def runJobManual(request):
+    job_name = request.GET.get('job_name', None)
+    if job_name is None:
+        return JsonResponse({
+            'data': 'job_name is None',
+            'status': False
+        }, status=400)
+    hasJob = False
+    for jn in jobName:
+        if jn == job_name:
+            hasJob = True
+            break
+    if not hasJob:
+        return JsonResponse({
+            'data': 'job_name is not exist',
+            'status': False
+        }, status=400)
+    try:
+        # management.call_command(job_name)
+        cmd = globals()[job_name].Command()
+        if job_name == 'sale_portal_ingestion_sync_daily':
+            management.call_command('sale_portal_ingestion_sync_daily', run_by_os=0)
+        elif job_name == 'export_report_to_google_spreadsheet_daily':
+            management.call_command('export_report_to_google_spreadsheet_daily', run_by_os=0)
+        else:
+            cmd.handle()
+    except Exception as e:
+        return JsonResponse({
+            'data': 'server error: ' + str(e),
+            'status': False
+        }, status=500)
+    return successful_response()

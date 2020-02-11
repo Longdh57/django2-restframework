@@ -6,7 +6,7 @@ from django.db import connections
 from django.core.management.base import BaseCommand
 
 from sale_portal.terminal.models import QrTerminalContact
-from sale_portal.cronjob.views import cron_create, cron_update
+from sale_portal.utils.cronjob_util import cron_create, cron_update
 
 
 class Command(BaseCommand):

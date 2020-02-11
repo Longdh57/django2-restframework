@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from sale_portal.user.models import User
 from sale_portal.terminal.models import Terminal
 from sale_portal.terminal.views import shop_store
-from sale_portal.cronjob.views import cron_create, cron_update
+from sale_portal.utils.cronjob_util import cron_create, cron_update
 
 class Command(BaseCommand):
     help = 'Auto create new shop from terminal daily'

@@ -4,7 +4,7 @@ from itertools import islice
 from django.db import connection
 
 from sale_portal.merchant.models import QrMerchantInfo
-from sale_portal.cronjob.views import cron_create, cron_update
+from sale_portal.utils.cronjob_util import cron_create, cron_update
 
 
 class Command(BaseCommand):
