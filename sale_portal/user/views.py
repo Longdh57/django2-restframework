@@ -14,8 +14,13 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.views import JSONWebTokenAPIView
 from social_core.exceptions import AuthException
 
+from sale_portal.administrative_unit.models import QrProvince
 from sale_portal.area.models import Area
 from sale_portal.common.permission import PermissionIsAdmin, check_user_admin
+from sale_portal.shop.models import Shop
+from sale_portal.staff_care import StaffCareType
+from sale_portal.staff_care.models import StaffCare
+from sale_portal.team.models import Team
 from ..user.models import CustomGroup, User
 from ..user import model_names, ROLE, ROLE_SALE_MANAGER, ROLE_SALE_ADMIN
 from django.http import JsonResponse
@@ -144,17 +149,18 @@ def get_user_info(user):
     user_info = {
         'is_superuser': user.is_superuser,
         'is_area_manager': user.is_area_manager,
-        'team_area_ids': [],
+        'is_sale_admin': user.is_sale_admin,
+        'area_ids': [],
         'staff_id': None,
         'team': None,
     }
 
-    if user.is_area_manager:
-        teams = user.team_set.all()
-        team_ids = []
-        for team in teams:
-            team_ids.append(team.id)
-        user_info.update({'team_area_ids': team_ids})
+    if user.is_area_manager or user.is_sale_admin:
+        areas = user.area_set.all()
+        area_ids = []
+        for area in areas:
+            area_ids.append(area.id)
+        user_info.update({'area_ids': area_ids})
 
     staff = Staff.objects.filter(email=user.email).first()
 
@@ -167,32 +173,52 @@ def get_user_info(user):
     return user_info
 
 
-def get_staffs_viewable(user):
-    staff_ids = []
-
+def get_shops_viewable_queryset(user):
     if not user.is_superuser:
-        team_ids = []
-        staff_id = None
-        if user.is_area_manager:
-            teams = user.team_set.all()
-            for team in teams:
-                team_ids.append(team.id)
+        group = user.get_group()
+        if group is None or group.status is False:
+            return Shop.objects.none()
+        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+            provinces = QrProvince.objects.none()
+            for area in user.area_set.all():
+                provinces |= area.get_provinces()
+
+            print(provinces)
+
+            return Shop.objects.filter(province__in=provinces)
         else:
             staff = Staff.objects.filter(email=user.email).first()
-            if staff.team and staff.role and staff.role.code == \
-                    StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
-                team_ids.append(staff.team.id)
+            if staff and staff.team and staff.role:
+                if staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+                    staffs = Staff.objects.filter(team_id=staff.team.id)
+                    return StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
+                else:
+                    return StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP).values('shop')
             else:
-                staff_id = staff.id
+                return Shop.objects.none()
 
-        if team_ids:
-            staffs = Staff.objects.filter(team__in=team_ids).values('id')
-            for staff in staffs:
-                staff_ids.append(staff.id)
+    return Shop.objects.all()
+
+
+def get_staffs_viewable_queryset(user):
+    if not user.is_superuser:
+        group = user.get_group()
+        if group is None or group.status is False:
+            return Staff.objects.none()
+        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+            teams = Team.objects.filter(area__in=user.area_set.all())
+            return Staff.objects.filter(team__in=teams)
         else:
-            staff_ids.append(staff_id)
+            staff = Staff.objects.filter(email=user.email).first()
+            if staff and staff.team and staff.role:
+                if staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+                    return Staff.objects.filter(team_id=staff.team.id)
+                else:
+                    return Staff.objects.filter(email=user.email)
+            else:
+                return Staff.objects.none()
 
-    return staff_ids
+    return Staff.objects.all()
 
 
 class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

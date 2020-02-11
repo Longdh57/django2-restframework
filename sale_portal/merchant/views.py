@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework.decorators import api_view
 
 from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.user.views import get_shops_viewable_queryset
 from ..qr_status.views import get_merchant_status_list
 
 
@@ -42,6 +43,10 @@ class MerchantViewSet(mixins.ListModelMixin,
     def get_queryset(self):
 
         queryset = Merchant.objects.all()
+
+        if self.request.user.is_superuser is False:
+            shops = get_shops_viewable_queryset(self.request.user)
+            queryset = queryset.filter(pk__in=shops.values('merchant'))
 
         merchant_code = self.request.query_params.get('merchant_code', None)
         merchant_name = self.request.query_params.get('merchant_name', None)
