@@ -9,6 +9,20 @@ from rest_framework.decorators import api_view
 from sale_portal.common.standard_response import successful_response
 from sale_portal.cronjob.models import CronjobLog
 from sale_portal.cronjob.serializers import CronjobLogSerializer
+from sale_portal.administrative_unit.management.commands import repair_id_seq
+from sale_portal.administrative_unit.management.commands import administrative_unit_sync
+from sale_portal.merchant.management.commands import merchant_synchronize_change
+from sale_portal.merchant.management.commands import qr_merchant_info_sync
+from sale_portal.merchant.management.commands import qr_merchant_sync_daily
+from sale_portal.merchant.management.commands import qr_type_merchant_sync
+from sale_portal.qr_status.management.commands import qr_status_sync
+from sale_portal.shop.management.commands import auto_create_shop_daily
+from sale_portal.shop_cube.management.commands import shop_cube_sync_daily
+from sale_portal.staff.management.commands import qr_staff_sync_daily
+from sale_portal.staff.management.commands import staff_synchronize_change
+from sale_portal.terminal.management.commands import qr_terminal_contact_sync_daily
+from sale_portal.terminal.management.commands import qr_terminal_sync_daily
+from sale_portal.terminal.management.commands import terminal_synchronize_change
 
 jobName = [
     'repair_id_seq', 'administrative_unit_sync',
@@ -83,3 +97,32 @@ def runJobManual(request):
             'status': False
         }, status=500)
     return successful_response()
+
+
+@api_view(['GET'])
+@login_required
+def get_job_status(request):
+    data = {}
+    today = datetime.now()
+    today = today.strftime("%d/%m/%Y")
+
+    auto_create_shop_daily_status = \
+        CronjobLog.objects.filter(name='auto_create_shop_daily',
+                                  status=1,
+                                  created_date__date=(datetime.strptime(today, '%d/%m/%Y').strftime('%Y-%m-%d'))
+                                  ).first()
+    if auto_create_shop_daily_status is None:
+        data['sync_ter'] = 'Hệ thống đang cập nhật data nhân viên, terminal, merchant mới hôm qua'
+
+    shop_cube_sync_daily_status = \
+        CronjobLog.objects.filter(name='shop_cube_sync_daily',
+                                  status=1,
+                                  created_date__date=(datetime.strptime(today, '%d/%m/%Y').strftime('%Y-%m-%d'))
+                                  ).first()
+
+    if shop_cube_sync_daily_status is None:
+        data['sync_shop_cube'] = 'Hệ thống đang cập nhật data giao dịch và point ngày hôm qua'
+
+    return JsonResponse({
+        'data': data,
+    }, status=200)
