@@ -3,7 +3,7 @@ import logging
 import collections
 
 from datetime import datetime
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, Permission
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -15,7 +15,7 @@ from rest_framework_jwt.views import JSONWebTokenAPIView
 from social_core.exceptions import AuthException
 
 from sale_portal.area.models import Area
-from sale_portal.common.permission import PermissionIsAdmin
+from sale_portal.common.permission import PermissionIsAdmin, check_user_admin
 from ..user.models import CustomGroup, User
 from ..user import model_names, ROLE, ROLE_SALE_MANAGER
 from django.http import JsonResponse
@@ -460,6 +460,7 @@ class GroupViewSet(mixins.ListModelMixin,
 
 @api_view(['GET'])
 @login_required
+@user_passes_test(check_user_admin)
 def list_groups(request):
     """
         API get list Groups to select \n
@@ -504,6 +505,7 @@ class PermissionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 @api_view(['GET'])
 @login_required
+@user_passes_test(check_user_admin)
 def model_permissions(request):
     """
         API get list model-permissions \n
