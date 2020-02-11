@@ -17,7 +17,7 @@ from social_core.exceptions import AuthException
 from sale_portal.area.models import Area
 from sale_portal.common.permission import PermissionIsAdmin, check_user_admin
 from ..user.models import CustomGroup, User
-from ..user import model_names, ROLE, ROLE_SALE_MANAGER
+from ..user import model_names, ROLE, ROLE_SALE_MANAGER, ROLE_SALE_ADMIN
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -295,20 +295,30 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     if not group:
                         return custom_response(Code.INVALID_BODY, 'group_name not valid')
                     else:
-                        if role_name == ROLE_SALE_MANAGER:
+                        if role_name == ROLE_SALE_MANAGER or role_name == ROLE_SALE_ADMIN:
                             if not area_ids or not isinstance(area_ids, list):
                                 return custom_response(Code.INVALID_BODY, 'List Area not valid')
                             if Area.objects.filter(pk__in=area_ids).count() != len(area_ids):
                                 return custom_response(Code.AREA_NOT_FOUND)
                             user.area_set.clear()
                             user.area_set.set(area_ids)
+                            if role_name == ROLE_SALE_MANAGER:
+                                user.is_area_manager = True
+                            else:
+                                user.is_sale_admin = True
 
                         user.groups.set(group)
 
                 if old_role_name == ROLE[0]:
                     user.is_superuser = False
                 if old_role_name == ROLE_SALE_MANAGER:
-                    user.area_set.clear()
+                    user.is_area_manager = False
+                    if role_name != ROLE_SALE_ADMIN:
+                        user.area_set.clear()
+                if old_role_name == ROLE_SALE_ADMIN:
+                    user.is_sale_admin = False
+                    if role_name != ROLE_SALE_MANAGER:
+                        user.area_set.clear()
 
             user.is_active = (is_active == 'true')
             user.save()
