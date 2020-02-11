@@ -15,15 +15,15 @@ from rest_framework_jwt.views import JSONWebTokenAPIView
 from social_core.exceptions import AuthException
 
 from sale_portal.area.models import Area
+from sale_portal.common.permission import PermissionIsAdmin
 from ..user.models import CustomGroup, User
 from ..user import model_names, ROLE, ROLE_SALE_MANAGER
 from django.http import JsonResponse
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView, decorate_request
-from rest_social_auth.serializers import JWTSerializer
-from .serializers import UserSerializer, GroupSerializer, PermissionSerializer, AccountSerializer
+from .serializers import UserSerializer, GroupSerializer, PermissionSerializer, AccountSerializer, UserJWTSerializer
 from ..staff.models import Staff
 from ..staff import StaffTeamRoleType
 from ..common.standard_response import successful_response, custom_response, Code
@@ -33,10 +33,6 @@ from django.utils import formats
 from requests.exceptions import HTTPError
 from django.http import HttpResponse
 from social_core.utils import parse_qs
-
-
-class UserJWTSerializer(JWTSerializer, UserSerializer):
-    pass
 
 
 class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
@@ -197,13 +193,6 @@ def get_staffs_viewable(user):
             staff_ids.append(staff_id)
 
     return staff_ids
-
-
-class PermissionIsAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.user.is_authenticated and request.user.is_superuser:
-            return True
-        return False
 
 
 class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
