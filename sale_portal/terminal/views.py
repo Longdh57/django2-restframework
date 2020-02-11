@@ -5,11 +5,12 @@ from datetime import datetime
 from django.utils import formats
 from django.conf import settings
 from django.utils.html import conditional_escape
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
+from sale_portal.common.permission import get_user_permission_classes
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
 from .models import Terminal
@@ -42,6 +43,15 @@ class TerminalViewSet(mixins.ListModelMixin,
         - to_date -- dd/mm/yyyy
     """
     serializer_class = TerminalSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('terminal.terminal_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('terminal.terminal_detail', self.request)
+        if self.action == 'update':
+            permission_classes = get_user_permission_classes('terminal.terminal_edit', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
 
@@ -121,6 +131,7 @@ class TerminalViewSet(mixins.ListModelMixin,
 
 @api_view(['GET'])
 @login_required
+@permission_required('terminal.terminal_list_data', raise_exception=True)
 def list_terminals(request):
     """
         API get list Terminal to select \n
@@ -147,7 +158,6 @@ def list_terminals(request):
     return successful_response(data)
 
 
-@login_required
 def detail(request, pk):
     try:
         terminal = Terminal.objects.filter(pk=pk).first()
@@ -235,7 +245,6 @@ def create_shop_from_terminal(request):
     shop_store(request)
 
 
-@login_required
 def shop_store(request):
     if request.method == 'POST':
         terminal_id = request.POST.get('terminal_id', None)
