@@ -17,6 +17,9 @@ class SalePromotionTitle(models.Model):
     class Meta:
         db_table = 'sale_promotion_title'
         default_permissions = ()
+        permissions = (
+            ('promotion_title_list_data', 'Can get promotion_title list data'),
+        )
 
 
 class SalePromotion(models.Model):
@@ -52,6 +55,7 @@ class SalePromotion(models.Model):
             ('sale_promotion_import', 'Can import sale_promotion'),
             ('sale_promotion_edit', 'Can edit sale_promotion'),
             ('sale_promotion_export', 'Can export data sale_promotion'),
+            ('sale_promotion_reset_data', 'Can reset data sale_promotion'),
         )
 
     def get_terminal(self):
