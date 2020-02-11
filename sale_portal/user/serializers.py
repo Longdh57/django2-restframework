@@ -2,6 +2,8 @@ from django.db.models import Q
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission, ContentType
+from rest_social_auth.serializers import JWTSerializer
+
 from ..user.models import CustomGroup
 from django.utils import formats
 
@@ -24,6 +26,10 @@ class UserSerializer(serializers.ModelSerializer):
         exclude = (
             'password', 'last_login', 'groups', 'is_staff', 'send_disable_shop_email', 'user_permissions'
         )
+
+
+class UserJWTSerializer(JWTSerializer, UserSerializer):
+    pass
 
 
 class AccountSerializer(serializers.ModelSerializer):

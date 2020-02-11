@@ -3,13 +3,14 @@ from django.utils import formats
 from django.db import connection
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.postgres.search import SearchQuery, SearchRank
 
 from unidecode import unidecode
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
+from sale_portal.common.permission import get_user_permission_classes
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
 from sale_portal.shop import ShopActivateType
@@ -25,6 +26,7 @@ from sale_portal.common.standard_response import successful_response
 
 @api_view(['GET'])
 @login_required
+@permission_required('shop.shop_list_data', raise_exception=True)
 def list_shop_for_search(request):
     """
         API để search full text search không dấu  các shop dựa trên địa chỉ, shop_code hoặc merchant brand, param là name
@@ -55,6 +57,7 @@ def list_shop_for_search(request):
 
 @api_view(['GET'])
 @login_required
+@permission_required('shop.shop_list_data', raise_exception=True)
 def list_recommend_shops(request, pk):
     '''
     API for get shop number_transaction and nearly shops \n
@@ -118,6 +121,17 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - to_date -- dd/mm/yyyy
     """
     serializer_class = ShopSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('shop.shop_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('shop.shop_detail', self.request)
+        if self.action == 'create':
+            permission_classes = get_user_permission_classes('shop.shop_create', self.request)
+        if self.action == 'update':
+            permission_classes = get_user_permission_classes('shop.shop_edit', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
 

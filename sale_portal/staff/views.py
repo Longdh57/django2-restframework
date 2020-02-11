@@ -5,11 +5,12 @@ from datetime import datetime
 from django.db.models import Q
 from django.utils import formats
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
+from sale_portal.common.permission import get_user_permission_classes
 from sale_portal.team.models import Team
 from sale_portal.shop.models import Shop
 from sale_portal.staff.serializers import StaffSerializer
@@ -32,6 +33,15 @@ class StaffViewSet(mixins.ListModelMixin,
         - to_date -- dd/mm/yyyy
     """
     serializer_class = StaffSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('staff.staff_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('staff.staff_detail', self.request)
+        if self.action == 'update':
+            permission_classes = get_user_permission_classes('staff.staff_edit', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
 
@@ -104,6 +114,7 @@ class StaffViewSet(mixins.ListModelMixin,
 
 @api_view(['GET'])
 @login_required
+@permission_required('staff.staff_list_data', raise_exception=True)
 def list_staffs(request):
     """
         API get list Staff to select \n
@@ -139,6 +150,7 @@ def list_staffs(request):
 
 @api_view(['POST', 'PUT', 'DELETE'])
 @login_required
+@permission_required('staff.staff_edit', raise_exception=True)
 def change_staff_team(request):
     """
         API update team for Staff (POST: create, PUT: update, DELETE: delete) \n

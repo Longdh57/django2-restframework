@@ -1,14 +1,13 @@
 import logging
 import json
 import time
-import datetime
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.utils import formats
-from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
+from sale_portal.common.permission import get_user_permission_classes
 from .serializers import SalePromotionSerializer
 from tablib import Dataset
 
@@ -32,6 +31,15 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - status -- number in {0, 1, 2, 3}
     """
     serializer_class = SalePromotionSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('sale_promotion_form.sale_promotion_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('sale_promotion_form.sale_promotion_detail', self.request)
+        if self.action == 'update':
+            permission_classes = get_user_permission_classes('sale_promotion_form.sale_promotion_edit', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         title_id = self.request.query_params.get('title_id', None)
@@ -147,6 +155,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 @api_view(['POST'])
 @login_required
+@permission_required('sale_promotion_form.sale_promotion_import', raise_exception=True)
 def import_view(request):
     """
         API import SalePromotion \n
@@ -304,6 +313,7 @@ def import_view_update_action(data, request, is_submit=False, promotion_title=No
 
 @api_view(['GET'])
 @login_required
+@permission_required('sale_promotion_form.promotion_title_list_data', raise_exception=True)
 def get_list_titles(request):
     """
        API get list Title to select \n
@@ -327,6 +337,7 @@ def get_list_titles(request):
 
 @api_view(['DELETE'])
 @login_required
+@permission_required('sale_promotion_form.sale_promotion_reset_data', raise_exception=True)
 def reset_data(request):
     """
         API delete all SalePromotion
