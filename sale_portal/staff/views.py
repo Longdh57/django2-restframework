@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
 from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.staff_care.models import StaffCare, StaffCareLog
 from sale_portal.team.models import Team
 from sale_portal.shop.models import Shop
 from sale_portal.staff.serializers import StaffSerializer
@@ -219,8 +220,11 @@ def change_staff_team(request):
                     description='Change_staff_team: out and join other team',
                     user=request.user
                 )
-                Shop.objects.filter(staff=staff).update(
-                    staff=None
+                StaffCare.objects.filter(staff=staff).delete()
+                StaffCareLog.objects.filter(staff=staff, is_caring=True).update(
+                    is_caring=False,
+                    updated_by=request.user,
+                    updated_date=datetime.now(),
                 )
 
         if request.method == 'DELETE':
@@ -241,8 +245,11 @@ def change_staff_team(request):
                     description='Change_staff_team: out team',
                     user=request.user
                 )
-                Shop.objects.filter(staff=staff).update(
-                    staff=None
+                StaffCare.objects.filter(staff=staff).delete()
+                StaffCareLog.objects.filter(staff=staff, is_caring=True).update(
+                    is_caring=False,
+                    updated_by=request.user,
+                    updated_date=datetime.now(),
                 )
 
         return successful_response()
