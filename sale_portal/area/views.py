@@ -1,13 +1,14 @@
 import logging
 
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
 from sale_portal.area.serializers import AreaSerializer
+from sale_portal.common.permission import get_user_permission_classes
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.administrative_unit.models import QrProvince
 from sale_portal.common.standard_response import successful_response, custom_response, Code
@@ -22,6 +23,17 @@ class AreaViewSet(mixins.ListModelMixin,
         - province -- text
     """
     serializer_class = AreaSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('area.area_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('area.area_detail', self.request)
+        if self.action == 'create':
+            permission_classes = get_user_permission_classes('area.area_create', self.request)
+        if self.action == 'update':
+            permission_classes = get_user_permission_classes('area.area_edit', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         queryset = Area.objects.all()
@@ -75,8 +87,9 @@ class AreaViewSet(mixins.ListModelMixin,
             return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
-@login_required
 @api_view(['GET'])
+@login_required
+@permission_required('area.area_list_data', raise_exception=True)
 def list_areas(request):
     """
         API get list Area to select \n
