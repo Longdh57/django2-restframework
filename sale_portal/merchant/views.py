@@ -4,8 +4,10 @@ from django.utils import formats
 from rest_framework import viewsets, mixins
 from datetime import datetime
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework.decorators import api_view
+
+from sale_portal.common.permission import get_user_permission_classes
 from ..qr_status.views import get_merchant_status_list
 
 
@@ -29,6 +31,13 @@ class MerchantViewSet(mixins.ListModelMixin,
         - to_date -- dd/mm/yyyy
     """
     serializer_class = MerchantSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('merchant.merchant_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('merchant.merchant_detail', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
 
@@ -70,6 +79,7 @@ class MerchantViewSet(mixins.ListModelMixin,
 
 @api_view(['GET'])
 @login_required
+@permission_required('merchant.merchant_list_data', raise_exception=True)
 def list_merchants(request):
     """
         API get list Merchant to select \n
