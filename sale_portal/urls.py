@@ -21,6 +21,7 @@ from sale_portal.shop.urls import urlpatterns as shop_urls
 from sale_portal.user.urls import url_user_patterns as user_urls
 from sale_portal.user.urls import url_group_patterns as group_urls
 from sale_portal.user.urls import url_permission_patterns as permission_urls
+from sale_portal.cronjob.urls import urlpatterns as cronjob_urls
 from sale_portal.user.views import CSRFGeneratorView
 
 schema_view = get_swagger_view(title='Sale_Portal API')
@@ -43,6 +44,7 @@ api_urlpatterns = [
     url(r'^users/', include((user_urls, 'user'), namespace='user')),
     url(r'^groups/', include((group_urls, 'group'), namespace='group')),
     url(r'^permissions/', include((permission_urls, 'permission'), namespace='permission')),
+    url(r'^cronjobs/', include((cronjob_urls, 'cronjob'), namespace='cronjob')),
     url(r'^generate-csrf/$', CSRFGeneratorView.as_view()),
 ]
 urlpatterns = [

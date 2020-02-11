@@ -5,7 +5,7 @@ from django.db import connection
 from django.core.management.base import BaseCommand, CommandError
 
 from sale_portal.staff.models import Staff, StaffLog
-from sale_portal.cronjob.views import cron_create, cron_update
+from sale_portal.utils.cronjob_util import cron_create, cron_update
 
 
 class Command(BaseCommand):

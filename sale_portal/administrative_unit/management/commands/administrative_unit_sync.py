@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection, connections
 from itertools import islice
 
-from sale_portal.cronjob.views import cron_create, cron_update
+from sale_portal.utils.cronjob_util import cron_create, cron_update
 from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 
 

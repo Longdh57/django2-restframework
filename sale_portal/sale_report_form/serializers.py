@@ -90,6 +90,7 @@ class SaleReportSerializer(serializers.ModelSerializer):
 class SaleReportStatisticSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     username = serializers.CharField()
+    email = serializers.CharField()
     full_name = serializers.CharField()
     count_total = serializers.IntegerField()
     count_new = serializers.IntegerField()

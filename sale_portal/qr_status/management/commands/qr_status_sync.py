@@ -3,7 +3,7 @@ from django.db import connection, connections
 from itertools import islice
 
 from sale_portal.qr_status.models import QrStatus
-from sale_portal.cronjob.views import cron_create, cron_update
+from sale_portal.utils.cronjob_util import cron_create, cron_update
 
 
 class Command(BaseCommand):
