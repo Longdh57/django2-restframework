@@ -54,7 +54,6 @@ class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 @api_view(['GET'])
 @login_required
-@permission_required('team.team_list_data', raise_exception=True)
 def list_contract_durations(request):
     """
         API get list thời hạn HĐ
