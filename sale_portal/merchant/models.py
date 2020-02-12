@@ -143,6 +143,8 @@ class Merchant(models.Model):
     def get_staff(self):
         try:
             qr_staff = QrStaff.objects.filter(staff_id=self.staff).first()
+            if qr_staff is None:
+                return None
             staff = Staff.objects.filter(email=qr_staff.email).first()
             return staff
         except Exception as e:
