@@ -51,6 +51,26 @@ def get_shops_viewable_queryset(user):
     return Shop.objects.all()
 
 
+def get_teams_viewable_queryset(user):
+    if not user.is_superuser:
+        group = user.get_group()
+        if group is None or group.status is False:
+            return Team.objects.none()
+        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+            return Team.objects.filter(area__in=user.area_set.all())
+        else:
+            staff = Staff.objects.filter(email=user.email).first()
+            if staff and staff.team and staff.role:
+                if staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+                    return Team.objects.filter(pk=staff.team.id)
+                else:
+                    return Team.objects.none()
+            else:
+                return Team.objects.none()
+
+    return Team.objects.all()
+
+
 def get_staffs_viewable_queryset(user):
     if not user.is_superuser:
         group = user.get_group()

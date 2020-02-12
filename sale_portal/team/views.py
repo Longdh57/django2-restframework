@@ -19,6 +19,7 @@ from sale_portal.staff_care.models import StaffCare, StaffCareLog
 from sale_portal.team.serializers import TeamSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
+from sale_portal.utils.queryset import get_teams_viewable_queryset
 
 from ..common.standard_response import successful_response, custom_response, Code
 
@@ -47,6 +48,10 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     def get_queryset(self):
 
         queryset = Team.objects.all()
+
+        if self.request.user.is_superuser is False:
+            teams = get_teams_viewable_queryset(self.request.user)
+            queryset = queryset.filter(pk__in=teams)
 
         name = self.request.query_params.get('name', None)
         code = self.request.query_params.get('code', None)
@@ -206,7 +211,12 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
             API get detail Team
         """
-        team = Team.objects.filter(pk=pk).first()
+        if request.user.is_superuser is False:
+            teams = get_teams_viewable_queryset(request.user)
+            team = Team.objects.filter(pk=pk, pk__in=teams).first()
+        else:
+            team = Team.objects.filter(pk=pk).first()
+
         if team is None:
             return custom_response(Code.TEAM_NOT_FOUND)
 
@@ -490,6 +500,10 @@ def list_teams(request):
     """
 
     queryset = Team.objects.values('id', 'code', 'name')
+
+    if request.user.is_superuser is False:
+        teams = get_teams_viewable_queryset(request.user)
+        queryset = queryset.filter(pk__in=teams)
 
     code = request.GET.get('code', None)
 
