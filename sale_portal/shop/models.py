@@ -1,6 +1,8 @@
 import logging
 
 from datetime import datetime
+
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -51,6 +53,9 @@ class Shop(models.Model):
     objects = ShopQuerySet.as_manager()
 
     class Meta:
+        indexes = [
+            GinIndex(fields=['document']),
+        ]
         db_table = 'shop'
         ordering = ('-created_date',)
         default_permissions = ()

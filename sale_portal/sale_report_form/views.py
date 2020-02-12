@@ -146,14 +146,14 @@ class SaleReportViewSet(mixins.ListModelMixin,
         current_draft_id = datajson.get('current_draft_id')
         # validate purpose, longitude, latitude, is_draft
         if purpose is None \
-                or longitude is None or longitude == '0' \
-                or latitude is None or latitude == '0' \
+                or longitude is None or str(longitude) == '0' \
+                or latitude is None or str(latitude) == '0' \
                 or is_draft is None:
             return self.response(
                 status=400, message='Validate error: purpose, longitude, latitude, is_draft are required')
 
         purpose = format_string(purpose, True)
-        if purpose not in ['0', '1', '2']:
+        if str(purpose) not in ['0', '1', '2']:
             return self.response(status=400, message='Validate error: Purpose is incorrect')
 
         # Create or find sale_report object if has a draft version
@@ -172,7 +172,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             return self.response(status=400, message='Only allow access to drafts created on today')
 
         # Xu ly request Mở Mới
-        if purpose == '0':
+        if str(purpose) == '0':
             new_merchant_name = datajson.get('new_merchant_name')
             new_merchant_brand = datajson.get('new_merchant_brand')
             new_address = datajson.get('new_address')
@@ -221,7 +221,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 }, status=400)
 
         # Xu ly request Triển khai
-        elif purpose == '1':
+        elif str(purpose) == '1':
             shop_id = datajson.get('shop_id')
             image_outside_v2 = datajson.get('image_outside')
             image_inside_v2 = datajson.get('image_inside')
@@ -230,7 +230,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             implement_career_guideline = datajson.get('implement_career_guideline')
             implement_confirm = datajson.get('implement_confirm')
             implement_new_address = datajson.get('new_address_input')
-
+            print(implement_new_address)
             standeeQr = datajson.get('standeeQr')
             stickerTable = datajson.get('stickerTable')
             wobbler = datajson.get('wobbler')
@@ -271,7 +271,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     'tentcard': tentcard,
                 })
                 sale_report.posm_v2 = json.dumps(posm_v2)
-                if implement_confirm == '1':
+                if str(implement_confirm) == '1':
                     field_validator.validate_address(format_string(implement_new_address), False, False, True)
                     sale_report.implement_new_address = format_string(implement_new_address, True)
             except Exception as e:
