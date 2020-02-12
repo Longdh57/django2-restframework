@@ -1,9 +1,11 @@
 import time
 import json
 
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 
 from tablib import Dataset
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.shop.models import Shop
@@ -11,6 +13,7 @@ from sale_portal.staff.models import Staff
 from sale_portal.merchant.models import Merchant
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCareImportLog
+from sale_portal.staff_care.serializers import StaffCareImportLogSerializer
 from sale_portal.common.standard_response import Code, successful_response, custom_response
 from sale_portal.utils.excel_util import check_or_create_excel_folder, create_simple_excel_file
 
@@ -59,6 +62,8 @@ def import_sale_shop(request):
 
         if result == 'Thành công':
             row_update += 1
+            row_no_change += 1
+        elif result == 'No change':
             row_no_change += 1
         else:
             row_error += 1
@@ -114,11 +119,19 @@ def update_sale_shop(request, data, is_submit=False):
     if staff.team is None:
         return 'Sale không thuộc bất kì Team nào - Lỗi dữ liệu'
 
-    if shop.staff == staff:
+    if shop.staff == staff and data['address'] == '':
         return 'No change'
-
+    elif shop.staff == staff and data['address'] != '':
+        if is_submit:
+            shop.address = data['address']
+            shop.save()
+        return 'Thành công'
     else:
         if is_submit:
+            if data['address'] != '':
+                shop.address = data['address']
+                shop.save()
+
             if shop.staff:
                 shop.staff_delete(request=request)
                 shop.staff_create(staff_id=staff.id, request=request)
@@ -177,7 +190,6 @@ def import_sale_merchant(request):
         }
         total_row += 1
         result = update_sale_merchant(request, data, is_submit)
-        print(f'import_sale_merchant: {result}')
 
         if result == 'Thành công':
             row_update += 1
@@ -257,3 +269,33 @@ def sale_merchant_render_excel_import_error(username='', data=[]):
     column_headers = ['Merchant Code', 'Email Sale']
 
     return create_simple_excel_file(folder_name, file_name, sheet_name, column_headers, data)
+
+
+class StaffCareImportLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+        API get danh sách lịch sử Import file  \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - type -- number {0,1,2}
+        - from_date -- dd/mm/yyyy
+        - to_date -- dd/mm/yyyy
+    """
+    serializer_class = StaffCareImportLogSerializer
+
+    def get_queryset(self):
+
+        queryset = StaffCareImportLog.objects.all()
+
+        type = self.request.query_params.get('type', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
+
+        if type is not None and type != '':
+            queryset = queryset.filter(type=type)
+        if from_date is not None and from_date != '':
+            queryset = queryset.filter(
+                created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+        if to_date is not None and to_date != '':
+            queryset = queryset.filter(
+                created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
+
+        return queryset

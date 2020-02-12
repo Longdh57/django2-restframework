@@ -56,4 +56,4 @@ def create_simple_excel_file(folder_name='', file_name='', sheet_name='', column
 
     workbook.close()
 
-    return settings.MEDIA_URL + '/excel/' + folder_name + '/' + file_name
+    return settings.MEDIA_URL + 'excel/' + folder_name + '/' + file_name
