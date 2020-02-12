@@ -94,6 +94,10 @@ def list_merchants(request):
 
     queryset = Merchant.objects.values('id', 'merchant_code', 'merchant_name', 'merchant_brand')
 
+    if request.user.is_superuser is False:
+        shops = get_shops_viewable_queryset(request.user)
+        queryset = queryset.filter(pk__in=shops.values('merchant'))
+
     code = request.GET.get('code', None)
 
     if code is not None and code != '':
