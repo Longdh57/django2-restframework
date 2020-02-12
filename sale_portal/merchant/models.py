@@ -99,7 +99,7 @@ class Merchant(models.Model):
     merchant_code = models.CharField(max_length=20, null=True, help_text='Equivalent with qr_merchant.merchant_code')
     merchant_brand = models.CharField(max_length=200, null=True, help_text='Equivalent with qr_merchant.merchant_brand')
     merchant_name = models.CharField(max_length=100, null=True, help_text='Equivalent with qr_merchant.merchant_name')
-    merchant_type = models.IntegerField(null=True,help_text='Equivalent with qr_merchant.merchant_type')
+    merchant_type = models.IntegerField(null=True, help_text='Equivalent with qr_merchant.merchant_type')
     address = models.CharField(max_length=150, null=True, help_text='Equivalent with qr_merchant.address')
     description = models.CharField(max_length=100, null=True, help_text='Equivalent with qr_merchant.description')
     status = models.IntegerField(default=1, null=True, help_text='Equivalent with qr_merchant.status')
@@ -156,6 +156,35 @@ class Merchant(models.Model):
             return staff_care.staff
         return None
 
+    @property
+    def team_care(self):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_MERCHANT).first()
+        if staff_care is not None:
+            return staff_care.staff.team
+        return None
+
+    def staff_create(self, staff_id, request=None):
+        staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_MERCHANT).first()
+        if staff_care is None:
+            try:
+                staff_care = self.staff_cares.create(
+                    staff_id=staff_id,
+                    shop_id=None,
+                    type=StaffCareType.STAFF_MERCHANT
+                )
+                create_staff_log(merchant=self, staff_id=staff_id, type=StaffCareType.STAFF_MERCHANT, request=request)
+                return staff_care.staff
+            except Exception as e:
+                logging.error('Create staff-merchant exception: %s', e)
+        else:
+            raise Exception('Merchant already exist a staff ')
+
+    def staff_delete(self, request=None):
+        try:
+            remove_staff_care(merchant=self, type=StaffCareType.STAFF_MERCHANT, request=request)
+        except Exception as e:
+            logging.error('Delete staff-merchant exception: %s', e)
+
     def get_type(self):
         return QrTypeMerchant.objects.filter(id=self.merchant_type).first()
 
@@ -189,6 +218,43 @@ class Merchant(models.Model):
                 number_of_tran_30d=merchant_cube.get('number_of_tran_30d') + int(shop_cube.number_of_tran_30d),
             )
         return merchant_cube
+
+
+def create_staff_log(merchant, staff_id, type, request):
+    merchant.staff_care_logs.create(
+        staff_id=staff_id,
+        merchant_id=merchant.id,
+        type=type,
+        is_caring=True,
+        created_by=request.user if request else None,
+        updated_by=request.user if request else None
+    )
+
+
+def remove_staff_care(merchant, type, request):
+    merchant_id = merchant.id
+
+    staff_care = merchant.staff_cares.filter(type=type).first()
+
+    staff = staff_care.staff
+
+    staff_care.delete()
+
+    if staff_care is not None:
+        staff_care_log = merchant.staff_care_logs.filter(staff=staff, type=type, is_caring=True).order_by('id').first()
+        if staff_care_log is not None:
+            staff_care_log.is_caring = False
+            staff_care_log.updated_by_id = request.user.id if request else None
+            staff_care_log.save()
+        else:
+            merchant.staff_care_logs.create(
+                staff_id=staff.id,
+                merchant_id=merchant_id,
+                type=type,
+                is_caring=False,
+                created_by=request.user if request else None,
+                updated_by=request.user if request else None
+            )
 
 
 class MerchantLog(models.Model):
