@@ -255,6 +255,7 @@ STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 
 STATICFILES_DIRS = (
     ('staff_care', os.path.join(BASE_DIR, 'sale_portal', 'static', 'staff_care')),
+    ('sale_promotion_form', os.path.join(BASE_DIR, 'sale_portal', 'static', 'sale_promotion_form')),
 )
 
 STATICFILES_FINDERS = [
