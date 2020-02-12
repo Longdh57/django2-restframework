@@ -1,27 +1,28 @@
+import itertools
 from datetime import datetime
-from django.utils import formats
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db import connection
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.postgres.search import SearchQuery, SearchRank
-
-from unidecode import unidecode
+from django.utils import formats
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
+from unidecode import unidecode
 
-from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.shop import ShopActivateType
-from sale_portal.terminal.models import Terminal
+from sale_portal.shop.models import Shop
+from sale_portal.shop.serializers import ShopSerializer
 from sale_portal.shop_cube.models import ShopCube
+from sale_portal.staff.models import Staff
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.utils.geo_utils import findDistance
-from sale_portal.shop.serializers import ShopSerializer
+from sale_portal.terminal.models import Terminal
 from sale_portal.utils.field_formatter import format_string
-from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.utils.geo_utils import findDistance
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
@@ -34,20 +35,30 @@ def list_shop_for_search(request):
     """
     name = request.GET.get('name', None)
     queryset = Shop.objects.all()
-    if name is not None and name != '':
-        name_en = unidecode(name).lower()
-        search_query = SearchQuery(name_en)
-        queryset = queryset.filter(
-            Q(document=search_query) \
-            | Q(code__icontains=name) | Q(merchant__merchant_brand__icontains=name))
 
-        queryset = queryset.annotate(
-            rank=SearchRank(F('document'), search_query)
-        ).order_by(
-            '-rank'
-        )
+    if name is not None and name != '':
+        querysetABS = queryset.filter(
+            Q(code__icontains=name) | Q(merchant__merchant_brand__icontains=name) | Q(address__icontains=name)
+        )[:10]
+        lengQuerysetABS = len(querysetABS)
+
+        if lengQuerysetABS < 10:
+            name_en = unidecode(name).lower()
+            search_query = SearchQuery(name_en)
+            querysetFTS = queryset.annotate(
+                rank=SearchRank(F('document'), search_query)
+            ).order_by(
+                '-rank'
+            )[:(10 - lengQuerysetABS)]
+        else:
+            querysetFTS = []
+
+    else:
+        querysetABS = queryset[:10]
+        querysetFTS = []
+
     data = []
-    for shop in queryset[:10]:
+    for shop in itertools.chain(querysetABS, querysetFTS):
         code = shop.code if shop.code is not None else 'N/A'
         address = shop.address if shop.address is not None else 'N/A'
         merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
