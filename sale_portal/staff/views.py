@@ -16,6 +16,7 @@ from sale_portal.team.models import Team
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLogType, StaffTeamRole
+from sale_portal.utils.queryset import get_staffs_viewable_queryset
 
 from ..common.standard_response import Code, successful_response, custom_response
 
@@ -46,6 +47,10 @@ class StaffViewSet(mixins.ListModelMixin,
     def get_queryset(self):
 
         queryset = Staff.objects.all()
+
+        if self.request.user.is_superuser is False:
+            staffs = get_staffs_viewable_queryset(self.request.user)
+            queryset = queryset.filter(pk__in=staffs)
 
         staff_code = self.request.query_params.get('staff_code', None)
         team_id = self.request.query_params.get('team_id', None)
@@ -82,7 +87,12 @@ class StaffViewSet(mixins.ListModelMixin,
         """
         team, role = None, None
 
-        staff = Staff.objects.filter(pk=pk).first()
+        if request.user.is_superuser is False:
+            staffs = get_staffs_viewable_queryset(request.user)
+            staff = Staff.objects.filter(pk=pk, pk__in=staffs).first()
+        else:
+            staff = Staff.objects.filter(pk=pk).first()
+
         if staff is None:
             return custom_response(Code.STAFF_NOT_FOUND)
 
@@ -126,6 +136,10 @@ def list_staffs(request):
     """
 
     queryset = Staff.objects.values('id', 'email', 'full_name')
+
+    if request.user.is_superuser is False:
+        staffs = get_staffs_viewable_queryset(request.user)
+        queryset = queryset.filter(pk__in=staffs)
 
     email = request.GET.get('email', None)
     team_id = request.GET.get('team_id', None)
