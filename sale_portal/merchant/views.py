@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework.decorators import api_view
 
 from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.user.views import get_shops_viewable_queryset
+from sale_portal.utils.queryset import get_shops_viewable_queryset
 from ..qr_status.views import get_merchant_status_list
 
 
