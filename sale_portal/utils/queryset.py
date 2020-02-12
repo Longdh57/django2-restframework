@@ -36,8 +36,6 @@ def get_shops_viewable_queryset(user):
             for area in user.area_set.all():
                 provinces |= area.get_provinces()
 
-            print(provinces)
-
             return Shop.objects.filter(province__in=provinces)
         else:
             staff = Staff.objects.filter(email=user.email).first()
