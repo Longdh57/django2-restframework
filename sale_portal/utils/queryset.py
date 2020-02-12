@@ -8,6 +8,24 @@ from sale_portal.team.models import Team
 from sale_portal.user import ROLE_SALE_MANAGER, ROLE_SALE_ADMIN
 
 
+def get_provinces_viewable_queryset(user):
+    if not user.is_superuser:
+        group = user.get_group()
+        if group is None or group.status is False:
+            return QrProvince.objects.none()
+        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+            provinces = QrProvince.objects.none()
+            for area in user.area_set.all():
+                provinces |= area.get_provinces()
+
+            return provinces
+
+        else:
+            return QrProvince.objects.none()
+
+    return QrProvince.objects.all()
+
+
 def get_shops_viewable_queryset(user):
     if not user.is_superuser:
         group = user.get_group()
