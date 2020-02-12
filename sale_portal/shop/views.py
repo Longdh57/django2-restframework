@@ -166,15 +166,12 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         if team_id is not None and team_id != '':
             staffs = Staff.objects.filter(team=team_id)
-            queryset = queryset.filter(staff__in=staffs)
+            shop_ids = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop_id')
+            queryset = queryset.filter(pk__in=shop_ids)
 
         if staff_id is not None and staff_id != '':
-            shop_list = []
-            staff_cares = StaffCare.objects.filter(staff=staff_id, type=StaffCareType.STAFF_SHOP).values('shop_id')
-            for shop in staff_cares:
-                shop_list.append(shop['shop_id'])
-            print(f'STAFF_CARE: {shop_list}')
-            queryset = queryset.filter(pk__in=shop_list)
+            shop_ids = StaffCare.objects.filter(staff=staff_id, type=StaffCareType.STAFF_SHOP).values('shop_id')
+            queryset = queryset.filter(pk__in=shop_ids)
 
         if province_id is not None and province_id != '':
             queryset = queryset.filter(province=province_id)
