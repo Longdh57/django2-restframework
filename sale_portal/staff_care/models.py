@@ -47,6 +47,7 @@ class StaffCareImportLog(models.Model):
         blank=True
     )
     description = models.TextField(blank=True)
+    type = models.IntegerField(choices=StaffCareType.CHOICES, default=StaffCareType.STAFF_SHOP)
     created_date = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
 
