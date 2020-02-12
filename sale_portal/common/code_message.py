@@ -33,6 +33,7 @@ code_message = {
     "404.008": "AREA NOT FOUND",
     "404.009": "USER NOT FOUND",
     "404.010": "PERMISSION NOT FOUND",
+    "404.011": "SHOP NOT FOUND",
 
     "500.000": "INTERNAL SERVER ERROR",
     "500.001": "DATA ERROR",

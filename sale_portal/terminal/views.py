@@ -180,10 +180,10 @@ def detail(request, pk):
         if request.user.is_superuser is False:
             if request.user.is_area_manager or request.user.is_sale_admin:
                 provinces = get_provinces_viewable_queryset(request.user)
-                terminal = Terminal.objects.filter(pk=pk, province_code__in=provinces.values('province_code'))
+                terminal = Terminal.objects.filter(pk=pk, province_code__in=provinces.values('province_code')).first()
             else:
                 shops = get_shops_viewable_queryset(request.user)
-                terminal = Terminal.objects.filter(pk=pk, shop__in=shops)
+                terminal = Terminal.objects.filter(pk=pk, shop__in=shops).first()
         else:
             terminal = Terminal.objects.filter(pk=pk).first()
 

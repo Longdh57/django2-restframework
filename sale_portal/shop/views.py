@@ -21,7 +21,8 @@ from sale_portal.staff_care.models import StaffCare
 from sale_portal.utils.geo_utils import findDistance
 from sale_portal.shop.serializers import ShopSerializer
 from sale_portal.utils.field_formatter import format_string
-from sale_portal.common.standard_response import successful_response
+from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
 @api_view(['GET'])
@@ -137,6 +138,14 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         queryset = Shop.objects.all()
 
+        if self.request.user.is_superuser is False:
+            if self.request.user.is_area_manager or self.request.user.is_sale_admin:
+                provinces = get_provinces_viewable_queryset(self.request.user)
+                queryset = queryset.filter(province__in=provinces)
+            else:
+                shops = get_shops_viewable_queryset(self.request.user)
+                queryset = queryset.filter(pk__in=shops)
+
         code = self.request.query_params.get('code', None)
         merchant_id = self.request.query_params.get('merchant_id', None)
         team_id = self.request.query_params.get('team_id', None)
@@ -226,7 +235,19 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
             API get detail Shop
         """
-        shop = Shop.objects.filter(pk=pk).first()
+        if request.user.is_superuser is False:
+            if request.user.is_area_manager or request.user.is_sale_admin:
+                provinces = get_provinces_viewable_queryset(request.user)
+                shop = Shop.objects.filter(pk=pk, province__in=provinces).first()
+            else:
+                shops = get_shops_viewable_queryset(request.user)
+                shop = Shop.objects.filter(pk=pk, pk__in=shops).first()
+        else:
+            shop = Shop.objects.filter(pk=pk).first()
+
+        if shop is None:
+            return custom_response(Code.SHOP_NOT_FOUND)
+
         first_terminal = shop.terminals.order_by('created_date').first()
 
         data = {
@@ -237,7 +258,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                                                 "SHORT_DATETIME_FORMAT") if shop.created_date else '',
             'first_terminal_created_date': formats.date_format(
                 first_terminal.created_date,
-                "SHORT_DATETIME_FORMAT") if first_terminal.created_date else None,
+                "SHORT_DATETIME_FORMAT") if first_terminal and first_terminal.created_date else None,
             'merchant': {
                 'merchant_code': shop.merchant.merchant_code if shop.merchant else None,
                 'merchant_name': shop.merchant.merchant_name if shop.merchant else None,

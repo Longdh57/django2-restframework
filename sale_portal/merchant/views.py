@@ -117,7 +117,7 @@ def detail(request, pk):
     try:
         if request.user.is_superuser is False:
             shops = get_shops_viewable_queryset(request.user)
-            merchant = Merchant.objects.filter(pk=pk, pk__in=shops.values('merchant'))
+            merchant = Merchant.objects.filter(pk=pk, pk__in=shops.values('merchant')).first()
         else:
             merchant = Merchant.objects.filter(pk=pk).first()
         if merchant is None:
