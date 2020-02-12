@@ -8,12 +8,11 @@ from django.utils import formats
 from django.db import transaction
 from django.contrib.auth.decorators import login_required, permission_required
 
-from rest_framework import permissions
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
-from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
 from sale_portal.staff_care.models import StaffCare, StaffCareLog

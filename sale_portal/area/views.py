@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
 from sale_portal.area.serializers import AreaSerializer
-from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.administrative_unit.models import QrProvince
 from sale_portal.common.standard_response import successful_response, custom_response, Code

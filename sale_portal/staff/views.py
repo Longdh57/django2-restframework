@@ -10,10 +10,9 @@ from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
-from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.staff_care.models import StaffCare, StaffCareLog
 from sale_portal.team.models import Team
-from sale_portal.shop.models import Shop
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.staff.models import Staff, StaffLogType, StaffTeamRole

@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework.decorators import api_view
 
-from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.user.views import get_shops_viewable_queryset
 from ..qr_status.views import get_merchant_status_list
 
@@ -111,7 +111,11 @@ def list_merchants(request):
 def detail(request, pk):
     # API detail
     try:
-        merchant = Merchant.objects.filter(pk=pk).first()
+        if request.user.is_superuser is False:
+            shops = get_shops_viewable_queryset(request.user)
+            merchant = Merchant.objects.filter(pk=pk, pk__in=shops.values('merchant'))
+        else:
+            merchant = Merchant.objects.filter(pk=pk).first()
         if merchant is None:
             return custom_response(Code.MERCHANT_NOT_FOUND)
         staff = merchant.get_staff()
