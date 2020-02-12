@@ -253,7 +253,9 @@ LOGOUT_REDIRECT_URL = 'login'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 
-STATICFILES_DIRS = ()
+STATICFILES_DIRS = (
+    ('staff_care', os.path.join(BASE_DIR, 'sale_portal', 'static', 'staff_care')),
+)
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
