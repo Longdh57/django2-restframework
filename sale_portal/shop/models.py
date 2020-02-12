@@ -164,7 +164,6 @@ class Shop(models.Model):
     def staff_delete(self, request=None):
         try:
             remove_staff_care(self, StaffCareType.STAFF_SHOP, request)
-
         except Exception as e:
             logging.error('Delete staff-shop exception: %s', e)
 
@@ -203,16 +202,29 @@ def create_staff_log(shop, staff_id, type, request):
 
 
 def remove_staff_care(shop, type, request):
-    staff_care = shop.staff_cares.filter(type=type).first()
-    if staff_care is not None:
-        staff = staff_care.staff
-        staff_care.delete()
+    shop_id = shop.id
 
-        shop.staff_care_logs.filter(staff=staff, type=type, is_caring=True).update(
-            is_caring=False,
-            updated_by=request.user,
-            updated_date=datetime.now()
-        )
+    staff_care = shop.staff_cares.filter(type=type).first()
+
+    staff = staff_care.staff
+
+    staff_care.delete()
+
+    if staff_care is not None:
+        staff_care_log = shop.staff_care_logs.filter(staff=staff, type=type, is_caring=True).order_by('id').first()
+        if staff_care_log is not None:
+            staff_care_log.is_caring = False
+            staff_care_log.updated_by_id = request.user.id if request else None
+            staff_care_log.save()
+        else:
+            shop.staff_care_logs.create(
+                staff_id=staff.id,
+                shop_id=shop_id,
+                type=type,
+                is_caring=False,
+                created_by=request.user if request else None,
+                updated_by=request.user if request else None
+            )
 
 
 @receiver(post_save, sender=Shop)
