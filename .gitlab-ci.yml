@@ -8,6 +8,11 @@ test:
   stage: test
   script:
     - cp .env.sample .env
+    - sed -i "s/YOUR_MAIN_DB_NAME/$TEST_DB_NAME/g" .env
+    - sed -i "s/YOUR_MAIN_USER/$TEST_USER/g" .env
+    - sed -i "s/YOUR_MAIN_PASSWORD/$TEST_PASSWORD/g" .env
+    - sed -i "s/YOUR_MAIN_HOST/$TEST_HOST/g" .env
+    - sed -i "s/YOUR_MAIN_PORT/5432/g" .env
     - sed -i "s/YOUR_TEST_DB_NAME/$TEST_DB_NAME/g" .env
     - sed -i "s/YOUR_TEST_USER/$TEST_USER/g" .env
     - sed -i "s/YOUR_TEST_PASSWORD/$TEST_PASSWORD/g" .env
