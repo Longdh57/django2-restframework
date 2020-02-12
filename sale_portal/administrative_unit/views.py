@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
 from rest_framework.decorators import api_view
+from unidecode import unidecode
 
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.common.standard_response import successful_response
@@ -21,8 +22,8 @@ def list_provinces(request):
     code = request.GET.get('code', None)
 
     if code is not None and code != '':
-        code = format_string(code)
-        queryset = queryset.filter(Q(province_name__icontains=code) | Q(province_code__icontains=code))
+        code = unidecode(format_string(code))
+        queryset = queryset.filter(Q(province_name__unaccent__icontains=code) | Q(province_code__icontains=code))
 
     queryset = queryset.order_by('province_name')[0:settings.PAGINATE_BY]
 
@@ -50,8 +51,8 @@ def list_districts(request):
     province_code = request.GET.get('province_code', None)
 
     if code is not None and code != '':
-        code = format_string(code)
-        queryset = queryset.filter(Q(district_name__icontains=code) | Q(district_code__icontains=code))
+        code = unidecode(format_string(code))
+        queryset = queryset.filter(Q(district_name__unaccent__icontains=code) | Q(district_code__icontains=code))
     if province_code is not None and province_code != '':
         province_code = format_string(province_code)
         queryset = queryset.filter(province_code=province_code)
@@ -84,8 +85,8 @@ def list_wards(request):
     district_code = request.GET.get('district_code', None)
 
     if code is not None and code != '':
-        code = format_string(code)
-        queryset = queryset.filter(Q(wards_name__icontains=code) | Q(wards_code__icontains=code))
+        code = unidecode(format_string(code))
+        queryset = queryset.filter(Q(wards_name__unaccent__icontains=code) | Q(wards_code__icontains=code))
     if province_code is not None and province_code != '':
         province_code = format_string(province_code)
         queryset = queryset.filter(province_code=province_code)
