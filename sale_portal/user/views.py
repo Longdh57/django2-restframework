@@ -251,35 +251,45 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             area_ids = body.get('area_ids')
             user_permissions = body.get('user_permissions')
 
+            if is_active is None or is_active not in ['true', 'false']:
+                return custom_response(Code.INVALID_BODY, 'status user not valid')
+
+            if role_name is None or role_name == '':
+                return custom_response(Code.INVALID_BODY, 'role_name not valid')
+
             if user_permissions is None or not isinstance(user_permissions, list):
                 return custom_response(Code.INVALID_BODY, 'List user-permission not valid')
             if Permission.objects.filter(pk__in=user_permissions).count() != len(user_permissions):
                 return custom_response(Code.PERMISSION_NOT_FOUND)
 
             old_role_name = user.get_role_name()
-            if role_name is not None and role_name != '' and old_role_name != role_name.upper():
-                role_name = role_name.upper()
-                if role_name == ROLE[0]:
+            role_name = role_name.upper()
+
+            # Kiểm tra định dạng area_ids nếu role là ROLE_SALE_MANAGER or ROLE_SALE_ADMIN
+            if role_name == ROLE_SALE_MANAGER or role_name == ROLE_SALE_ADMIN:
+                if not area_ids or not isinstance(area_ids, list):
+                    return custom_response(Code.INVALID_BODY, 'List Area not valid')
+                if Area.objects.filter(pk__in=area_ids).count() != len(area_ids):
+                    return custom_response(Code.AREA_NOT_FOUND)
+
+            if old_role_name != role_name:  # Thay đổi group cho user
+                if role_name == ROLE[0]:    # Đưa lên làm admin
                     user.groups.clear()
                     user.is_superuser = True
                 else:
                     group = Group.objects.filter(name=role_name)
                     if not group:
-                        return custom_response(Code.INVALID_BODY, 'group_name not valid')
-                    else:
-                        if role_name == ROLE_SALE_MANAGER or role_name == ROLE_SALE_ADMIN:
-                            if not area_ids or not isinstance(area_ids, list):
-                                return custom_response(Code.INVALID_BODY, 'List Area not valid')
-                            if Area.objects.filter(pk__in=area_ids).count() != len(area_ids):
-                                return custom_response(Code.AREA_NOT_FOUND)
-                            user.area_set.clear()
-                            user.area_set.set(area_ids)
-                            if role_name == ROLE_SALE_MANAGER:
-                                user.is_area_manager = True
-                            else:
-                                user.is_sale_admin = True
+                        return custom_response(Code.GROUP_NOT_FOUND)
 
-                        user.groups.set(group)
+                    if role_name == ROLE_SALE_MANAGER or role_name == ROLE_SALE_ADMIN:
+                        user.area_set.clear()
+                        user.area_set.set(area_ids)
+                        if role_name == ROLE_SALE_MANAGER:
+                            user.is_area_manager = True
+                        else:
+                            user.is_sale_admin = True
+
+                    user.groups.set(group)
 
                 if old_role_name == ROLE[0]:
                     user.is_superuser = False
@@ -291,6 +301,10 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     user.is_sale_admin = False
                     if role_name != ROLE_SALE_MANAGER:
                         user.area_set.clear()
+
+            elif role_name == ROLE_SALE_MANAGER or role_name == ROLE_SALE_ADMIN:    # Không thay đổi role nhưng vẫn update lại area list
+                user.area_set.clear()
+                user.area_set.set(area_ids)
 
             user.is_active = (is_active == 'true')
             user.save()
