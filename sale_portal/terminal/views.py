@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.utils.queryset import get_shops_viewable_queryset
+from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 from .models import Terminal
 from ..shop.models import Shop
 from ..staff.models import Staff
@@ -59,8 +59,12 @@ class TerminalViewSet(mixins.ListModelMixin,
         queryset = Terminal.objects.all()
 
         if self.request.user.is_superuser is False:
-            shops = get_shops_viewable_queryset(self.request.user)
-            queryset = queryset.filter(shop__in=shops)
+            if self.request.user.is_area_manager or self.request.user.is_sale_admin:
+                provinces = get_provinces_viewable_queryset(self.request.user)
+                queryset = queryset.filter(province_code__in=provinces.values('province_code'))
+            else:
+                shops = get_shops_viewable_queryset(self.request.user)
+                queryset = queryset.filter(shop__in=shops)
 
         shop_id = self.request.query_params.get('shop_id', None)
         terminal_id = self.request.query_params.get('terminal_id', None)
@@ -166,11 +170,15 @@ def list_terminals(request):
 def detail(request, pk):
     try:
         if request.user.is_superuser is False:
-            shops = get_shops_viewable_queryset(request.user)
-            terminal = Terminal.objects.filter(pk=pk, shop__in=shops)
+            if request.user.is_area_manager or request.user.is_sale_admin:
+                provinces = get_provinces_viewable_queryset(request.user)
+                terminal = Terminal.objects.filter(pk=pk, province_code__in=provinces.values('province_code'))
+            else:
+                shops = get_shops_viewable_queryset(request.user)
+                terminal = Terminal.objects.filter(pk=pk, shop__in=shops)
         else:
             terminal = Terminal.objects.filter(pk=pk).first()
-        terminal = Terminal.objects.filter(pk=pk).first()
+
         if terminal is None:
             return custom_response(Code.TERMINAL_NOT_FOUND)
 
