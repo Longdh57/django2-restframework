@@ -10,9 +10,10 @@ from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
-from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
+from sale_portal.user.views import get_shops_viewable_queryset
 from .models import Terminal
 from ..shop.models import Shop
 from ..staff.models import Staff
@@ -56,6 +57,10 @@ class TerminalViewSet(mixins.ListModelMixin,
     def get_queryset(self):
 
         queryset = Terminal.objects.all()
+
+        if self.request.user.is_superuser is False:
+            shops = get_shops_viewable_queryset(self.request.user)
+            queryset = queryset.filter(shop__in=shops)
 
         shop_id = self.request.query_params.get('shop_id', None)
         terminal_id = self.request.query_params.get('terminal_id', None)
@@ -160,6 +165,11 @@ def list_terminals(request):
 
 def detail(request, pk):
     try:
+        if request.user.is_superuser is False:
+            shops = get_shops_viewable_queryset(request.user)
+            terminal = Terminal.objects.filter(pk=pk, shop__in=shops)
+        else:
+            terminal = Terminal.objects.filter(pk=pk).first()
         terminal = Terminal.objects.filter(pk=pk).first()
         if terminal is None:
             return custom_response(Code.TERMINAL_NOT_FOUND)

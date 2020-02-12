@@ -10,7 +10,7 @@ from unidecode import unidecode
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
-from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
 from sale_portal.shop import ShopActivateType

@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.utils import formats
 from django.conf import settings
 
-from sale_portal.common.permission import get_user_permission_classes
+from sale_portal.utils.permission import get_user_permission_classes
 from .serializers import SalePromotionSerializer
 from tablib import Dataset
 
