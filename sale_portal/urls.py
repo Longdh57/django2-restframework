@@ -14,6 +14,7 @@ from sale_portal.merchant.urls import urlpatterns as merchant_urls
 from sale_portal.pos365.urls import urlpatterns as pos365_urls
 from sale_portal.terminal.urls import urlpatterns as terminal_urls
 from sale_portal.staff.urls import urlpatterns as staff_urls
+from sale_portal.staff_care.urls import urlpatterns as staff_care_urls
 from sale_portal.sale_report_form.urls import urlpatterns as sale_report_form_urls
 from sale_portal.sale_promotion_form.urls import urlpatterns as sale_promotion_form_urls
 from sale_portal.team.urls import urlpatterns as team_urls
@@ -37,6 +38,7 @@ api_urlpatterns = [
     url(r'^sale-promotion-form/',
         include((sale_promotion_form_urls, 'sale_promotion_form'), namespace='sale_promotion_form')),
     url(r'^staffs/', include((staff_urls, 'staff'), namespace='staff')),
+    url(r'^staff-care/', include((staff_care_urls, 'staff_care'), namespace='staff_care')),
     url(r'^teams/', include((team_urls, 'team'), namespace='team')),
     url(r'^terminals/', include((terminal_urls, 'terminal'), namespace='terminal')),
     url(r'^shop/', include((shop_urls, 'shop'), namespace='shop')),

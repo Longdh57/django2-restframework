@@ -25,7 +25,8 @@ class StaffCare(models.Model):
 class StaffCareLog(models.Model):
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, related_name='staff_care_logs', blank=True, null=True)
     shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, related_name='staff_care_logs', blank=True, null=True)
-    merchant = models.ForeignKey(Merchant, on_delete=models.SET_NULL, related_name='staff_care_logs', blank=True, null=True)
+    merchant = models.ForeignKey(Merchant, on_delete=models.SET_NULL, related_name='staff_care_logs', blank=True,
+                                 null=True)
     type = models.IntegerField(choices=StaffCareType.CHOICES, default=StaffCareType.STAFF_SHOP)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -36,4 +37,19 @@ class StaffCareLog(models.Model):
     class Meta:
         db_table = 'staff_care_log'
         ordering = ('-created_date',)
+        default_permissions = ()
+
+
+class StaffCareImportLog(models.Model):
+    file_url = models.FileField(
+        upload_to='excel/staff-care-import-logs/',
+        help_text='File imported of module staff-care',
+        blank=True
+    )
+    description = models.TextField(blank=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+
+    class Meta:
+        db_table = 'staff_care_import_log'
         default_permissions = ()
