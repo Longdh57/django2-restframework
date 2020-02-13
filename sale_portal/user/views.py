@@ -12,7 +12,7 @@ from django.db.models import Q
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.views import JSONWebTokenAPIView
-from social_core.exceptions import AuthException
+from social_core.exceptions import AuthException, AuthForbidden
 
 from sale_portal.area.models import Area
 from sale_portal.utils.permission import PermissionIsAdmin, check_user_admin
@@ -57,7 +57,13 @@ class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
         try:
             user = self.get_object()
         except (AuthException, HTTPError) as e:
-            return self.respond_error(e)
+            if isinstance(e, AuthForbidden):
+                return Response({
+                    'message': 'Tài khoản đăng nhập không phải VNPAY.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'message': 'Đăng nhập thất bại!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if isinstance(user, HttpResponse):  # An error happened and pipeline returned HttpResponse instead of user
             return user
         resp_data = self.get_serializer(instance=user)

@@ -80,6 +80,7 @@ class SaleReportSerializer(serializers.ModelSerializer):
             'customer_care_posm',
             'customer_care_cashier_reward',
             'customer_care_transaction',
+            'implement_confirm',
             'implement_posm',
             'implement_merchant_view',
             'implement_career_guideline',
