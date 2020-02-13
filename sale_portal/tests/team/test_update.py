@@ -4,10 +4,11 @@ import pytest
 from mixer.backend.django import mixer
 from django.test import RequestFactory
 
+from sale_portal.staff import StaffTeamRoleType
 from sale_portal.user.models import User
 from sale_portal.team.views import TeamViewSet
 from sale_portal.team.models import Team, TeamLog, TeamType, TeamLogType
-from sale_portal.staff.models import Staff, StaffTeamRole, StaffLog, StaffLogType
+from sale_portal.staff.models import Staff, StaffLog, StaffLogType
 
 
 @pytest.fixture
@@ -23,8 +24,8 @@ def test_data(db):
         updated_by=user
     )
 
-    role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
-    role_manager = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
+    role_staff = StaffTeamRoleType.TEAM_STAFF
+    role_manager = StaffTeamRoleType.TEAM_MANAGEMENT
 
     Staff.objects.filter(pk=1149).update(team=team, role=role_staff)
     Staff.objects.filter(pk=1160).update(team=team, role=role_manager)
@@ -185,14 +186,14 @@ def test_update_success(test_data, factory, data, status_code, response_message)
     staff_log1 = StaffLog.objects.filter(staff_id=staff1.id).order_by('-created_date').first()
     staff_log2 = StaffLog.objects.filter(staff_id=staff2.id).order_by('-created_date').first()
 
-    role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
-    role_manager = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
+    role_staff = StaffTeamRoleType.TEAM_STAFF
+    role_manager = StaffTeamRoleType.TEAM_MANAGEMENT
 
     assert team.name == data['name'] and team.type == data['type']
     assert team_log is not None
-    assert staff1.team_id == team.id and staff1.role_id == role_staff.id
-    assert staff2.team_id == team.id and staff2.role_id == role_manager.id
-    assert staff_log1 is not None and staff_log1.team_id == team.id and staff_log1.role_id == role_staff.id
-    assert staff_log2 is not None and staff_log2.team_id == team.id and staff_log2.role_id == role_manager.id
+    assert staff1.team_id == team.id and staff1.role == role_staff
+    assert staff2.team_id == team.id and staff2.role == role_manager
+    assert staff_log1 is not None and staff_log1.team_id == team.id and staff_log1.role == role_staff
+    assert staff_log2 is not None and staff_log2.team_id == team.id and staff_log2.role == role_manager
     assert response.status_code == status_code
     assert response_message in str(json.loads(response.content))

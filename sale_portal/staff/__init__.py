@@ -27,12 +27,12 @@ class StaffStatus:
 
 
 class StaffTeamRoleType:
-    TEAM_STAFF = 0
+    FREELANCE_STAFF = 0
     TEAM_MANAGEMENT = 1
-    FREELANCE_STAFF = 99
+    TEAM_STAFF = 2
 
     CHOICES = [
-        (TEAM_STAFF, 'TEAM_STAFF'),
-        (TEAM_MANAGEMENT, 'TEAM_MANAGEMENT'),
         (FREELANCE_STAFF, 'FREELANCE_STAFF'),
+        (TEAM_MANAGEMENT, 'TEAM_MANAGEMENT'),
+        (TEAM_STAFF, 'TEAM_STAFF'),
     ]
