@@ -85,7 +85,7 @@ class Staff(models.Model):
                     staff_id=kwargs.get('staff_id'),
                     team_id=kwargs.get('team_id'),
                     team_code=kwargs.get('team_code'),
-                    role_id=kwargs.get('role_id'),
+                    role=kwargs.get('role'),
                     type=kwargs.get('log_type'),
                     description=kwargs.get('description'),
                     created_by=kwargs.get('user'),
@@ -96,7 +96,7 @@ class Staff(models.Model):
                     staff_id=kwargs.get('staff_id'),
                     team_id=kwargs.get('old_team_id'),
                     team_code=kwargs.get('old_team_code'),
-                    role_id=None,
+                    role=None,
                     type=StaffLogType.OUT_TEAM,
                     description=kwargs.get('description'),
                     created_by=kwargs.get('user'),
@@ -105,7 +105,7 @@ class Staff(models.Model):
                     staff_id=kwargs.get('staff_id'),
                     team_id=kwargs.get('team_id'),
                     team_code=kwargs.get('team_code'),
-                    role_id=kwargs.get('role_id'),
+                    role=kwargs.get('role_id'),
                     type=StaffLogType.JOIN_TEAM,
                     description=kwargs.get('description'),
                     created_by=kwargs.get('user'),
@@ -145,7 +145,7 @@ class StaffLog(models.Model):
     staff_id = models.IntegerField(blank=True, null=True)
     team_id = models.IntegerField(blank=True, null=True)
     team_code = models.CharField(max_length=20, blank=True, null=True)
-    role_id = models.IntegerField(blank=True, null=True)
+    role = models.IntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='staff_log_created_by', null=True)
