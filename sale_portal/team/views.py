@@ -363,7 +363,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         staff_ids=remove_ids,
                         team=team,
                         type=StaffLogType.OUT_TEAM,
-                        role=None,
+                        role=StaffTeamRoleType.FREELANCE_STAFF,
                         description='Update team: remove staff from team'
                     )
 
@@ -460,7 +460,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 staff_ids=remove_ids,
                 team=team,
                 type=StaffLogType.OUT_TEAM,
-                role=None,
+                role=StaffTeamRoleType.FREELANCE_STAFF,
                 description='Delete team'
             )
 

@@ -86,7 +86,6 @@ class StaffViewSet(mixins.ListModelMixin,
         """
             API get detail Staff
         """
-        team, role = None, None
 
         if request.user.is_superuser is False:
             staffs = get_staffs_viewable_queryset(request.user)
@@ -97,13 +96,12 @@ class StaffViewSet(mixins.ListModelMixin,
         if staff is None:
             return custom_response(Code.STAFF_NOT_FOUND)
 
-        if staff.team is not None:
-            team = {
-                "name": staff.team.name,
-                "code": staff.team.code,
-                "created_date": formats.date_format(staff.team.created_date,
-                                                    "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
-            }
+        team = {
+            "name": staff.team.name,
+            "code": staff.team.code,
+            "created_date": formats.date_format(staff.team.created_date,
+                                                "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
+        } if staff.team is not None else None
 
         data = {
             'full_name': staff.full_name,
