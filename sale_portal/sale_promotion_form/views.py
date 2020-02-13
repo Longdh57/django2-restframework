@@ -205,7 +205,8 @@ def import_view(request):
     try:
         promotion_rows = dataset.load(promotion_file.read())
     except Exception as e:
-        return custom_response(Code.INVALID_BODY, 'Nội dung file sai định dạng, vui lòng tải file mãu và làm theo.')
+        logging.error('Promotion import file exception: %s', e)
+        return custom_response(Code.INVALID_BODY, 'Nội dung file sai định dạng, vui lòng tải file mẫu và làm theo.')
 
     total_row = 0
     row_create = 0
