@@ -297,6 +297,7 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
     'DEFAULT_PAGINATION_CLASS': 'sale_portal.utils.pagination.StandardResultsSetPagination',
     'PAGE_SIZE': 50,
+    'EXCEPTION_HANDLER': 'sale_portal.utils.exception_response.custom_exception_handler',
 }
 
 # Set Pagination default value
