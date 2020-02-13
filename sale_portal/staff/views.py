@@ -191,6 +191,9 @@ def change_staff_team(request):
             return custom_response(Code.TEAM_NOT_FOUND)
 
         role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
+        if role is None:
+            return custom_response(Code.ROLE_NOT_FOUND)
+
         # gan staff vao team moi
         if request.method == 'POST':
             if staff.team is not None:
