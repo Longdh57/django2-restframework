@@ -96,7 +96,7 @@ class Staff(models.Model):
                     staff_id=kwargs.get('staff_id'),
                     team_id=kwargs.get('old_team_id'),
                     team_code=kwargs.get('old_team_code'),
-                    role=None,
+                    role=StaffTeamRoleType.FREELANCE_STAFF,
                     type=StaffLogType.OUT_TEAM,
                     description=kwargs.get('description'),
                     created_by=kwargs.get('user'),
