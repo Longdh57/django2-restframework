@@ -28,8 +28,11 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-class UserJWTSerializer(JWTSerializer, UserSerializer):
-    pass
+class UserJWTSerializer(JWTSerializer):
+    user = serializers.SerializerMethodField()
+
+    def get_user(self, user):
+        return UserSerializer(user).data
 
 
 class AccountSerializer(serializers.ModelSerializer):
