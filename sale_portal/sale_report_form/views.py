@@ -407,7 +407,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
             image_inside = sale_report.image_inside_v2
             image_store_cashier = sale_report.image_store_cashier_v2
             posm = sale_report.posm_v2
-
         data = {
             'purpose': sale_report.purpose,
             'longitude': sale_report.longitude,
@@ -429,7 +428,10 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 'shop_id': shop.id if sale_report.shop_code else 0,
                 'shop_address': shop.address if sale_report.shop_code else '',
                 'shop_code': sale_report.shop_code if sale_report.shop_code else '',
-                'shop_name': shop.name if sale_report.shop_code else ''
+                'shop_name': shop.name if sale_report.shop_code else '',
+                'merchant_name': shop.merchant.merchant_name,
+                'merchant_code': shop.merchant.merchant_code,
+                'merchant_brand': shop.merchant.merchant_brand,
             },
             'shop_status': sale_report.shop_status,
             'image_outside': image_outside,
