@@ -331,7 +331,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 @api_view(['GET'])
-# @login_required
+@login_required
 def user_info(request):
     """
         API get user information \n
