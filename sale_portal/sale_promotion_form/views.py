@@ -108,8 +108,8 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     "tentcard_ctkm": true/false,
                     "wobbler_ctkm": true/false,
                     "status": 2 (status in {0,1,2,3} ),
-                    "image_file": "text",
-                    "sub_image_file": "text"
+                    "image": "text",
+                    "sub_image": "text"
                 }
         """
         sale_promotion = SalePromotion.objects.filter(pk=pk).first()
