@@ -330,6 +330,21 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+@login_required
+def user_info(request):
+    """
+        API get user information \n
+    """
+
+    user = request.user
+
+    if user is None:
+        return custom_response(Code.PERMISSION_DENIED)
+
+    return successful_response(UserSerializer(user).data)
+
+
 class GroupViewSet(mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     """
