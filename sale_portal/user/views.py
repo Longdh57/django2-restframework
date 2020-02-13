@@ -12,7 +12,7 @@ from django.db.models import Q
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.views import JSONWebTokenAPIView
-from social_core.exceptions import AuthException
+from social_core.exceptions import AuthException, AuthForbidden
 
 from sale_portal.area.models import Area
 from sale_portal.utils.permission import PermissionIsAdmin, check_user_admin
@@ -57,32 +57,38 @@ class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
         try:
             user = self.get_object()
         except (AuthException, HTTPError) as e:
-            return self.respond_error(e)
+            if isinstance(e, AuthForbidden):
+                return Response({
+                    'message': 'Tài khoản đăng nhập không phải VNPAY.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'message': 'Đăng nhập thất bại!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if isinstance(user, HttpResponse):  # An error happened and pipeline returned HttpResponse instead of user
             return user
         resp_data = self.get_serializer(instance=user)
         # self.do_login(request.backend, user)
         if user.is_active is False:
             return Response({
-                'Unauthorized': 'User has been disable'
-            }, status=401)
+                'message': 'Tài khoản đã bị khóa, vui lòng liên hệ admin để được hỗ trợ.'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if not user.groups.all():
             if not user.is_superuser:
                 return Response({'message': 'Bạn không có bất kì nhóm quyền nào'},
-                                status=status.HTTP_403_FORBIDDEN)
+                                status=status.HTTP_400_BAD_REQUEST)
         elif len(user.groups.all()) > 1:
             return Response({'message': 'Bạn có nhiều hơn 1 nhóm quyền, liên hệ admin để được giải quyết'},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                            status=status.HTTP_400_BAD_REQUEST)
         else:
             group = user.get_group()
             if group is None:
                 return Response(
                     {'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    status=status.HTTP_400_BAD_REQUEST)
             elif not group.status:
                 return Response({
                                     'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
-                                status=status.HTTP_403_FORBIDDEN)
+                                status=status.HTTP_400_BAD_REQUEST)
         return Response(resp_data.data)
 
 
@@ -98,18 +104,18 @@ class AccountJWTUserAuthView(JSONWebTokenAPIView):
             if not user.groups.all():
                 if not user.is_superuser:
                     return Response({'message': 'Bạn không có bất kì nhóm quyền nào'},
-                                    status=status.HTTP_403_FORBIDDEN)
+                                    status=status.HTTP_400_BAD_REQUEST)
             elif len(user.groups.all()) > 1:
                 return Response({'message': 'Bạn có nhiều hơn 1 nhóm quyền, liên hệ admin để được giải quyết'},
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                                status=status.HTTP_400_BAD_REQUEST)
             else:
                 group = user.get_group()
                 if group is None:
                     return Response({'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
-                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                                    status=status.HTTP_400_BAD_REQUEST)
                 elif not group.status:
                     return Response({'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
-                                status=status.HTTP_403_FORBIDDEN)
+                                status=status.HTTP_400_BAD_REQUEST)
             response_data = jwt_response_payload_handler(token, user, request)
             response = Response(response_data)
             if api_settings.JWT_AUTH_COOKIE:
@@ -121,7 +127,13 @@ class AccountJWTUserAuthView(JSONWebTokenAPIView):
                                     httponly=True)
             return response
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        message = serializer.errors['non_field_errors'][0]
+        if message == 'Unable to log in with provided credentials.':
+            message = 'Sai tên truy cập hoặc mật khẩu.'
+        if message == 'User account is disabled.':
+            message = 'Tài khoản đã bị khóa, vui lòng liên hệ admin để được hỗ trợ.'
+
+        return Response({'message': message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def jwt_response_payload_handler(token, user=None, request=None):
@@ -316,6 +328,21 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             logging.error('Create team exception: %s', e)
             print(e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@login_required
+def user_info(request):
+    """
+        API get user information \n
+    """
+
+    user = request.user
+
+    if user is None:
+        return custom_response(Code.PERMISSION_DENIED)
+
+    return successful_response(UserSerializer(user).data)
 
 
 class GroupViewSet(mixins.ListModelMixin,

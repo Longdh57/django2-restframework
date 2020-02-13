@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 from rest_framework import routers
-from .views import GroupViewSet, list_groups, PermissionViewSet, model_permissions, UserViewSet
+from .views import GroupViewSet, list_groups, PermissionViewSet, model_permissions, UserViewSet, user_info
 from . import views
 
 router_users = routers.DefaultRouter()
@@ -21,6 +21,7 @@ url_login_patterns = [
 ]
 url_user_patterns = [
     url(r'^', include(router_users.urls), name='Restful API User'),
+    url(r'^user-info', user_info, name='get_user_info'),
 ]
 url_group_patterns = [
     url(r'^', include(router_groups.urls), name='Restful API Group'),

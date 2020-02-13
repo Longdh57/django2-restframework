@@ -108,8 +108,8 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     "tentcard_ctkm": true/false,
                     "wobbler_ctkm": true/false,
                     "status": 2 (status in {0,1,2,3} ),
-                    "image_file": "text",
-                    "sub_image_file": "text"
+                    "image": "text",
+                    "sub_image": "text"
                 }
         """
         sale_promotion = SalePromotion.objects.filter(pk=pk).first()
@@ -202,7 +202,11 @@ def import_view(request):
         if is_submit:
             promotion_title.save()
 
-    promotion_rows = dataset.load(promotion_file.read())
+    try:
+        promotion_rows = dataset.load(promotion_file.read())
+    except Exception as e:
+        logging.error('Promotion import file exception: %s', e)
+        return custom_response(Code.INVALID_BODY, 'Nội dung file sai định dạng, vui lòng tải file mẫu và làm theo.')
 
     total_row = 0
     row_create = 0
