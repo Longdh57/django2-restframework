@@ -12,13 +12,14 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
+from sale_portal.staff import StaffTeamRoleType
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
 from sale_portal.staff_care.models import StaffCare, StaffCareLog
 from sale_portal.team.serializers import TeamSerializer
 from sale_portal.utils.field_formatter import format_string
-from sale_portal.staff.models import Staff, StaffLog, StaffLogType, StaffTeamRole
+from sale_portal.staff.models import Staff, StaffLog, StaffLogType
 from sale_portal.utils.queryset import get_teams_viewable_queryset
 
 from ..common.standard_response import successful_response, custom_response, Code
@@ -138,12 +139,12 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     if not isinstance(staff['id'], int):
                         return custom_response(Code.INVALID_BODY, 'staff_id Invalid')
                     staff_ids.append(staff['id'])
-                    if staff['role'] == 'TEAM_MANAGEMENT':
+                    if staff['role'] == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
                         if had_leader:
                             return custom_response(Code.INVALID_BODY, 'Team chỉ được phép có 1 leader')
                         had_leader = True
                         team_lead_id = staff['id']
-                    elif staff['role'] != 'TEAM_STAFF':
+                    elif staff['role'] != StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_STAFF][1]:
                         return custom_response(Code.INVALID_BODY, 'staff_role Invalid')
 
                 if staff_ids:
@@ -171,7 +172,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             team.save(user=request.user)
 
             if staffs is not None and staffs != '':
-                role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
+                role_staff = StaffTeamRoleType.TEAM_STAFF
                 Staff.objects.filter(pk__in=staff_ids).exclude(pk=team_lead_id).update(
                     team=team,
                     role=role_staff
@@ -182,12 +183,12 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     staff_ids=staff_ids,
                     team=team,
                     type=StaffLogType.JOIN_TEAM,
-                    role_id=role_staff.id,
+                    role=role_staff,
                     description='Create new team: add staff'
                 )
 
                 if team_lead_id is not None:
-                    role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
+                    role_leader = StaffTeamRoleType.TEAM_MANAGEMENT
                     staff = Staff.objects.get(pk=team_lead_id)
                     staff.team = team
                     staff.role = role_leader
@@ -195,7 +196,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         staff_id=staff.id,
                         team_id=team.id,
                         team_code=team.code,
-                        role_id=role_leader.id,
+                        role=role_leader,
                         log_type=StaffLogType.JOIN_TEAM,
                         description='Create new team: add management',
                         user=request.user
@@ -230,7 +231,8 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'full_name': staff.full_name,
                 'email': staff.email,
                 'status': staff.status,
-                'role': staff.role.code if staff.role else ''
+                # check choice
+                'role': staff.get_role_name()
             }
             members.append(member)
 
@@ -295,8 +297,8 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             if Team.objects.filter(name__iexact=name).exclude(pk=pk):
                 return custom_response(Code.BAD_REQUEST, 'name being used by other Team')
 
-            role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
-            role_leader = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
+            role_staff = StaffTeamRoleType.TEAM_STAFF
+            role_leader = StaffTeamRoleType.TEAM_MANAGEMENT
 
             staff_ids = []
             had_leader = False
@@ -313,12 +315,12 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
                 staff_ids.append(st['id'])
 
-                if st['role'] == 'TEAM_MANAGEMENT':
+                if st['role'] == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
                     if had_leader:
                         return custom_response(Code.INVALID_BODY, 'Team chỉ được phép có 1 leader')
                     had_leader = True
                     is_leader = True
-                elif st['role'] != 'TEAM_STAFF':
+                elif st['role'] != StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_STAFF][1]:
                     return custom_response(Code.INVALID_BODY, 'staff_role Invalid')
 
                 staff = Staff.objects.filter(pk=st['id']).first()
@@ -330,7 +332,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     else:
                         new_staff_ids.append(st['id'])
                 elif staff.team == team:
-                    if staff.role is None or staff.role.code != st['role']:
+                    if StaffTeamRoleType.CHOICES[staff.role][1] != st['role']:
                         if is_leader:
                             update_to_leader_id = st['id']
                         else:
@@ -355,7 +357,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
                     staffs_remove.update(
                         team=None,
-                        role=None
+                        role=StaffTeamRoleType.FREELANCE_STAFF
                     )
                     self.create_staff_log(
                         staff_ids=remove_ids,
@@ -374,7 +376,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         staff_ids=new_staff_ids,
                         team=team,
                         type=StaffLogType.JOIN_TEAM,
-                        role_id=role_staff.id,
+                        role=role_staff,
                         description='Update team: add new staff'
                     )
 
@@ -386,7 +388,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         staff_id=new_leader_id,
                         team_id=team.id,
                         team_code=team.code,
-                        role_id=role_leader.id,
+                        role=role_leader,
                         log_type=StaffLogType.JOIN_TEAM,
                         description='Update team: add new management',
                         user=request.user
@@ -399,7 +401,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         staff_id=update_to_staff_id,
                         team_id=team.id,
                         team_code=team.code,
-                        role_id=role_staff.id,
+                        role=role_staff,
                         log_type=StaffLogType.UPDATE_ROLE,
                         description='Update team: demote to staff',
                         user=request.user
@@ -412,7 +414,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         staff_id=update_to_leader_id,
                         team_id=team.id,
                         team_code=team.code,
-                        role_id=role_leader.id,
+                        role=role_leader,
                         log_type=StaffLogType.UPDATE_ROLE,
                         description='Update team: promote to management',
                         user=request.user
@@ -451,7 +453,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
             staffs.update(
                 team=None,
-                role=None
+                role=StaffTeamRoleType.FREELANCE_STAFF
             )
 
             self.create_staff_log(

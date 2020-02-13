@@ -1,25 +1,12 @@
 import logging
 
 from django.db import models
-from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 
 from sale_portal.user.models import User
 from sale_portal.team.models import Team
-from sale_portal.staff import StaffLogType
+from sale_portal.staff import StaffLogType, StaffTeamRoleType
 from sale_portal.staff_care import StaffCareType
-
-
-class StaffTeamRole(models.Model):
-    code = models.CharField(max_length=50, unique=True)
-    group = models.OneToOneField(Group, on_delete=models.SET_NULL, blank=True, null=True)
-
-    class Meta:
-        db_table = 'staff_team_role'
-        default_permissions = ()
-
-    def __str__(self):
-        return self.code
 
 
 class QrStaff(models.Model):
@@ -55,7 +42,8 @@ class Staff(models.Model):
     created_date = models.DateTimeField(null=True, help_text='Equivalent with qr_staff.created_date')
     modify_date = models.DateTimeField(null=True, help_text='Equivalent with qr_staff.modify_date')
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
-    role = models.ForeignKey(StaffTeamRole, on_delete=models.SET_NULL, null=True, blank=True)
+    role = models.IntegerField(choices=StaffTeamRoleType.CHOICES, default=StaffTeamRoleType.FREELANCE_STAFF,
+                               null=False, blank=False)
 
     class Meta:
         db_table = 'staff'
@@ -73,7 +61,7 @@ class Staff(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Staff, self).__init__(*args, **kwargs)
-        self.__important_fields = ['team_id', 'role_id']
+        self.__important_fields = ['team_id', 'role']
         for field in self.__important_fields:
             setattr(self, '__original_%s' % field, getattr(self, field))
 
@@ -143,6 +131,11 @@ class Staff(models.Model):
             'shop_chain': self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP).all(),
             'merchant': self.staff_cares.filter(type=StaffCareType.STAFF_MERCHANT).all(),
         }
+
+    def get_role_name(self):
+        if self.role == StaffTeamRoleType.TEAM_MANAGEMENT:
+            return StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]
+        return StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_STAFF][1]
 
 
 class StaffLog(models.Model):
