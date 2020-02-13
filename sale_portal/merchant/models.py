@@ -174,7 +174,7 @@ class Merchant(models.Model):
                     shop_id=None,
                     type=StaffCareType.STAFF_MERCHANT
                 )
-                create_staff_log(merchant=self, staff_id=staff_id, type=StaffCareType.STAFF_MERCHANT, request=request)
+                create_staff_care_log(merchant=self, staff_id=staff_id, type=StaffCareType.STAFF_MERCHANT, request=request)
                 return staff_care.staff
             except Exception as e:
                 logging.error('Create staff-merchant exception: %s', e)
@@ -222,7 +222,7 @@ class Merchant(models.Model):
         return merchant_cube
 
 
-def create_staff_log(merchant, staff_id, type, request):
+def create_staff_care_log(merchant, staff_id, type, request):
     merchant.staff_care_logs.create(
         staff_id=staff_id,
         merchant_id=merchant.id,

@@ -363,7 +363,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         staff_ids=remove_ids,
                         team=team,
                         type=StaffLogType.OUT_TEAM,
-                        role_id=None,
+                        role=None,
                         description='Update team: remove staff from team'
                     )
 
@@ -460,7 +460,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 staff_ids=remove_ids,
                 team=team,
                 type=StaffLogType.OUT_TEAM,
-                role_id=None,
+                role=None,
                 description='Delete team'
             )
 
@@ -472,7 +472,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             logging.error('Delete team exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
 
-    def create_staff_log(self, staff_ids, team, type, role_id, description, user=None):
+    def create_staff_log(self, staff_ids, team, type, role, description, user=None):
         try:
             staff_logs = []
 
@@ -482,7 +482,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     team_id=team.id,
                     team_code=team.code,
                     type=type,
-                    role_id=role_id,
+                    role=role,
                     description=description,
                     created_by=user or None)
                 )
