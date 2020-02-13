@@ -202,7 +202,10 @@ def import_view(request):
         if is_submit:
             promotion_title.save()
 
-    promotion_rows = dataset.load(promotion_file.read())
+    try:
+        promotion_rows = dataset.load(promotion_file.read())
+    except Exception as e:
+        return custom_response(Code.INVALID_BODY, 'Nội dung file sai định dạng, vui lòng tải file mãu và làm theo.')
 
     total_row = 0
     row_create = 0
