@@ -251,7 +251,7 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Static files (CSS, JavaScript, Images)
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = os.environ.get('STATIC_URL', '/static/')
+STATIC_URL = os.environ.get('STATIC_URL', '/backend-static/')
 
 STATICFILES_DIRS = (
     ('staff_care', os.path.join(BASE_DIR, 'sale_portal', 'static', 'staff_care')),
