@@ -4,12 +4,13 @@ import pytest
 from mixer.backend.django import mixer
 from django.test import RequestFactory
 
+from sale_portal.staff import StaffTeamRoleType
 from sale_portal.user.models import User
 from sale_portal.shop.models import Shop
 from sale_portal.team.views import TeamViewSet
 from sale_portal.staff_care.models import StaffCare
 from sale_portal.team.models import Team, TeamLog, TeamType, TeamLogType
-from sale_portal.staff.models import Staff, StaffTeamRole, StaffLog, StaffLogType
+from sale_portal.staff.models import Staff, StaffLog, StaffLogType
 
 
 @pytest.fixture
@@ -18,8 +19,8 @@ def test_data(db):
     team = mixer.blend(Team, name='Team Test', code='TEAM_TEST', type=TeamType.TEAM_SALE, area=None,
                        created_by=user, updated_by=user)
 
-    role_staff = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
-    role_manager = StaffTeamRole.objects.filter(code='TEAM_MANAGEMENT').first()
+    role_staff = StaffTeamRoleType.TEAM_STAFF
+    role_manager = StaffTeamRoleType.TEAM_MANAGEMENT
 
     Staff.objects.filter(pk=1149).update(team=team, role=role_staff)
     Staff.objects.filter(pk=1160).update(team=team, role=role_manager)

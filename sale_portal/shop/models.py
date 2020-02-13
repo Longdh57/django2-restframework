@@ -159,7 +159,7 @@ class Shop(models.Model):
                     merchant_id=None,
                     type=StaffCareType.STAFF_SHOP
                 )
-                create_staff_log(self, staff_id, StaffCareType.STAFF_SHOP, request)
+                create_staff_care_log(self, staff_id, StaffCareType.STAFF_SHOP, request)
                 return staff_care.staff
             except Exception as e:
                 logging.error('Create staff-shop exception: %s', e)
@@ -181,7 +181,7 @@ class Shop(models.Model):
                     merchant_id=None,
                     type=StaffCareType.STAFF_OF_CHAIN_SHOP
                 )
-                create_staff_log(self, staff_id, StaffCareType.STAFF_OF_CHAIN_SHOP, request)
+                create_staff_care_log(self, staff_id, StaffCareType.STAFF_OF_CHAIN_SHOP, request)
                 return staff_care.staff
             except Exception as e:
                 logging.error('Create staff_of_chain-shop exception: %s', e)
@@ -195,7 +195,7 @@ class Shop(models.Model):
             logging.error('Delete staff_of_chain-shop exception: %s', e)
 
 
-def create_staff_log(shop, staff_id, type, request):
+def create_staff_care_log(shop, staff_id, type, request):
     shop.staff_care_logs.create(
         staff_id=staff_id,
         shop_id=shop.id,

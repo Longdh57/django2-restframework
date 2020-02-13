@@ -4,10 +4,11 @@ import pytest
 from mixer.backend.django import mixer
 from django.test import RequestFactory
 
+from sale_portal.staff import StaffTeamRoleType
 from sale_portal.user.models import User
 from sale_portal.team.views import TeamViewSet
 from sale_portal.team.models import Team, TeamLog, TeamLogType
-from sale_portal.staff.models import Staff, StaffTeamRole, StaffLog, StaffLogType
+from sale_portal.staff.models import Staff, StaffLog, StaffLogType
 
 
 @pytest.fixture
@@ -122,9 +123,9 @@ def test_create_success(user, factory, data):
         new_data__icontains=data['code'], type=TeamLogType.CREATED).first()
     staff = Staff.objects.get(pk=1149)
     staff_log = StaffLog.objects.filter(staff_id=1149, type=StaffLogType.JOIN_TEAM).order_by('-created_date').first()
-    role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
+    role = StaffTeamRoleType.TEAM_STAFF
 
     assert team.name == data['name'] and team.type == data['type']
-    assert staff.team_id == team.id and staff.role_id == role.id
+    assert staff.team_id == team.id and staff.role == role
     assert staff_log is not None and staff_log.team_id == team.id
     assert team_log is not None

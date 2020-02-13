@@ -10,12 +10,13 @@ from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
+from sale_portal.staff import StaffTeamRoleType
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.staff_care.models import StaffCare, StaffCareLog
 from sale_portal.team.models import Team
 from sale_portal.staff.serializers import StaffSerializer
 from sale_portal.utils.field_formatter import format_string
-from sale_portal.staff.models import Staff, StaffLogType, StaffTeamRole
+from sale_portal.staff.models import Staff, StaffLogType
 from sale_portal.utils.queryset import get_staffs_viewable_queryset
 
 from ..common.standard_response import Code, successful_response, custom_response
@@ -104,9 +105,6 @@ class StaffViewSet(mixins.ListModelMixin,
                                                     "SHORT_DATETIME_FORMAT") if staff.team.created_date else '',
             }
 
-        if staff.role is not None:
-            role = staff.role.code
-
         data = {
             'full_name': staff.full_name,
             'code': staff.staff_code,
@@ -114,7 +112,7 @@ class StaffViewSet(mixins.ListModelMixin,
             'mobile': staff.mobile,
             'status': staff.status,
             'team': team,
-            'role': role,
+            'role': staff.get_role_name(),
             'created_date': formats.date_format(staff.created_date,
                                                 "SHORT_DATETIME_FORMAT") if staff.created_date else '',
         }
@@ -190,9 +188,7 @@ def change_staff_team(request):
         if team is None:
             return custom_response(Code.TEAM_NOT_FOUND)
 
-        role = StaffTeamRole.objects.filter(code='TEAM_STAFF').first()
-        if role is None:
-            return custom_response(Code.ROLE_NOT_FOUND)
+        role = StaffTeamRoleType.TEAM_STAFF
 
         # gan staff vao team moi
         if request.method == 'POST':
@@ -208,7 +204,7 @@ def change_staff_team(request):
                     staff_id=staff.id,
                     team_id=team.id,
                     team_code=team.code,
-                    role_id=role.id,
+                    role=role,
                     log_type=StaffLogType.JOIN_TEAM,
                     description='Change_staff_team: add new team',
                     user=request.user
@@ -231,7 +227,7 @@ def change_staff_team(request):
                     old_team_code=old_team.code,
                     team_id=team.id,
                     team_code=team.code,
-                    role_id=role.id,
+                    role=role,
                     log_type=StaffLogType.OUT_TEAM,
                     description='Change_staff_team: out and join other team',
                     user=request.user
@@ -251,12 +247,12 @@ def change_staff_team(request):
                 return custom_response(Code.BAD_REQUEST, message)
             else:
                 staff.team = None
-                staff.role = None
+                staff.role = StaffTeamRoleType.FREELANCE_STAFF
                 staff.save(
                     staff_id=staff.id,
                     team_id=team.id,
                     team_code=team.code,
-                    role_id=None,
+                    role=StaffTeamRoleType.FREELANCE_STAFF,
                     log_type=StaffLogType.OUT_TEAM,
                     description='Change_staff_team: out team',
                     user=request.user

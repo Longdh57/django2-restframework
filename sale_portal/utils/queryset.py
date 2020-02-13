@@ -39,8 +39,8 @@ def get_shops_viewable_queryset(user):
             return Shop.objects.filter(province__in=provinces)
         else:
             staff = Staff.objects.filter(email=user.email).first()
-            if staff and staff.team and staff.role:
-                if staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+            if staff and staff.team:
+                if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
                     staffs = Staff.objects.filter(team_id=staff.team.id)
                     return StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
                 else:
@@ -60,8 +60,8 @@ def get_teams_viewable_queryset(user):
             return Team.objects.filter(area__in=user.area_set.all())
         else:
             staff = Staff.objects.filter(email=user.email).first()
-            if staff and staff.team and staff.role:
-                if staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+            if staff and staff.team:
+                if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
                     return Team.objects.filter(pk=staff.team.id)
                 else:
                     return Team.objects.none()
@@ -81,8 +81,8 @@ def get_staffs_viewable_queryset(user):
             return Staff.objects.filter(team__in=teams)
         else:
             staff = Staff.objects.filter(email=user.email).first()
-            if staff and staff.team and staff.role:
-                if staff.role.code == StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]:
+            if staff and staff.team:
+                if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
                     return Staff.objects.filter(team_id=staff.team.id)
                 else:
                     return Staff.objects.filter(email=user.email)

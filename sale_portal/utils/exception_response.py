@@ -13,12 +13,6 @@ def custom_exception_handler(exc, context):
         }
         response.data = custom_response_data    # set the custom response data on response object
 
-    # if isinstance(exc, AuthenticationFailed):
-    #     custom_response_data = {
-    #         'message': 'Sai tài khoản đăng nhập. Đăng nhập thất bại!'
-    #     }
-    #     response.data = custom_response_data
-
     if isinstance(exc, PermissionDenied):
         custom_response_data = {
             'message': 'Bạn không có quyền thực hiện hành động này.'

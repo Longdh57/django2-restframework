@@ -19,9 +19,7 @@ class StaffSerializer(serializers.ModelSerializer):
         return staff.team.code if staff.team else ''
 
     def get_role(self, staff):
-        return StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_MANAGEMENT][1]\
-            if staff.role and staff.role.code == 'TEAM_MANAGEMENT'\
-            else StaffTeamRoleType.CHOICES[StaffTeamRoleType.TEAM_STAFF][1]
+        return staff.get_role_name()
 
     def get_count_shop(self, staff):
         return staff.staff_cares.filter(type=StaffCareType.STAFF_SHOP).count()
