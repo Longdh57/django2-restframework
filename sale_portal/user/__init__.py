@@ -1,6 +1,7 @@
-model_names = ['area', 'proportion_kpi_team', 'cronjoblog', 'pos365', 'customgroup', 'merchant', 'merchantlog', 'permission', 'salepromotion',
-               'salepromotiontitle', 'salereport', 'shop', 'shopcube', 'shoplog', 'staff', 'stafflog', 'team',
-               'teamlog', 'terminal', 'terminallog', 'user', 'staff_care', 'staff_care_log', 'staff_care_import_log']
+model_names = ['area', 'exchangepointpos365', 'proportionkpiteam', 'cronjoblog', 'merchant', 'merchantlog',
+               'pos365', 'salepromotionform', 'salepromotiontitle', 'salereportform', 'shop', 'shoplog',
+               'shopcube', 'staff', 'stafflog', 'team', 'teamlog', 'staffcare', 'staffcarelog',
+               'staffcareimportlog', 'terminal', 'terminallog', 'user', 'customgroup', 'permission']
 
 # Role user
 ROLE_ADMIN = 'ADMIN'
