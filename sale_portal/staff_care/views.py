@@ -56,7 +56,7 @@ def import_sale_shop(request):
     for item in imported_data:
         data = {
             'code': int(item[0]) if (isinstance(item[0], int) and item[0] != '') else '',
-            'address': item[1],
+            'street': item[1],
             'staff_email': str(item[2]).strip(),
         }
         total_row += 1
@@ -121,17 +121,17 @@ def update_sale_shop(request, data, is_submit=False):
     if staff.team is None:
         return 'Sale không thuộc bất kì Team nào - Lỗi dữ liệu'
 
-    if shop.staff == staff and data['address'] == '':
+    if shop.staff == staff and data['street'] == '':
         return 'No change'
-    elif shop.staff == staff and data['address'] != '':
+    elif shop.staff == staff and data['street'] != '':
         if is_submit:
-            shop.address = data['address']
+            shop.street = data['street']
             shop.save()
         return 'Thành công'
     else:
         if is_submit:
-            if data['address'] != '':
-                shop.address = data['address']
+            if data['street'] != '':
+                shop.street = data['street']
                 shop.save()
 
             if shop.staff:
