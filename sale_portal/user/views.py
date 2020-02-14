@@ -17,7 +17,7 @@ from social_core.exceptions import AuthException, AuthForbidden
 from sale_portal.area.models import Area
 from sale_portal.utils.permission import PermissionIsAdmin, check_user_admin
 from ..user.models import CustomGroup, User
-from ..user import model_names, ROLE, ROLE_SALE_MANAGER, ROLE_SALE_ADMIN
+from ..user import model_names, ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ADMIN, ROLE_OTHER
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -209,11 +209,9 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             queryset = queryset.filter(is_active=status)
         if role is not None and role != '':
             role = role.upper()
-            # ROLE ADMIN
-            if role == ROLE[0]:
+            if role == ROLE_ADMIN:
                 queryset = queryset.filter(is_superuser=True)
-            # ROLE OTHER
-            elif role == ROLE[1]:
+            elif role == ROLE_OTHER:
                 staff_emails = Staff.objects.all().values('email')
                 queryset = queryset.filter(is_superuser=False).filter(groups__isnull=True)
             else:
@@ -285,7 +283,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     return custom_response(Code.AREA_NOT_FOUND)
 
             if old_role_name != role_name:  # Thay đổi group cho user
-                if role_name == ROLE[0]:    # Đưa lên làm admin
+                if role_name == ROLE_ADMIN:    # Đưa lên làm admin
                     user.groups.clear()
                     user.is_superuser = True
                 else:
@@ -303,7 +301,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
                     user.groups.set(group)
 
-                if old_role_name == ROLE[0]:
+                if old_role_name == ROLE_ADMIN:
                     user.is_superuser = False
                 if old_role_name == ROLE_SALE_MANAGER:
                     user.is_area_manager = False

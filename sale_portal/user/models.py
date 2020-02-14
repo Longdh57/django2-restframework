@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from sale_portal.user import ROLE
+from sale_portal.user import ROLE_ADMIN, ROLE_OTHER
 
 
 class CustomUserManager(UserManager):
@@ -33,10 +33,10 @@ class User(AbstractUser):
 
     def get_role_name(self):
         if self.is_superuser:
-            return ROLE[0]
+            return ROLE_ADMIN
         group = self.groups.first()
         if group is None:
-            return ROLE[1]
+            return ROLE_OTHER
         return group.name
 
 

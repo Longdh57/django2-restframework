@@ -2,10 +2,8 @@ model_names = ['area', 'cronjoblog', 'customgroup', 'merchant', 'merchantlog', '
                'salepromotiontitle', 'salereport', 'shop', 'shopcube', 'shoplog', 'staff', 'stafflog', 'staffteamlog',
                'team', 'teamlog', 'terminal', 'terminallog', 'user']
 
-ROLE = {
-    0: 'ADMIN',
-    1: 'OTHER',
-}
-
+# Role user
+ROLE_ADMIN = 'ADMIN'
+ROLE_OTHER = 'OTHER'
 ROLE_SALE_MANAGER = 'SALE MANAGER'
 ROLE_SALE_ADMIN = 'SALE ADMIN'
