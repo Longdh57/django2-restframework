@@ -42,9 +42,10 @@ def get_shops_viewable_queryset(user):
             if staff and staff.team:
                 if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
                     staffs = Staff.objects.filter(team_id=staff.team.id)
-                    return StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
+                    shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
                 else:
-                    return StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP).values('shop')
+                    shops = StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP).values('shop')
+                return Shop.objects.filter(pk__in=shops)
             else:
                 return Shop.objects.none()
 
