@@ -1,28 +1,27 @@
 import logging
+from datetime import datetime, date, timedelta
 
-from django.db.models import Q
-from datetime import datetime
-from django.utils import formats
 from django.conf import settings
-from django.utils.html import conditional_escape
 from django.contrib.auth.decorators import login_required, permission_required
-
+from django.db import connection
+from django.db.models import Q
+from django.utils import formats
+from django.utils.html import conditional_escape
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
-from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
+from sale_portal.team import TeamType
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 from .models import Terminal
+from .serializers import TerminalSerializer
+from ..common.standard_response import successful_response, custom_response, Code
+from ..qr_status.views import get_terminal_status_list
 from ..shop.models import Shop
 from ..staff.models import Staff
-from sale_portal.team import TeamType
-from .serializers import TerminalSerializer
 from ..utils.field_formatter import format_string
-from ..qr_status.views import get_terminal_status_list
-
-from ..common.standard_response import successful_response, custom_response, Code
 
 
 class TerminalViewSet(mixins.ListModelMixin,
@@ -322,3 +321,43 @@ def shop_store(request):
         'shop_id': shop.pk
     }
     return successful_response(data)
+
+
+@api_view(['GET'])
+@login_required
+def count_terminal_30_days_before(request):
+    all_terminal = request.GET.get('all_terminal', None)
+
+    if all_terminal is not None and all_terminal != '':
+        terminal_count = Terminal.objects.filter(~Q(status=-1) & ~Q(register_vnpayment=1)).count()
+    else:
+        terminal_count = Terminal.objects.filter(Q(status=1) & ~Q(register_vnpayment=1)).count()
+
+    with connection.cursor() as cursor:
+        cursor.execute('''
+            select count(*), date(created_date)
+            from terminal
+            where created_date > current_date - interval '30 days' and register_vnpayment <> 1 and status <> -1
+            group by date(created_date)
+            order by date(created_date) asc
+        ''')
+        columns = [col[0] for col in cursor.description]
+        data_cursor = [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    data = []
+    yesterday = 0
+    for item in data_cursor:
+        if str(item['date']) == str((date.today() - timedelta(days=1)).strftime("%Y-%m-%d")):
+            yesterday = item['count']
+        data.append({
+            'date': str(item['date'].strftime("%d/%m/%Y")),
+            'alpha': item['count']
+        })
+
+    return successful_response({
+        'data': data,
+        'yesterday': yesterday,
+        'terminal_count': terminal_count
+    })

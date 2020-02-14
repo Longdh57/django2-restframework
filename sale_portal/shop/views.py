@@ -1,25 +1,26 @@
 import itertools
+from datetime import datetime, date
 
-from datetime import datetime
-from unidecode import unidecode
-from django.utils import formats
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.db import connection
 from django.db.models import F, Q
+from django.shortcuts import get_object_or_404
+from django.utils import formats
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
-from django.shortcuts import get_object_or_404
-from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.contrib.auth.decorators import login_required, permission_required
+from unidecode import unidecode
 
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.shop.models import Shop
+from sale_portal.shop.serializers import ShopSerializer
+from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff.models import Staff
 from sale_portal.staff_care import StaffCareType
-from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.utils.geo_utils import findDistance
-from sale_portal.shop.serializers import ShopSerializer
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.geo_utils import findDistance
 from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
@@ -112,6 +113,41 @@ def list_recommend_shops(request, pk):
         'nearly_shops': nearly_shops_by_latlong_sorted[:3]
     }
     return successful_response(data)
+
+
+@api_view(['GET'])
+@login_required
+def get_count_shop_30_days_before(request):
+    shop_count = Shop.objects.filter(activated=1).count()
+    with connection.cursor() as cursor:
+        cursor.execute('''
+            select count(*), date(created_date)
+            from shop
+            where created_date > current_date - interval '30 days'
+            group by date(created_date)
+            order by date(created_date) asc
+        ''')
+        columns = [col[0] for col in cursor.description]
+        data_cursor = [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    data = []
+    today = 0
+    for item in data_cursor:
+        if str(item['date']) == str(date.today().strftime("%Y-%m-%d")):
+            today = item['count']
+            continue
+        data.append({
+            'date': str(item['date'].strftime("%d/%m/%Y")),
+            'alpha': item['count']
+        })
+
+    return successful_response({
+        'data': data,
+        'today': today,
+        'shop_count': shop_count
+    })
 
 
 class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
