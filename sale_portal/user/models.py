@@ -3,7 +3,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from sale_portal.user import ROLE
+from sale_portal.staff import StaffTeamRoleType
+from sale_portal.user import ROLE_ADMIN, ROLE_OTHER, ROLE_SALE_LEADER, ROLE_SALE
 
 
 class CustomUserManager(UserManager):
@@ -33,10 +34,10 @@ class User(AbstractUser):
 
     def get_role_name(self):
         if self.is_superuser:
-            return ROLE[0]
+            return ROLE_ADMIN
         group = self.groups.first()
         if group is None:
-            return ROLE[1]
+            return ROLE_OTHER
         return group.name
 
 
@@ -67,10 +68,13 @@ def assign_role_to_user(sender, instance, created, **kwargs):
     if not created:
         from sale_portal.staff.models import Staff
         staff = Staff.objects.filter(email=instance.email).first()
-        if staff is not None:
-            if str(staff.role_id) == '1':
-                sale_group = Group.objects.get(name='Sale staff')
-                instance.groups.add(sale_group)
-            if str(staff.role_id) == '2':
-                sale_group = Group.objects.get(name='Sale manager')
-                instance.groups.add(sale_group)
+        if staff is not None and staff.status == 1:
+            if staff.team and staff.role and staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
+                sale_group = Group.objects.filter(name=ROLE_SALE_LEADER).first()
+            else:
+                sale_group = Group.objects.get(name=ROLE_SALE)
+
+            if sale_group is None:
+                raise Exception('INTERNAL_SEVER_ERROR: GROUP_NOT_FOUND')
+
+            instance.groups.add(sale_group)
