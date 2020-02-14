@@ -6,7 +6,7 @@ from datetime import date, time
 from datetime import datetime as dt_datetime
 
 import xlsxwriter
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -479,6 +479,11 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
                                  viewsets.GenericViewSet):
     serializer_class = SaleReportStatisticSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('sale_report_form.report_statistic_list_data', self.request)
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
         """
             API get SaleReportStatisticView   \n
@@ -647,6 +652,7 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
 
 @api_view(['GET'])
 @login_required
+@permission_required('sale_report_form.get_list_draft_report', raise_exception=True)
 def list_draff(request):
     """
         API get list_draff   \n
@@ -686,6 +692,7 @@ def list_draff(request):
 
 
 @api_view(['GET'])
+@permission_required('sale_report_form.report_statistic__export_data', raise_exception=True)
 @login_required
 def export_excel(request):
     """
