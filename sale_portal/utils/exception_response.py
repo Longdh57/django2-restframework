@@ -1,4 +1,5 @@
-from rest_framework.exceptions import PermissionDenied, AuthenticationFailed, NotAuthenticated
+from rest_framework.exceptions import PermissionDenied, AuthenticationFailed, NotAuthenticated, APIException
+from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 
@@ -7,7 +8,10 @@ def custom_exception_handler(exc, context):
     # to get the standard error response.
     response = exception_handler(exc, context)
 
-    message = exc.detail
+    if isinstance(exc, APIException):
+        message = exc.detail
+    else:
+        message = str(exc)
 
     if isinstance(exc, NotAuthenticated):
         message = 'Bạn cần phải đăng nhập để thực hiện hành động này.'
@@ -24,6 +28,9 @@ def custom_exception_handler(exc, context):
     custom_response_data = {
         'message': message
     }
-    response.data = custom_response_data
+    if response is None:
+        response = Response(custom_response_data, status=500)
+    else:
+        response.data = custom_response_data
 
     return response
