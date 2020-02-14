@@ -172,7 +172,7 @@ def get_user_info(user):
 
     if staff is not None:
         user_info.update({'staff_id': staff.id})
-        team = {'id': staff.team.id, 'role': staff.role.code} if staff.team and staff.role else None
+        team = {'id': staff.team.id, 'role': staff.role} if staff.team else None
 
         user_info.update({'team': team})
 
