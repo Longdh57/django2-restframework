@@ -7,16 +7,23 @@ def custom_exception_handler(exc, context):
     # to get the standard error response.
     response = exception_handler(exc, context)
 
+    message = exc.detail
+
     if isinstance(exc, NotAuthenticated):
-        custom_response_data = {
-            'message': 'Bạn cần phải đăng nhập để thực hiện hành động này.'    # custom exception message
-        }
-        response.data = custom_response_data    # set the custom response data on response object
+        message = 'Bạn cần phải đăng nhập để thực hiện hành động này.'
+
+    if isinstance(exc, AuthenticationFailed):
+        if message == 'Error decoding signature.':
+            message = 'Mã xác thực không hợp lệ. Đề nghị đăng nhập lại.'
+        if message == 'Signature has expired.':
+            message = 'Phiên làm việc đã quá hạn. Bạn cần đăng nhập lại.'
 
     if isinstance(exc, PermissionDenied):
-        custom_response_data = {
-            'message': 'Bạn không có quyền thực hiện hành động này.'
-        }
-        response.data = custom_response_data
+        message = 'Bạn không có quyền thực hiện hành động này.'
+
+    custom_response_data = {
+        'message': message
+    }
+    response.data = custom_response_data
 
     return response

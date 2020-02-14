@@ -70,8 +70,12 @@ def assign_role_to_user(sender, instance, created, **kwargs):
         staff = Staff.objects.filter(email=instance.email).first()
         if staff is not None and staff.status == 1:
             if staff.team and staff.role and staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
-                sale_group = Group.objects.get(name=ROLE_SALE_LEADER)
+                sale_group = Group.objects.filter(name=ROLE_SALE_LEADER).first()
             else:
-                sale_group = Group.objects.get(name=ROLE_SALE)
+                # sale_group = Group.objects.get(name=ROLE_SALE)
+                sale_group = Group.objects.filter(name='sdfdsfsdfsd').first()
+
+            if sale_group is None:
+                raise Exception('Group not found')
 
             instance.groups.add(sale_group)
