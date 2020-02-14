@@ -120,6 +120,13 @@ class SaleReport(models.Model):
         db_table = 'sale_report_form'
         ordering = ['-created_date']
         default_permissions = ()
+        permissions = (
+            ('report_list_data', 'Can get sale report list data'),
+            ('report_detail_data', 'Can get sale report detail data'),
+            ('create_sale_report', 'Can create sale report'),
+            ('report_statistic_list_data', 'Can get list sale report statistic'),
+            ('report_statistic__export_data', 'Can export list sale report statistic'),
+        )
 
     def get_shop(self):
         try:

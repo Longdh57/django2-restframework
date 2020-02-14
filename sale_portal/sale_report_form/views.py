@@ -24,11 +24,22 @@ from sale_portal.user.models import User
 from sale_portal.utils import field_validator
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.utils.queryset import get_users_viewable_queryset
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = SaleReportSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('sale_report_form.report_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('sale_report_form.report_detail_data', self.request)
+        if self.action == 'create':
+            permission_classes = get_user_permission_classes('sale_report_form.create_sale_report', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         """
@@ -43,7 +54,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 
-        queryset = SaleReport.objects.filter(is_draft=False)
+        queryset = SaleReport.objects.filter(is_draft=False) \
+            .filter(created_by__in=get_users_viewable_queryset(self.request.user))
 
         if purpose is not None and purpose != '':
             queryset = queryset.filter(purpose=purpose)
