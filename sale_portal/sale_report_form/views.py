@@ -5,8 +5,6 @@ import time as time_t
 from datetime import date, time
 from datetime import datetime as dt_datetime
 
-import datetime
-
 import xlsxwriter
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -17,16 +15,15 @@ from rest_framework.decorators import api_view
 
 from sale_portal import settings
 from sale_portal.sale_report_form import SaleReportFormPurposeTypes
+from sale_portal.sale_report_form.models import SaleReport
+from sale_portal.sale_report_form.serializers import SaleReportSerializer
 from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
 from sale_portal.shop.models import Shop
-from sale_portal.user.models import User
 from sale_portal.staff.models import Staff
-from sale_portal.user.views import get_user_info
+from sale_portal.user.models import User
 from sale_portal.utils import field_validator
-from sale_portal.sale_report_form.models import SaleReport
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.field_formatter import format_string
-from sale_portal.sale_report_form.serializers import SaleReportSerializer
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -475,25 +472,31 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
             API get SaleReportStatisticView   \n
             param có report_date report_month team_id
         """
-        report_date = self.request.query_params.get('date', None)
-        report_month = self.request.query_params.get('month', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
         team_id = self.request.query_params.get('team_id', None)
-        raw_query = get_raw_query_statistic(user=self.request.user, report_date=report_date, report_month=report_month,
+        raw_query = get_raw_query_statistic(user=self.request.user, from_date=from_date, to_date=to_date,
                                             team_id=team_id)
         queryset = SaleReport.objects.raw(raw_query)
         return queryset
 
 
-def get_raw_query_statistic(user=None, report_date=None, report_month=None, team_id=None):
+def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=None):
     filter_time = ''
-    if report_month is not None and report_month != '':
-        filter_time += "and to_char(created_date, 'MM-YYYY') = '" + report_month + "'"
-    else:
-        if report_date is None or report_date == '':
-            report_date = datetime.date.today()
-        filter_time += "and created_date :: date = '" + str(report_date) + "'"
 
-    user = get_user_info(user)  # for filter by permission
+    if (from_date is None or from_date == '') and (to_date is None or to_date == ''):
+        filter_time += "and created_date >= '" + \
+                       dt_datetime.now().strftime('%Y-%m-%d') + ' 00:00:00' + "'"
+    else:
+        if from_date is not None and from_date != '':
+            filter_time += "and created_date >= '" + \
+                           dt_datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S') + "'"
+
+        if to_date is not None or to_date == '':
+            filter_time += "and created_date <= '" + \
+                           dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59' + "'"
+
+    # user = get_user_info(user)  # for filter by permission
     if team_id is not None and team_id != '':
         staffs = Staff.objects.all().filter(team_id=team_id)
         staff_emails = [x.email for x in staffs]
@@ -506,7 +509,6 @@ def get_raw_query_statistic(user=None, report_date=None, report_month=None, team
             filter_user = filter_user[:-3] + ")"
     else:
         filter_user = 'and created_by_id is not null'
-
     raw_query = '''
         SELECT au.username,
                au.email, 
@@ -858,11 +860,11 @@ def export_excel(request):
 
 
 def get_statistic_data(request):
-    report_date = request.GET.get('date', None)
-    report_month = request.GET.get('month', None)
+    from_date = request.query_params.get('from_date', None)
+    to_date = request.query_params.get('to_date', None)
     team_id = request.GET.get('team_id', None)
 
-    raw_query = get_raw_query_statistic(request.user, report_date=report_date, report_month=report_month,
+    raw_query = get_raw_query_statistic(request.user, from_date=from_date, to_date=to_date,
                                         team_id=team_id)
 
     if raw_query == '':
