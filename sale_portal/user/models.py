@@ -3,7 +3,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from sale_portal.user import ROLE_ADMIN, ROLE_OTHER
+from sale_portal.staff import StaffTeamRoleType
+from sale_portal.user import ROLE_ADMIN, ROLE_OTHER, ROLE_SALE_LEADER, ROLE_SALE
 
 
 class CustomUserManager(UserManager):
@@ -67,10 +68,17 @@ def assign_role_to_user(sender, instance, created, **kwargs):
     if not created:
         from sale_portal.staff.models import Staff
         staff = Staff.objects.filter(email=instance.email).first()
-        if staff is not None:
+        if staff is not None and staff.status == 1:
             if str(staff.role_id) == '1':
                 sale_group = Group.objects.get(name='Sale staff')
                 instance.groups.add(sale_group)
             if str(staff.role_id) == '2':
                 sale_group = Group.objects.get(name='Sale manager')
                 instance.groups.add(sale_group)
+
+            if staff.team and staff.role and staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
+                sale_group = Group.objects.get(name=ROLE_SALE_LEADER)
+            else:
+                sale_group = Group.objects.get(name=ROLE_SALE)
+
+            instance.groups.add(sale_group)
