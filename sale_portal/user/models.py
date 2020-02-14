@@ -69,13 +69,6 @@ def assign_role_to_user(sender, instance, created, **kwargs):
         from sale_portal.staff.models import Staff
         staff = Staff.objects.filter(email=instance.email).first()
         if staff is not None and staff.status == 1:
-            if str(staff.role_id) == '1':
-                sale_group = Group.objects.get(name='Sale staff')
-                instance.groups.add(sale_group)
-            if str(staff.role_id) == '2':
-                sale_group = Group.objects.get(name='Sale manager')
-                instance.groups.add(sale_group)
-
             if staff.team and staff.role and staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
                 sale_group = Group.objects.get(name=ROLE_SALE_LEADER)
             else:
