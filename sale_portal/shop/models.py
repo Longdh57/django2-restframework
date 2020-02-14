@@ -1,12 +1,11 @@
 import logging
 
-from datetime import datetime
-
-from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.db.models import Q, Count, Func, Subquery
+
+from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 
@@ -20,13 +19,13 @@ from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWar
 
 
 class ShopQuerySet(models.QuerySet):
-    def shop_list_active(self):
+    def shop_active(self):
         return self.annotate(count_terminals=Count('terminals')).filter(~Q(count_terminals=0)).filter(
             activated=ShopActivateType.ACTIVATE)
 
-    def shop_none_street(self):
-        return self.annotate(count_terminals=Count('terminals')).filter(~Q(count_terminals=0)) \
-            .filter(activated=ShopActivateType.ACTIVATE).filter(Q(street__isnull=True) | Q(street=''))
+    def shop_disable(self):
+        return self.annotate(count_terminals=Count('terminals')).filter(
+            Q(count_terminals=0) | Q(activated=ShopActivateType.DISABLE))
 
 
 class Shop(models.Model):

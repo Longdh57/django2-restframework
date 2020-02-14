@@ -1,28 +1,25 @@
 import itertools
-from datetime import datetime
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.db import connection
-from django.db.models import F, Q
-from django.shortcuts import get_object_or_404
+from datetime import datetime
+from unidecode import unidecode
 from django.utils import formats
+from django.db.models import F, Q
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
-from unidecode import unidecode
+from django.shortcuts import get_object_or_404
+from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.contrib.auth.decorators import login_required, permission_required
 
-from sale_portal.common.standard_response import successful_response, custom_response, Code
-from sale_portal.shop import ShopActivateType
 from sale_portal.shop.models import Shop
-from sale_portal.shop.serializers import ShopSerializer
-from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff.models import Staff
 from sale_portal.staff_care import StaffCareType
+from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.terminal.models import Terminal
-from sale_portal.utils.field_formatter import format_string
 from sale_portal.utils.geo_utils import findDistance
+from sale_portal.shop.serializers import ShopSerializer
+from sale_portal.utils.field_formatter import format_string
 from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
@@ -146,8 +143,19 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-
-        queryset = Shop.objects.all()
+        status = self.request.query_params.get('status', None)
+        if status is not None and status != '':
+            if status == '0':
+                queryset = Shop.objects.shop_active().filter(Q(street__isnull=True) | Q(street=''))
+            elif status == '1':
+                queryset = Shop.objects.shop_disable()
+            elif status == '2':
+                shop_caring_lists = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP).values('shop')
+                queryset = Shop.objects.shop_active().filter(~Q(pk__in=shop_caring_lists))
+            else:
+                return ''
+        else:
+            queryset = Shop.objects.shop_active()
 
         if self.request.user.is_superuser is False:
             if self.request.user.is_area_manager or self.request.user.is_sale_admin:
@@ -164,7 +172,6 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         province_id = self.request.query_params.get('province_id', None)
         district_id = self.request.query_params.get('district_id', None)
         ward_id = self.request.query_params.get('ward_id', None)
-        status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 
@@ -192,43 +199,6 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         if ward_id is not None and ward_id != '':
             queryset = queryset.filter(ward=ward_id)
-
-        if status is not None and status != '':
-            if status == '0':
-                queryset = queryset.filter(Q(street__isnull=True) | Q(street=''))
-            elif status == '1':
-                shop_have_terminals = Terminal.objects.filter(shop__isnull=False).values('shop')
-                queryset = queryset.exclude(shop_have_terminals)
-            elif status == '2':
-                dup_ids = []
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        select s.id
-                        from shop s
-                              INNER JOIN (select
-                                      merchant_id,
-                                      wards_id
-                                    from shop
-                                    where merchant_id is not null
-                                    group by merchant_id, wards_id
-                                    having count(merchant_id) > 1) dup
-                                ON dup.merchant_id = s.merchant_id and dup.wards_id = s.wards_id
-                        where s.activated = 1
-                    """)
-                    columns = [col[0] for col in cursor.description]
-                    data_cursor = [
-                        dict(zip(columns, row))
-                        for row in cursor.fetchall()
-                    ]
-                for dup in data_cursor:
-                    dup_ids.append(dup['id'])
-                queryset = queryset.filter(pk__in=dup_ids)
-            elif status == '3':
-                queryset = queryset.filter(activated=ShopActivateType.DISABLE)
-            elif status == '4':
-                queryset = queryset.filter(staff__isnull=True)
-            else:
-                return ''
 
         if from_date is not None and from_date != '':
             queryset = queryset.filter(
@@ -262,6 +232,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'name': shop.name,
             'code': shop.code,
             'address': shop.address,
+            'street': shop.street,
             'created_date': formats.date_format(shop.created_date,
                                                 "SHORT_DATETIME_FORMAT") if shop.created_date else '',
             'first_terminal_created_date': formats.date_format(

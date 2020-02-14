@@ -1,10 +1,10 @@
-from sale_portal.administrative_unit.models import QrProvince
 from sale_portal.shop.models import Shop
-from sale_portal.staff import StaffTeamRoleType
+from sale_portal.team.models import Team
 from sale_portal.staff.models import Staff
+from sale_portal.staff import StaffTeamRoleType
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.team.models import Team
+from sale_portal.administrative_unit.models import QrProvince
 from sale_portal.user import ROLE_SALE_MANAGER, ROLE_SALE_ADMIN
 
 
