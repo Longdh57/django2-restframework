@@ -55,22 +55,19 @@ class StaffViewSet(mixins.ListModelMixin,
 
         staff_code = self.request.query_params.get('staff_code', None)
         team_id = self.request.query_params.get('team_id', None)
-        full_name = self.request.query_params.get('full_name', None)
         status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 
         if staff_code is not None and staff_code != '':
             staff_code = format_string(staff_code)
-            queryset = queryset.filter(staff_code__icontains=staff_code)
+            queryset = queryset.filter(Q(staff_code__icontains=staff_code) | Q(full_name__icontains=staff_code) | Q(
+                email__icontains=staff_code))
         if team_id is not None and team_id != '':
             if team_id == '0':
                 queryset = queryset.filter(team__isnull=True)
             else:
                 queryset = queryset.filter(team_id=team_id)
-        if full_name is not None and full_name != '':
-            full_name = format_string(full_name)
-            queryset = queryset.filter(Q(full_name__icontains=full_name) | Q(email__icontains=full_name))
         if status is not None and status != '':
             queryset = queryset.filter(status=(1 if status == '1' else -1))
         if from_date is not None and from_date != '':
