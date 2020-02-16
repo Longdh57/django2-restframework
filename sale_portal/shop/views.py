@@ -31,7 +31,8 @@ def list_shop_for_search(request):
         API để search full text search không dấu  các shop dựa trên địa chỉ, shop_code hoặc merchant brand, param là name
     """
     name = request.GET.get('name', None)
-    queryset = Shop.objects.all()
+    queryset = get_shops_viewable_queryset(request.user)
+
 
     if name is not None and name != '':
         querysetABS = queryset.filter(
