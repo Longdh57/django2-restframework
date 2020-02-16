@@ -261,7 +261,19 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'name': shop.team_of_chain.name if shop.team_of_chain else None,
                 'code': shop.team_of_chain.code if shop.team_of_chain else None
             },
-            'shop_cube': None
+            'shop_cube': {
+                'report_date': shop.shop_cube.report_date,
+                'number_of_tran': int(
+                    shop.shop_cube.number_of_tran) if shop.shop_cube.number_of_tran.isdigit() else None,
+                'number_of_tran_w_1_7': int(
+                    shop.shop_cube.number_of_tran_w_1_7) if shop.shop_cube.number_of_tran_w_1_7.isdigit() else None,
+                'number_of_tran_w_8_14': int(
+                    shop.shop_cube.number_of_tran_w_8_14) if shop.shop_cube.number_of_tran_w_8_14.isdigit() else None,
+                'number_of_tran_w_15_21': int(
+                    shop.shop_cube.number_of_tran_w_15_21) if shop.shop_cube.number_of_tran_w_15_21.isdigit() else None,
+                'number_of_tran_w_22_end': int(
+                    shop.shop_cube.number_of_tran_w_22_end) if shop.shop_cube.number_of_tran_w_22_end.isdigit() else None,
+            } if shop.shop_cube else None
         }
 
         return successful_response(data)
