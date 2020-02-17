@@ -1,22 +1,20 @@
-from django.db.models import Q
 import logging
-from django.utils import formats
-from rest_framework import viewsets, mixins
 from datetime import datetime
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
+from django.db.models import Q
+from django.utils import formats
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset
-from ..qr_status.views import get_merchant_status_list
-
-
 from .models import Merchant
 from .serializers import MerchantSerializer
-
-from ..utils.field_formatter import format_string
 from ..common.standard_response import successful_response, custom_response, Code
+from ..qr_status.views import get_merchant_status_list
+from ..utils.field_formatter import format_string
 
 
 class MerchantViewSet(mixins.ListModelMixin,
@@ -133,6 +131,15 @@ def detail(request, pk):
             'staff': {
                 'full_name': staff.full_name if staff is not None else '',
                 'email': staff.email if staff is not None else ''
+            },
+            'staff_care': {
+                "full_name": merchant.staff_care.full_name if merchant.staff_care.full_name else 'N/A',
+                "email": merchant.staff_care.email if merchant.staff_care.email else 'N/A',
+                "team": merchant.staff_care.team.name if merchant.staff_care.team else 'N/A',
+            } if merchant.staff_care else {
+                "full_name": 'N/A',
+                "email": 'N/A',
+                "team": 'N/A',
             },
             'created_date': formats.date_format(merchant.created_date,
                                                 "SHORT_DATETIME_FORMAT") if merchant.created_date else '',
