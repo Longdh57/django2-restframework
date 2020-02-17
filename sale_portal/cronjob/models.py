@@ -18,3 +18,8 @@ class CronjobLog(models.Model):
         db_table = 'cronjob_log'
         ordering = ['-created_date']
         default_permissions = ()
+        permissions = (
+            ('cronjob_list_log', 'Can get list cronjob log'),
+            ('cronjob_list_name', 'Can get area cronjob name'),
+            ('cronjob_run_manual', 'Can run cronjob'),
+        )
