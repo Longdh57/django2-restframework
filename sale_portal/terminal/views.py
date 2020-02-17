@@ -364,3 +364,41 @@ def count_terminal_30_days_before(request):
         'yesterday': yesterday,
         'terminal_count': terminal_count
     })
+
+
+@api_view(['GET'])
+@login_required
+@permission_required('terminal.dashboard_terminal_count', raise_exception=True)
+def count_terminal_30_days_before_heatmap(request):
+    today = date.today()
+    date_list = []
+    hour_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    for i in range(0, 31):
+        date_list.append((today - timedelta(days=i)).strftime("%d/%m/%Y"))
+
+    with connection.cursor() as cursor:
+        cursor.execute('''
+            select  count(*),date(created_date) as terminal_date, extract(hour from created_date) as terminal_hour
+            from terminal
+            where created_date > current_date - interval '30 days'
+            group by terminal_date,terminal_hour
+            order by date(created_date) asc
+        ''')
+        columns = [col[0] for col in cursor.description]
+        data_cursor = [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    data = []
+    for item in data_cursor:
+        data.append([
+            date_list.index(str(item['terminal_date'].strftime("%d/%m/%Y"))),
+            hour_list.index(item['terminal_hour']),
+            item['count']
+        ])
+
+    return successful_response({
+        'data': data,
+        'date_list': date_list,
+        'hour_list': hour_list
+    })
