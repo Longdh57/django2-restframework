@@ -1,21 +1,20 @@
 import logging
 
-from django.db import models
-from django.dispatch import receiver
-from django.db.models.signals import post_save
-from django.db.models import Q, Count, Func, Subquery
-
-from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField, SearchVector
+from django.db import models
+from django.db.models import Q, Count, Func, Subquery
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-from sale_portal.area.models import Area
-from sale_portal.user.models import User
-from sale_portal.staff_care import StaffCareType
-from sale_portal.merchant.models import Merchant
-from sale_portal.shop_cube.models import ShopCube
-from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
 from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
+from sale_portal.area.models import Area
+from sale_portal.merchant.models import Merchant
+from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
+from sale_portal.shop_cube.models import ShopCube
+from sale_portal.staff_care import StaffCareType
+from sale_portal.user.models import User
 
 
 class ShopQuerySet(models.QuerySet):
@@ -65,6 +64,7 @@ class Shop(models.Model):
             ('shop_edit', 'Can edit shop'),
             ('shop_import', 'Can import data shop'),
             ('shop_export', 'Can export data shop'),
+            ('dashboard_shop_count', 'Can get shop data for dashboard')
         )
 
     def __str__(self):

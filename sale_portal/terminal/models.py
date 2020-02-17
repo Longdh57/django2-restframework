@@ -131,6 +131,7 @@ class Terminal(models.Model):
             ('terminal_detail', 'Can get terminal detail'),
             ('terminal_edit', 'Can edit terminal'),
             ('terminal_export', 'Can export data terminal'),
+            ('dashboard_terminal_count', 'Can get terminal data for dashboard'),
         )
 
     def __str__(self):

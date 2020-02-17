@@ -117,6 +117,7 @@ def list_recommend_shops(request, pk):
 
 @api_view(['GET'])
 @login_required
+@permission_required('shop.dashboard_shop_count', raise_exception=True)
 def get_count_shop_30_days_before(request):
     shop_count = Shop.objects.filter(activated=1).count()
     with connection.cursor() as cursor:
@@ -132,19 +133,21 @@ def get_count_shop_30_days_before(request):
             dict(zip(columns, row))
             for row in cursor.fetchall()
         ]
-    data = []
+    data_date = []
+    data_value = []
     today = 0
     for item in data_cursor:
         if str(item['date']) == str(date.today().strftime("%Y-%m-%d")):
             today = item['count']
             continue
-        data.append({
-            'date': str(item['date'].strftime("%d/%m/%Y")),
-            'alpha': item['count']
-        })
+        data_date.append(str(item['date'].strftime("%d/%m/%Y")))
+        data_value.append(item['count'])
 
     return successful_response({
-        'data': data,
+        'data': {
+            'data_date': data_date,
+            'data_value': data_value
+        },
         'today': today,
         'shop_count': shop_count
     })

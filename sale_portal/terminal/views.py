@@ -325,6 +325,7 @@ def shop_store(request):
 
 @api_view(['GET'])
 @login_required
+@permission_required('terminal.dashboard_terminal_count', raise_exception=True)
 def count_terminal_30_days_before(request):
     all_terminal = request.GET.get('all_terminal', None)
 
@@ -346,18 +347,20 @@ def count_terminal_30_days_before(request):
             dict(zip(columns, row))
             for row in cursor.fetchall()
         ]
-    data = []
+    data_date = []
+    data_value = []
     yesterday = 0
     for item in data_cursor:
         if str(item['date']) == str((date.today() - timedelta(days=1)).strftime("%Y-%m-%d")):
             yesterday = item['count']
-        data.append({
-            'date': str(item['date'].strftime("%d/%m/%Y")),
-            'alpha': item['count']
-        })
+        data_date.append(str(item['date'].strftime("%d/%m/%Y")))
+        data_value.append(item['count'])
 
     return successful_response({
-        'data': data,
+        'data': {
+            'data_date': data_date,
+            'data_value': data_value
+        },
         'yesterday': yesterday,
         'terminal_count': terminal_count
     })
