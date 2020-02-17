@@ -8,6 +8,7 @@ from django.utils import formats
 from django.conf import settings
 
 from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.utils.queryset import get_shops_viewable_queryset
 from .serializers import SalePromotionSerializer
 from tablib import Dataset
 
@@ -49,7 +50,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         team_id = self.request.query_params.get('team_id', None)
         status = self.request.query_params.get('status', None)
 
-        queryset = SalePromotion.objects.all()
+        queryset = SalePromotion.objects.filter(shop__in =get_shops_viewable_queryset(self.request.user))
 
         if title_id is not None and title_id != '':
             queryset = queryset.filter(title_id=title_id)

@@ -32,7 +32,6 @@ def get_provinces_viewable_queryset(user):
 def get_shops_viewable_queryset(user):
     if not user.is_superuser:
         group = user.get_group()
-        print('call')
         if group is None or group.status is False:
             return Shop.objects.none()
         if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
