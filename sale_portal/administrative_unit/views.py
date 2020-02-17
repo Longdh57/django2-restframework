@@ -8,6 +8,7 @@ from unidecode import unidecode
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.common.standard_response import successful_response
 from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
+from sale_portal.utils.queryset import get_provinces_viewable_queryset
 
 
 @api_view(['GET'])
@@ -19,6 +20,11 @@ def list_provinces(request):
         - code -- text
     """
     queryset = QrProvince.objects.values('id', 'province_code', 'province_name')
+
+    if request.user.is_superuser is False:
+        provinces = get_provinces_viewable_queryset(request.user)
+        queryset = queryset.filter(pk__in=provinces)
+
     code = request.GET.get('code', None)
 
     if code is not None and code != '':

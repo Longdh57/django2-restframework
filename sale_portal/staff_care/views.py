@@ -36,11 +36,13 @@ def import_sale_shop(request):
     total_row, row_no_change, row_update, row_error = 0, 0, 0, 0
 
     shop_file = request.FILES['shop_file']
-    is_submit = request.POST.get('is_submit', None)
-    submit_total_row = request.POST.get('submit_total_row', None)
-    submit_total_row_not_change = request.POST.get('submit_total_row_not_change', None)
-    submit_total_row_update = request.POST.get('submit_total_row_update', None)
-    submit_total_row_error = request.POST.get('submit_total_row_error', None)
+    data = json.loads(request.POST.get('data', None))
+
+    is_submit = data.get('is_submit', None)
+    submit_total_row = data.get('submit_total_row', None)
+    submit_total_row_not_change = data.get('submit_total_row_not_change', None)
+    submit_total_row_update = data.get('submit_total_row_update', None)
+    submit_total_row_error = data.get('submit_total_row_error', None)
 
     is_submit = True if is_submit == 'true' else False
 
@@ -53,8 +55,8 @@ def import_sale_shop(request):
 
     for item in imported_data:
         data = {
-            'code': int(item[0]) if item[0] != '' else '',
-            'address': item[1],
+            'code': int(item[0]) if (isinstance(item[0], int) and item[0] != '') else '',
+            'street': item[1],
             'staff_email': str(item[2]).strip(),
         }
         total_row += 1
@@ -119,17 +121,17 @@ def update_sale_shop(request, data, is_submit=False):
     if staff.team is None:
         return 'Sale không thuộc bất kì Team nào - Lỗi dữ liệu'
 
-    if shop.staff == staff and data['address'] == '':
+    if shop.staff == staff and data['street'] == '':
         return 'No change'
-    elif shop.staff == staff and data['address'] != '':
+    elif shop.staff == staff and data['street'] != '':
         if is_submit:
-            shop.address = data['address']
+            shop.street = data['street']
             shop.save()
         return 'Thành công'
     else:
         if is_submit:
-            if data['address'] != '':
-                shop.address = data['address']
+            if data['street'] != '':
+                shop.street = data['street']
                 shop.save()
 
             if shop.staff:
@@ -168,11 +170,13 @@ def import_sale_merchant(request):
     total_row, row_no_change, row_update, row_error = 0, 0, 0, 0
 
     merchant_file = request.FILES['merchant_file']
-    is_submit = request.POST.get('is_submit', None)
-    submit_total_row = request.POST.get('submit_total_row', None)
-    submit_total_row_not_change = request.POST.get('submit_total_row_not_change', None)
-    submit_total_row_update = request.POST.get('submit_total_row_update', None)
-    submit_total_row_error = request.POST.get('submit_total_row_error', None)
+    data = json.loads(request.POST.get('data', None))
+
+    is_submit = data.get('is_submit', None)
+    submit_total_row = data.get('submit_total_row', None)
+    submit_total_row_not_change = data.get('submit_total_row_not_change', None)
+    submit_total_row_update = data.get('submit_total_row_update', None)
+    submit_total_row_error = data.get('submit_total_row_error', None)
 
     is_submit = True if is_submit == 'true' else False
 

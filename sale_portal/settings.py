@@ -203,7 +203,18 @@ DATABASES = {
         'HOST': os.environ.get('MMS_DB_HOST', ''),
         'PORT': os.environ.get('MMS_DB_PORT', ''),
     },
+    'data_warehouse': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('DWH_DB_NAME', ''),
+        'USER': os.environ.get('DWH_DB_USER', ''),
+        'PASSWORD': os.environ.get('DWH_DB_PASSWORD', ''),
+        'HOST': os.environ.get('DWH_DB_HOST', ''),
+        'PORT': os.environ.get('DWH_DB_PORT', ''),
+    },
 }
+
+# shop_cube table name
+DWH_DB_TABLE = os.environ.get('DWH_DB_TABLE', 'full_shop_cube')
 
 # User Model
 AUTH_USER_MODEL = 'user.User'

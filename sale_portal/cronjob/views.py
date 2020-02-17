@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core import management
 from django.http import JsonResponse
 from rest_framework import viewsets, mixins
@@ -23,6 +23,7 @@ from sale_portal.staff.management.commands import staff_synchronize_change
 from sale_portal.terminal.management.commands import qr_terminal_contact_sync_daily
 from sale_portal.terminal.management.commands import qr_terminal_sync_daily
 from sale_portal.terminal.management.commands import terminal_synchronize_change
+from sale_portal.utils.permission import get_user_permission_classes
 
 jobName = [
     'repair_id_seq', 'administrative_unit_sync',
@@ -45,6 +46,11 @@ class CronjobLogViewSet(mixins.ListModelMixin,
     """
     serializer_class = CronjobLogSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('cronjob_log.cronjob_list_log', self.request)
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
         queryset = CronjobLog.objects.all()
         date = self.request.query_params.get('date', None)
@@ -58,6 +64,7 @@ class CronjobLogViewSet(mixins.ListModelMixin,
 
 @api_view(['GET'])
 @login_required
+@permission_required('cronjob_log.cronjob_list_name', raise_exception=True)
 def getAllJobName(request):
     data = [{"jobName": n} for n in jobName]
     return successful_response(data)
@@ -65,6 +72,7 @@ def getAllJobName(request):
 
 @api_view(['GET'])
 @login_required
+@permission_required('cronjob_log.cronjob_run_manual', raise_exception=True)
 def runJobManual(request):
     job_name = request.GET.get('job_name', None)
     if job_name is None:

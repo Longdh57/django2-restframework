@@ -1,10 +1,10 @@
 from django.db import models
 
-from sale_portal.user.models import User
-from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff
 from sale_portal.sale_report_form import SaleReportFormPurposeTypes, SaleReportFormCreateNewResults, \
     SaleReportFormNewUsingApplications, SaleReportFormShopStatus, SaleReportFormShopConfirm, SaleReportFormCashierReward
+from sale_portal.shop.models import Shop
+from sale_portal.staff.models import Staff
+from sale_portal.user.models import User
 
 
 class SaleReport(models.Model):
@@ -120,6 +120,14 @@ class SaleReport(models.Model):
         db_table = 'sale_report_form'
         ordering = ['-created_date']
         default_permissions = ()
+        permissions = (
+            ('report_list_data', 'Can get sale report list data'),
+            ('report_detail_data', 'Can get sale report detail data'),
+            ('create_sale_report', 'Can create sale report'),
+            ('get_list_draft_report', 'Can get list draft report'),
+            ('report_statistic_list_data', 'Can get list sale report statistic'),
+            ('report_statistic__export_data', 'Can export list sale report statistic'),
+        )
 
     def get_shop(self):
         try:

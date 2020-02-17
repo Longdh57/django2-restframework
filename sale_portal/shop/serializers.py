@@ -52,7 +52,7 @@ class ShopSerializer(serializers.ModelSerializer):
         return shop.address if shop.address else ''
 
     def get_created_date(self, shop):
-        return formats.date_format(shop.created_date, "SHORT_DATETIME_FORMAT") if shop.created_date else ''
+        return formats.date_format(shop.created_date, "SHORT_DATE_FORMAT") if shop.created_date else ''
 
     def get_count_terminals(self, shop):
         return shop.terminals.count()
@@ -64,11 +64,17 @@ class ShopSerializer(serializers.ModelSerializer):
             return None
 
         return {
-            'report_date': shop_cube.report_date,
-            'point_w_1_7': shop_cube.point_w_1_7,
-            'point_w_8_14': shop_cube.point_w_8_14,
-            'point_w_15_21': shop_cube.point_w_15_21,
-            'point_w_22_end': shop_cube.point_w_22_end,
+            'report_date': shop.shop_cube.report_date,
+            'number_of_tran': int(
+                shop.shop_cube.number_of_tran) if shop.shop_cube.number_of_tran.isdigit() else None,
+            'number_of_tran_w_1_7': int(
+                shop.shop_cube.number_of_tran_w_1_7) if shop.shop_cube.number_of_tran_w_1_7.isdigit() else None,
+            'number_of_tran_w_8_14': int(
+                shop.shop_cube.number_of_tran_w_8_14) if shop.shop_cube.number_of_tran_w_8_14.isdigit() else None,
+            'number_of_tran_w_15_21': int(
+                shop.shop_cube.number_of_tran_w_15_21) if shop.shop_cube.number_of_tran_w_15_21.isdigit() else None,
+            'number_of_tran_w_22_end': int(
+                shop.shop_cube.number_of_tran_w_22_end) if shop.shop_cube.number_of_tran_w_22_end.isdigit() else None,
         }
 
     class Meta:

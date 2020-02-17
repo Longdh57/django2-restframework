@@ -32,9 +32,35 @@ def list_shop_for_search(request):
         API để search full text search không dấu  các shop dựa trên địa chỉ, shop_code hoặc merchant brand, param là name
     """
     name = request.GET.get('name', None)
-    queryset = Shop.objects.all()
+    user_info = request.user
+    queryset = get_shops_viewable_queryset(user_info)
+    # if not user_info.is_superuser:
+    #     group = user_info.get_group()
+    #     if group is None or group.status is False:
+    #         return successful_response([])
+    #     if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+    #         provinces = QrProvince.objects.none()
+    #         for area in user_info.area_set.all():
+    #             provinces |= area.get_provinces()
+    #         queryset = Shop.objects.filter(province__in=provinces)
+    #     else:
+    #         staff = Staff.objects.filter(email=user_info.email).first()
+    #         if staff and staff.team:
+    #             if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
+    #                 staffs = Staff.objects.filter(team_id=staff.team.id)
+    #                 list_shop_id = [s.shop_id for s in
+    #                                 StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP)]
+    #                 queryset = Shop.objects.filter(pk__in=list_shop_id)
+    #             else:
+    #                 list_shop_id = [s.shop_id for s in StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP)]
+    #                 queryset = Shop.objects.filter(pk__in=list_shop_id)
+    #         else:
+    #             return successful_response([])
+    # else:
+    #     queryset = Shop.objects.all()
 
     if name is not None and name != '':
+        name = format_string(name)
         querysetABS = queryset.filter(
             Q(code__icontains=name) | Q(merchant__merchant_brand__icontains=name) | Q(address__icontains=name)
         )[:10]
@@ -47,7 +73,7 @@ def list_shop_for_search(request):
                 rank=SearchRank(F('document'), search_query)
             ).order_by(
                 '-rank'
-            )[:(10 - lengQuerysetABS)]
+            ).exclude(pk__in=querysetABS)[:(10 - lengQuerysetABS)]
         else:
             querysetFTS = []
 
@@ -300,7 +326,19 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'name': shop.team_of_chain.name if shop.team_of_chain else None,
                 'code': shop.team_of_chain.code if shop.team_of_chain else None
             },
-            'shop_cube': None
+            'shop_cube': {
+                'report_date': shop.shop_cube.report_date,
+                'number_of_tran': int(
+                    shop.shop_cube.number_of_tran) if shop.shop_cube.number_of_tran.isdigit() else None,
+                'number_of_tran_w_1_7': int(
+                    shop.shop_cube.number_of_tran_w_1_7) if shop.shop_cube.number_of_tran_w_1_7.isdigit() else None,
+                'number_of_tran_w_8_14': int(
+                    shop.shop_cube.number_of_tran_w_8_14) if shop.shop_cube.number_of_tran_w_8_14.isdigit() else None,
+                'number_of_tran_w_15_21': int(
+                    shop.shop_cube.number_of_tran_w_15_21) if shop.shop_cube.number_of_tran_w_15_21.isdigit() else None,
+                'number_of_tran_w_22_end': int(
+                    shop.shop_cube.number_of_tran_w_22_end) if shop.shop_cube.number_of_tran_w_22_end.isdigit() else None,
+            } if shop.shop_cube else None
         }
 
         return successful_response(data)

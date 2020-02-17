@@ -6,7 +6,7 @@ from datetime import date, time
 from datetime import datetime as dt_datetime
 
 import xlsxwriter
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -24,11 +24,22 @@ from sale_portal.user.models import User
 from sale_portal.utils import field_validator
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.utils.queryset import get_users_viewable_queryset, get_teams_viewable_queryset
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = SaleReportSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('sale_report_form.report_list_data', self.request)
+        if self.action == 'retrieve':
+            permission_classes = get_user_permission_classes('sale_report_form.report_detail_data', self.request)
+        if self.action == 'create':
+            permission_classes = get_user_permission_classes('sale_report_form.create_sale_report', self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         """
@@ -43,7 +54,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 
-        queryset = SaleReport.objects.filter(is_draft=False)
+        queryset = SaleReport.objects.filter(is_draft=False) \
+            .filter(created_by__in=get_users_viewable_queryset(self.request.user))
 
         if purpose is not None and purpose != '':
             queryset = queryset.filter(purpose=purpose)
@@ -467,6 +479,12 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
                                  viewsets.GenericViewSet):
     serializer_class = SaleReportStatisticSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('sale_report_form.report_statistic_list_data',
+                                                             self.request)
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
         """
             API get SaleReportStatisticView   \n
@@ -496,19 +514,19 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
             filter_time += "and created_date <= '" + \
                            dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59' + "'"
 
-    # user = get_user_info(user)  # for filter by permission
+    users = get_users_viewable_queryset(user)
     if team_id is not None and team_id != '':
         staffs = Staff.objects.all().filter(team_id=team_id)
         staff_emails = [x.email for x in staffs]
-        users = User.objects.filter(email__in=staff_emails)
-        users_id = [x.id for x in users]
-        filter_user = 'and created_by_id in {}'.format(tuple(users_id))
-        if filter_user.endswith(",)"):
-            filter_user = filter_user[:-2] + ")"
-        elif filter_user.endswith(", )"):
-            filter_user = filter_user[:-3] + ")"
-    else:
-        filter_user = 'and created_by_id is not null'
+        users = users.filter(email__in=staff_emails)
+
+    users_id = [x.id for x in users]
+    filter_user = 'and created_by_id in {}'.format(tuple(users_id))
+    if filter_user.endswith(",)"):
+        filter_user = filter_user[:-2] + ")"
+    elif filter_user.endswith(", )"):
+        filter_user = filter_user[:-3] + ")"
+
     raw_query = '''
         SELECT au.username,
                au.email, 
@@ -635,6 +653,7 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
 
 @api_view(['GET'])
 @login_required
+@permission_required('sale_report_form.get_list_draft_report', raise_exception=True)
 def list_draff(request):
     """
         API get list_draff   \n
@@ -674,6 +693,7 @@ def list_draff(request):
 
 
 @api_view(['GET'])
+@permission_required('sale_report_form.report_statistic__export_data', raise_exception=True)
 @login_required
 def export_excel(request):
     """

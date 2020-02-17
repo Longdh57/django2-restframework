@@ -29,5 +29,5 @@ url_group_patterns = [
 ]
 url_permission_patterns = [
     url(r'^', include(router_permissions.urls), name='List view permission'),
-    url(r'^model-permissions/', model_permissions, name='get_model_permissions'),
+    url(r'^model-permissions', model_permissions, name='get_model_permissions'),
 ]
