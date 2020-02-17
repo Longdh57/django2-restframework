@@ -174,7 +174,8 @@ class Merchant(models.Model):
                     shop_id=None,
                     type=StaffCareType.STAFF_MERCHANT
                 )
-                create_staff_care_log(merchant=self, staff_id=staff_id, type=StaffCareType.STAFF_MERCHANT, request=request)
+                create_staff_care_log(merchant=self, staff_id=staff_id, type=StaffCareType.STAFF_MERCHANT,
+                                      request=request)
                 return staff_care.staff
             except Exception as e:
                 logging.error('Create staff-merchant exception: %s', e)
@@ -197,28 +198,32 @@ class Merchant(models.Model):
     def get_merchant_cube(self):
         shops = self.shops.values('id')
         shop_cubes = ShopCube.objects.filter(shop_id__in=shops)
-        merchant_cube = {
-            'number_of_tran_7d': 0,
-            'number_of_tran_acm': 0,
-            'value_of_tran_7d': 0,
-            'value_of_tran_acm': 0,
-            'number_of_new_customer': 0,
-            'number_of_tran': 0,
-            'value_of_tran': 0,
-            'number_of_tran_30d': 0
-        }
+
+        number_of_tran = 0
+        number_of_tran_w_1_7 = 0
+        number_of_tran_w_8_14 = 0
+        number_of_tran_w_15_21 = 0
+        number_of_tran_w_22_end = 0
+
         for shop_cube in shop_cubes:
-            merchant_cube.update(
-                number_of_tran_7d=merchant_cube.get('number_of_tran_7d') + shop_cube.number_of_tran_7d,
-                number_of_tran_acm=merchant_cube.get('number_of_tran_acm') + shop_cube.number_of_tran_acm,
-                value_of_tran_7d=merchant_cube.get('value_of_tran_7d') + int(shop_cube.value_of_tran_7d),
-                value_of_tran_acm=merchant_cube.get('value_of_tran_acm') + int(shop_cube.value_of_tran_acm),
-                number_of_new_customer=merchant_cube.get('number_of_new_customer') + int(
-                    shop_cube.number_of_new_customer),
-                number_of_tran=merchant_cube.get('number_of_tran') + int(shop_cube.number_of_tran),
-                value_of_tran=merchant_cube.get('value_of_tran') + int(shop_cube.value_of_tran),
-                number_of_tran_30d=merchant_cube.get('number_of_tran_30d') + int(shop_cube.number_of_tran_30d),
-            )
+            if shop_cube.number_of_tran.isdigit():
+                number_of_tran = number_of_tran + int(shop_cube.number_of_tran)
+            if shop_cube.number_of_tran_w_1_7.isdigit():
+                number_of_tran_w_1_7 = number_of_tran_w_1_7 + int(shop_cube.number_of_tran_w_1_7)
+            if shop_cube.number_of_tran_w_8_14.isdigit():
+                number_of_tran_w_8_14 = number_of_tran_w_8_14 + int(shop_cube.number_of_tran_w_8_14)
+            if shop_cube.number_of_tran_w_15_21.isdigit():
+                number_of_tran_w_15_21 = number_of_tran_w_15_21 + int(shop_cube.number_of_tran_w_15_21)
+            if shop_cube.number_of_tran_w_22_end.isdigit():
+                number_of_tran_w_22_end = number_of_tran_w_22_end + int(shop_cube.number_of_tran_w_22_end)
+
+        merchant_cube = {
+            'number_of_tran': number_of_tran if number_of_tran < 6 else 5,
+            'number_of_tran_w_1_7': number_of_tran_w_1_7 if number_of_tran_w_1_7 < 6 else 5,
+            'number_of_tran_w_8_14': number_of_tran_w_8_14 if number_of_tran_w_8_14 < 6 else 5,
+            'number_of_tran_w_15_21': number_of_tran_w_15_21 if number_of_tran_w_15_21 < 6 else 5,
+            'number_of_tran_w_22_end': number_of_tran_w_22_end if number_of_tran_w_22_end < 6 else 5,
+        }
         return merchant_cube
 
 

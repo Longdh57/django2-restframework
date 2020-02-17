@@ -152,18 +152,3 @@ def list_status(request):
         API get list status of Merchant
     """
     return successful_response(get_merchant_status_list())
-
-
-def store(request):
-    # API tạo mới
-    pass
-
-
-def update(request, pk):
-    # API cập nhật
-    pass
-
-
-def delete(request, pk):
-    # API xóa
-    pass
