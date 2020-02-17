@@ -52,7 +52,7 @@ class ShopSerializer(serializers.ModelSerializer):
         return shop.address if shop.address else ''
 
     def get_created_date(self, shop):
-        return formats.date_format(shop.created_date, "SHORT_DATETIME_FORMAT") if shop.created_date else ''
+        return formats.date_format(shop.created_date, "SHORT_DATE_FORMAT") if shop.created_date else ''
 
     def get_count_terminals(self, shop):
         return shop.terminals.count()
