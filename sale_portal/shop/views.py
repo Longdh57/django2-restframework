@@ -35,32 +35,31 @@ def list_shop_for_search(request):
     """
     name = request.GET.get('name', None)
     user_info = request.user
-    if not user_info.is_superuser:
-        group = user_info.get_group()
-        print('call1')
-        if group is None or group.status is False:
-            return successful_response([])
-            print('call2')
-        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
-            provinces = QrProvince.objects.none()
-            for area in user_info.area_set.all():
-                provinces |= area.get_provinces()
-            queryset = Shop.objects.filter(province__in=provinces)
-        else:
-            staff = Staff.objects.filter(email=user_info.email).first()
-            if staff and staff.team:
-                if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
-                    staffs = Staff.objects.filter(team_id=staff.team.id)
-                    shop_id = [s.shop.id for s in
-                               StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP)]
-                    queryset = Shop.objects.filter(pk__in=shop_id)
-                else:
-                    shop_id = [s.shop.id for s in StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP)]
-                    queryset = Shop.objects.filter(pk__in=shop_id)
-            else:
-                return successful_response([])
-    else:
-        queryset = Shop.objects.all()
+    queryset = get_shops_viewable_queryset(user_info)
+    # if not user_info.is_superuser:
+    #     group = user_info.get_group()
+    #     if group is None or group.status is False:
+    #         return successful_response([])
+    #     if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+    #         provinces = QrProvince.objects.none()
+    #         for area in user_info.area_set.all():
+    #             provinces |= area.get_provinces()
+    #         queryset = Shop.objects.filter(province__in=provinces)
+    #     else:
+    #         staff = Staff.objects.filter(email=user_info.email).first()
+    #         if staff and staff.team:
+    #             if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
+    #                 staffs = Staff.objects.filter(team_id=staff.team.id)
+    #                 list_shop_id = [s.shop_id for s in
+    #                                 StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP)]
+    #                 queryset = Shop.objects.filter(pk__in=list_shop_id)
+    #             else:
+    #                 list_shop_id = [s.shop_id for s in StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP)]
+    #                 queryset = Shop.objects.filter(pk__in=list_shop_id)
+    #         else:
+    #             return successful_response([])
+    # else:
+    #     queryset = Shop.objects.all()
 
     if name is not None and name != '':
         name = format_string(name)

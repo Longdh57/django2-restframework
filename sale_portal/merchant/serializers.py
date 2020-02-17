@@ -1,5 +1,5 @@
-from rest_framework import serializers
 from django.utils import formats
+from rest_framework import serializers
 
 from sale_portal.merchant.models import Merchant
 
@@ -27,6 +27,7 @@ class MerchantSerializer(serializers.ModelSerializer):
         return {
             "full_name": staff_care.full_name,
             "email": staff_care.email,
+            "team": staff_care.team.name if staff_care.team else 'N/A',
         } if staff_care else ''
 
     def get_created_date(self, merchant):
