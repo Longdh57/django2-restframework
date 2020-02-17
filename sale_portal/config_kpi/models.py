@@ -14,6 +14,9 @@ class ExchangePointPos365(models.Model):
     class Meta:
         db_table = 'exchange_point_pos365'
         default_permissions = ()
+        permissions = (
+            ('list_exchange_point_pos365_config', 'Can get exchange point pos365 config list '),
+        )
 
     def __str__(self):
         return Pos365ContractDuration.CHOICES[self.type][1]

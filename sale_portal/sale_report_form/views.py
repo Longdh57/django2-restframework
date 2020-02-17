@@ -25,7 +25,7 @@ from sale_portal.utils import field_validator
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.utils.queryset import get_users_viewable_queryset
+from sale_portal.utils.queryset import get_users_viewable_queryset, get_teams_viewable_queryset
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -481,7 +481,8 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
 
     def get_permissions(self):
         if self.action == 'list':
-            permission_classes = get_user_permission_classes('sale_report_form.report_statistic_list_data', self.request)
+            permission_classes = get_user_permission_classes('sale_report_form.report_statistic_list_data',
+                                                             self.request)
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
@@ -513,19 +514,19 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
             filter_time += "and created_date <= '" + \
                            dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59' + "'"
 
-    # user = get_user_info(user)  # for filter by permission
+    users = get_users_viewable_queryset(user)
     if team_id is not None and team_id != '':
         staffs = Staff.objects.all().filter(team_id=team_id)
         staff_emails = [x.email for x in staffs]
-        users = User.objects.filter(email__in=staff_emails)
-        users_id = [x.id for x in users]
-        filter_user = 'and created_by_id in {}'.format(tuple(users_id))
-        if filter_user.endswith(",)"):
-            filter_user = filter_user[:-2] + ")"
-        elif filter_user.endswith(", )"):
-            filter_user = filter_user[:-3] + ")"
-    else:
-        filter_user = 'and created_by_id is not null'
+        users = users.filter(email__in=staff_emails)
+
+    users_id = [x.id for x in users]
+    filter_user = 'and created_by_id in {}'.format(tuple(users_id))
+    if filter_user.endswith(",)"):
+        filter_user = filter_user[:-2] + ")"
+    elif filter_user.endswith(", )"):
+        filter_user = filter_user[:-3] + ")"
+
     raw_query = '''
         SELECT au.username,
                au.email, 

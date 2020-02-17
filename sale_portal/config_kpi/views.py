@@ -2,16 +2,16 @@ import json
 import logging
 
 from django.contrib.auth.decorators import login_required
-
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
-from sale_portal.pos365 import Pos365ContractDuration
-from sale_portal.config_kpi import ProportionKpiTeamType
-from sale_portal.config_kpi.serializers import ExchangePointPos365Serializer
-from sale_portal.config_kpi.models import ExchangePointPos365, ProportionKpiTeam
 from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.config_kpi import ProportionKpiTeamType
+from sale_portal.config_kpi.models import ExchangePointPos365, ProportionKpiTeam
+from sale_portal.config_kpi.serializers import ExchangePointPos365Serializer
+from sale_portal.pos365 import Pos365ContractDuration
+from sale_portal.utils.permission import get_user_permission_classes
 
 
 class ExchangePointPos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -19,6 +19,12 @@ class ExchangePointPos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet)
         API get list ExchangePointPos365 \n
     """
     serializer_class = ExchangePointPos365Serializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = get_user_permission_classes('exchange_point_pos365.list_exchange_point_pos365_config',
+                                                             self.request)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         queryset = ExchangePointPos365.objects.all()
@@ -157,7 +163,8 @@ def update_proportion_kpi_team(request, pk):
         for i in data:
             if not isinstance(i['type'], int) or i['type'] < 0 or i['type'] > 6:
                 return custom_response(Code.INVALID_BODY, 'type Invalid')
-            if not isinstance(i['leader_coefficient'], int) or i['leader_coefficient'] < 0 or i['leader_coefficient'] > 100:
+            if not isinstance(i['leader_coefficient'], int) or i['leader_coefficient'] < 0 or i[
+                'leader_coefficient'] > 100:
                 return custom_response(Code.INVALID_BODY, 'leader_coefficient Invalid')
 
         for update_item in data:
