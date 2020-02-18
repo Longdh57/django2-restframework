@@ -83,7 +83,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     "name": "Team Da Nang",
                     "type": 2, (type in {0,1,2} )
                     "description": "description",
-                    "area_id": 1
+                    "area_id": 1,
                     "staffs": [
                         {
                             "id": 11732,
@@ -224,6 +224,11 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         members = []
         staffs = team.staff_set.all()
 
+        area = {
+            'id': team.area.id if team.area else '',
+            'name': team.area.name if team.area else ''
+        }
+
         for staff in staffs:
             member = {
                 'id': staff.id,
@@ -243,6 +248,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'description': team.description,
             'area': team.area.name if team.area else '',
             'members': members,
+            'area': area,
             'created_date': formats.date_format(team.created_date,
                                                 "SHORT_DATETIME_FORMAT") if team.created_date else '',
         }
@@ -257,6 +263,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     "name": "team name",
                     "type": 2, (type in {0,1,2} )
                     "description": "description",
+                    "area_id": 1,
                     "staffs": [
                         {
                             "id": 11732,
@@ -279,6 +286,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             type = body.get('type')
             description = body.get('description')
             staffs = body.get('staffs')
+            area_id = body.get('area_id')
 
             if staffs is not None and staffs != '':
                 if not isinstance(staffs, list):
@@ -296,6 +304,14 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
             if Team.objects.filter(name__iexact=name).exclude(pk=pk):
                 return custom_response(Code.BAD_REQUEST, 'name being used by other Team')
+
+            area = None
+            if area_id is not None and area_id != '':
+                if not isinstance(area_id, int):
+                    return custom_response(Code.INVALID_BODY, 'area_id not valid')
+                area = Area.objects.filter(pk=area_id).first()
+                if area is None:
+                    return custom_response(Code.AREA_NOT_FOUND)
 
             role_staff = StaffTeamRoleType.TEAM_STAFF
             role_leader = StaffTeamRoleType.TEAM_MANAGEMENT
@@ -424,6 +440,8 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 team.type = type
                 team.description = description
                 team.updated_by = request.user
+                if area is not None:
+                    team.area = area
                 team.save(user=request.user, action="update")
 
             return successful_response()
