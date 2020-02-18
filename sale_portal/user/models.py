@@ -65,7 +65,10 @@ class CustomGroup(Group):
 
 @receiver(post_save, sender=User)
 def assign_role_to_user(sender, instance, created, **kwargs):
-    if not created:
+    if created:
+        print("lksdjflkdsjalfjldajflkajlfjlafjladjflkjdalkjf")
+        print("lksdjflkdsjalfjldajflkajlfjlafjladjflkjdalkjf")
+        print("lksdjflkdsjalfjldajflkajlfjlafjladjflkjdalkjf")
         from sale_portal.staff.models import Staff
         staff = Staff.objects.filter(email=instance.email).first()
         if staff is not None and staff.status == 1:
