@@ -178,10 +178,10 @@ class Command(BaseCommand):
         try:
             self.stdout.write(self.style.WARNING('Start sale_portal_ingestion synchronize daily processing...'))
 
-            # count_shop = self.shop_list_action(db_name=database)
-            # desc.update(count_shop=count_shop)
-            # cron_log.description = desc
-            # cron_log.save()
+            count_shop = self.shop_list_action(db_name=database)
+            desc.update(count_shop=count_shop)
+            cron_log.description = desc
+            cron_log.save()
 
             count_terminal = self.mid_tid_shop_action(db_name=database)
             desc.update(count_terminal=count_terminal)
