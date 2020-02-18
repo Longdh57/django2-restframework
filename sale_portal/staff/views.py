@@ -29,7 +29,7 @@ class StaffViewSet(mixins.ListModelMixin,
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - staff_code -- text
         - team_id -- number
-        - full_name -- text
+        - role -- number in {1,2}
         - status -- number in {-1,1}
         - from_date -- dd/mm/yyyy
         - to_date -- dd/mm/yyyy
@@ -55,6 +55,7 @@ class StaffViewSet(mixins.ListModelMixin,
 
         staff_code = self.request.query_params.get('staff_code', None)
         team_id = self.request.query_params.get('team_id', None)
+        role = self.request.query_params.get('role', None)
         status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
@@ -68,6 +69,12 @@ class StaffViewSet(mixins.ListModelMixin,
                 queryset = queryset.filter(team__isnull=True)
             else:
                 queryset = queryset.filter(team_id=team_id)
+        if role is not None and role != '':
+            if role.isdigit():
+                if int(role) == 2:
+                    queryset = queryset.filter(Q(role=int(role)) | Q(role=0))
+                else:
+                    queryset = queryset.filter(role=int(role))
         if status is not None and status != '':
             queryset = queryset.filter(status=(1 if status == '1' else -1))
         if from_date is not None and from_date != '':
