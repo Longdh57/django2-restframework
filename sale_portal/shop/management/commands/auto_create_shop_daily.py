@@ -8,6 +8,7 @@ from sale_portal.terminal.models import Terminal
 from sale_portal.terminal.views import shop_store
 from sale_portal.utils.cronjob_util import cron_create, cron_update
 
+
 class Command(BaseCommand):
     help = 'Auto create new shop from terminal daily'
 
@@ -20,6 +21,7 @@ class Command(BaseCommand):
         try:
             self.stdout.write(self.style.WARNING('Start Auto create new shop from terminal daily processing...'))
 
+            # suggestion_lists la danh sach cac ter có thể trùng
             suggestion_lists = []
             suggestion_query = Terminal.objects.raw('''
                             select t.id
