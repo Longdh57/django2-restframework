@@ -52,8 +52,6 @@ class Command(BaseCommand):
                 activated=ShopActivateType.ACTIVATE,
                 id__in=shop_without_register_vnpayments)[offset:(offset + limit)]
 
-            print('START')
-
             objs = (ShopList(
                 shop_id=item.code,
                 shop_province_code=item.province.province_code if item.province is not None else None,
