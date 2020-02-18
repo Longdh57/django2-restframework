@@ -299,8 +299,6 @@ def shop_store(request):
 
     shop = Shop(
         merchant=terminal.merchant,
-        staff=staff if (staff is not None) else None,
-        staff_of_chain=staff_of_chain if (staff_of_chain is not None) else None,
         name=conditional_escape(terminal.terminal_name),
         address=conditional_escape(address),
         province_id=terminal.get_province().id if (terminal.get_province() is not None) else None,
@@ -313,6 +311,12 @@ def shop_store(request):
 
     terminal.shop = shop
     terminal.save()
+
+    if staff is not None:
+        shop.staff_create(staff.id)
+
+    if staff_of_chain is not None:
+        shop.staff_of_chain_create(staff.id)
 
     if request.method == 'OTHER':
         return True
