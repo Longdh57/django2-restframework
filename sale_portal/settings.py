@@ -142,6 +142,7 @@ INSTALLED_APPS = [
     'sale_portal.merchant',
     'sale_portal.pos365',
     'sale_portal.qr_status',
+    'sale_portal.sale_portal_ingestion',
     'sale_portal.sale_report_form',
     'sale_portal.sale_promotion_form',
     'sale_portal.shop',
@@ -211,7 +212,17 @@ DATABASES = {
         'HOST': os.environ.get('DWH_DB_HOST', ''),
         'PORT': os.environ.get('DWH_DB_PORT', ''),
     },
+    'sale_portal_ingestion': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('BI_INGESTION_DB_NAME', ''),
+        'USER': os.environ.get('BI_INGESTION_DB_USER', ''),
+        'PASSWORD': os.environ.get('BI_INGESTION_DB_PASSWORD', ''),
+        'HOST': os.environ.get('BI_INGESTION_DB_HOST', ''),
+        'PORT': os.environ.get('BI_INGESTION_DB_PORT', ''),
+    }
 }
+
+DATABASE_ROUTERS = ['sale_portal.sale_portal_ingestion.dbrouters.DBRouter']
 
 # shop_cube table name
 DWH_DB_TABLE = os.environ.get('DWH_DB_TABLE', 'full_shop_cube')
@@ -249,6 +260,9 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'test@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'secret111')
 EMAIL_PORT = 587
 EMAIL_USER_RECEIVER = os.environ.get('EMAIL_USER_RECEIVER', 'long.daohai4894@gmail.com')
+
+# Get LIST_ADMINISTRATOR_EMAIL
+LIST_ADMINISTRATOR_EMAIL = os.environ.get('LIST_ADMINISTRATOR_EMAIL', 'longdh@vnpay.vn').split()
 
 # Internationalization
 LANGUAGE_CODE = 'vi'
