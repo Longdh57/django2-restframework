@@ -4,6 +4,7 @@ import logging
 from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 
 from sale_portal.area.models import Area
 from sale_portal.common.standard_response import successful_response, custom_response, Code
@@ -24,6 +25,8 @@ class ExchangePointPos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet)
         if self.action == 'list':
             permission_classes = get_user_permission_classes('exchange_point_pos365.list_exchange_point_pos365_config',
                                                              self.request)
+        else:
+            permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
