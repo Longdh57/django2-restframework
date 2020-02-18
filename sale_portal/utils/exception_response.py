@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied as exc_permission_denied
 from rest_framework.exceptions import PermissionDenied, AuthenticationFailed, NotAuthenticated, APIException
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
@@ -11,7 +12,10 @@ def custom_exception_handler(exc, context):
     if isinstance(exc, APIException):
         message = exc.detail
     else:
-        message = str(exc)
+        if isinstance(exc, exc_permission_denied):
+            message = 'Bạn không có quyền thực hiện hành động này.'
+        else:
+            message = str(exc)
 
     if isinstance(exc, NotAuthenticated):
         message = 'Bạn cần phải đăng nhập để thực hiện hành động này.'
