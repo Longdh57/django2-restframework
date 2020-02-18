@@ -1,0 +1,32 @@
+<h2 style="text-align: left">
+  Danh sách các shop bị dissable trong tháng {{ current_month }}.
+</h2>
+<table style="border: 1px solid black;">
+  <tr>
+    <th style="border: 1px solid black; text-align: center">ID cửa hàng</th>
+    <th style="border: 1px solid black; text-align: center">Merchant Brand</th>
+    <th style="border: 1px solid black; text-align: center">Ngày tạo</th>
+    <th style="border: 1px solid black; text-align: center">Ngày hủy</th>
+  </tr>
+  <tbody>
+  {% for shop in shops %}
+  <tr style="border: 1px solid black;">
+    <td style="border: 1px solid black; text-align: center">{{ shop.code }}</td>
+    <td style="border: 1px solid black; text-align: center">{{ shop.merchant__merchant_brand }}</td>
+    <td style="border: 1px solid black; text-align: center">{{ shop.created_date|date:"d-m-Y" }}</td>
+    <td style="border: 1px solid black; text-align: center">{{ shop.inactivated_date|date:"d-m-Y" }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p style="text-align: left">
+  Thông tin danh sách các Cửa hàng bị disable trong tháng {{ current_month }} và tháng {{ previous_month }} được đặt trong <strong style="color: #0aa7ef">file đính kèm</strong>
+</p>
+
+<hr width="40%" align="center" color="#500050"/>
+<p style="text-align: center">
+  <b> By VNpay SALE PORTAL.</b>
+</p>
+
+<p style='color:black;text-align: center'> Đây là email được gửi tự động hàng ngày từ hệ thống. Vui lòng không phản hồi lại email này  </p>
+<p style='color:red;text-align: center;font-weight: bold'> Chúc các SM ngủ ngon  </p>
