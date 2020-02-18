@@ -186,7 +186,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - username -- text
         - email -- text
         - status -- true/false (trạng thái)
-        - role: text in { 'ADMIN', 'AREA MANAGER', 'TEAM MANAGER', 'SALE' }
+        - role: text in { 'ADMIN', 'SALE MANAGER', 'SALE ADMIN', 'SALE LEADER', 'SALE', 'OTHER' }
     """
     serializer_class = AccountSerializer
     permission_classes = [PermissionIsAdmin]
@@ -212,7 +212,6 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             if role == ROLE_ADMIN:
                 queryset = queryset.filter(is_superuser=True)
             elif role == ROLE_OTHER:
-                staff_emails = Staff.objects.all().values('email')
                 queryset = queryset.filter(is_superuser=False).filter(groups__isnull=True)
             else:
                 queryset = queryset.filter(groups__name=role)
