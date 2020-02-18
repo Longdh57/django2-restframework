@@ -322,7 +322,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             return successful_response()
 
         except Exception as e:
-            logging.error('Create team exception: %s', e)
+            logging.error('Update team exception: %s', e)
             print(e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
 
