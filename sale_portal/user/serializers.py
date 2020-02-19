@@ -11,6 +11,8 @@ from django.utils import formats
 class UserSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
+    date_joined = serializers.SerializerMethodField()
+    area = serializers.SerializerMethodField()
 
     def get_permissions(self, user):
         permissions = []
@@ -20,6 +22,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_role(self, user):
         return user.get_role_name()
+
+    def get_date_joined(self, user):
+        return formats.date_format(user.date_joined, "SHORT_DATETIME_FORMAT") if user.date_joined else ''
+
+    def get_area(self, user):
+        data = []
+        for area in user.area_set.all():
+            data.append(area.name)
+        return data
 
     class Meta:
         model = get_user_model()
