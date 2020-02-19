@@ -190,7 +190,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - province_id -- number
         - district_id -- number
         - ward_id -- number
-        - status -- number in {0, 1, 2, 3, 4} = {Shop không có thông tin đường phố, Shop không có Terminal, Shop có khả năng trùng lặp, Shop đã hủy, Shop chưa được gán Sale}
+        - status -- number in {0, 1, 2, 3, 4, 5, 6} = {Shop không có thông tin đường phố, Shop đã hủy or không có Terminal, Shop chưa được gán Sale, Shop phát sinh 1 GD kỳ này, Shop phát sinh 2 GD kỳ này, Shop phát sinh trên 3 GD kỳ này, Shop không phát sinh GD}
         - from_date -- dd/mm/yyyy
         - to_date -- dd/mm/yyyy
     """
@@ -218,7 +218,15 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 shop_caring_lists = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP).values('shop')
                 queryset = Shop.objects.shop_active().filter(~Q(pk__in=shop_caring_lists))
             else:
-                return ''
+                if status == '3':
+                    shop_lists = ShopCube.objects.number_of_tran_this_week(value=1).values('shop_id')
+                elif status == '4':
+                    shop_lists = ShopCube.objects.number_of_tran_this_week(value=2).values('shop_id')
+                elif status == '5':
+                    shop_lists = ShopCube.objects.number_of_tran_this_week(value=3).values('shop_id')
+                else:
+                    shop_lists = ShopCube.objects.number_of_tran_this_week(value=0).values('shop_id')
+                queryset = Shop.objects.shop_active().filter(pk__in=shop_lists)
         else:
             queryset = Shop.objects.shop_active()
 
@@ -328,16 +336,11 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             },
             'shop_cube': {
                 'report_date': shop.shop_cube.report_date,
-                'number_of_tran': int(
-                    shop.shop_cube.number_of_tran) if shop.shop_cube.number_of_tran.isdigit() else None,
-                'number_of_tran_w_1_7': int(
-                    shop.shop_cube.number_of_tran_w_1_7) if shop.shop_cube.number_of_tran_w_1_7.isdigit() else None,
-                'number_of_tran_w_8_14': int(
-                    shop.shop_cube.number_of_tran_w_8_14) if shop.shop_cube.number_of_tran_w_8_14.isdigit() else None,
-                'number_of_tran_w_15_21': int(
-                    shop.shop_cube.number_of_tran_w_15_21) if shop.shop_cube.number_of_tran_w_15_21.isdigit() else None,
-                'number_of_tran_w_22_end': int(
-                    shop.shop_cube.number_of_tran_w_22_end) if shop.shop_cube.number_of_tran_w_22_end.isdigit() else None,
+                'number_of_tran': shop.shop_cube.number_of_tran,
+                'number_of_tran_w_1_7': shop.shop_cube.number_of_tran_w_1_7,
+                'number_of_tran_w_8_14': shop.shop_cube.number_of_tran_w_8_14,
+                'number_of_tran_w_15_21': shop.shop_cube.number_of_tran_w_15_21,
+                'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
             } if shop.shop_cube else None
         }
 
