@@ -377,14 +377,14 @@ def count_terminal_30_days_before_heatmap(request):
     today = date.today()
     date_list = []
     hour_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
-    for i in range(0, 31):
-        date_list.append((today - timedelta(days=i)).strftime("%d/%m/%Y"))
+    for i in range(0, 14):
+        date_list.append((today - timedelta(days=14) + timedelta(days=i)).strftime("%d/%m/%Y"))
 
     with connection.cursor() as cursor:
         cursor.execute('''
             select  count(*),date(created_date) as terminal_date, extract(hour from created_date) as terminal_hour
             from terminal
-            where created_date > current_date - interval '30 days'
+            where created_date > current_date - interval '14 days'
             group by terminal_date,terminal_hour
             order by date(created_date) asc
         ''')
