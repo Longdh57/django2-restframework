@@ -4,6 +4,7 @@ from mixer.backend.django import mixer
 from sale_portal.team.models import Team, TeamLog
 from sale_portal.team import TeamType, TeamLogType
 
+
 @pytest.mark.django_db
 def test_create_team():
     team = Team.objects.create(
