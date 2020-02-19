@@ -384,7 +384,7 @@ def count_terminal_30_days_before_heatmap(request):
         cursor.execute('''
             select  count(*),date(created_date) as terminal_date, extract(hour from created_date) as terminal_hour
             from terminal
-            where created_date > current_date - interval '14 days'
+            where created_date > current_date - interval '14 days' and created_date < current_date
             group by terminal_date,terminal_hour
             order by date(created_date) asc
         ''')
