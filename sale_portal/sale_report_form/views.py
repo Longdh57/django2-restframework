@@ -25,7 +25,7 @@ from sale_portal.utils import field_validator
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.utils.queryset import get_users_viewable_queryset, get_teams_viewable_queryset
+from sale_portal.utils.queryset import get_users_viewable_queryset
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -49,7 +49,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
         """
         purpose = self.request.query_params.get('purpose', None)
         shop_id = self.request.query_params.get('shop_id', None)
-        user = self.request.query_params.get('user', None)
+        staff_id = self.request.query_params.get('staff_id', None)
         team_id = self.request.query_params.get('team_id', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
@@ -64,9 +64,9 @@ class SaleReportViewSet(mixins.ListModelMixin,
             shop_id = format_string(shop_id)
             queryset = queryset.filter(shop_code=shop_id)
 
-        if user is not None and user != '':
-            user = format_string(user)
-            users = User.objects.filter(email__icontains=user)
+        if staff_id is not None and staff_id != '':
+            staff = Staff.objects.filter(pk=staff_id).first()
+            users = User.objects.filter(email=staff.email)
             queryset = queryset.filter(created_by__in=users)
 
         if team_id is not None and team_id != '':
@@ -493,13 +493,15 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
         team_id = self.request.query_params.get('team_id', None)
+        staff_id = self.request.query_params.get('staff_id', None)
+
         raw_query = get_raw_query_statistic(user=self.request.user, from_date=from_date, to_date=to_date,
-                                            team_id=team_id)
+                                            team_id=team_id, staff_id=staff_id)
         queryset = SaleReport.objects.raw(raw_query)
         return queryset
 
 
-def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=None):
+def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=None, staff_id=None):
     filter_time = ''
 
     if (from_date is None or from_date == '') and (to_date is None or to_date == ''):
@@ -510,7 +512,7 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
             filter_time += "and created_date >= '" + \
                            dt_datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S') + "'"
 
-        if to_date is not None or to_date == '':
+        if to_date is not None and to_date == '':
             filter_time += "and created_date <= '" + \
                            dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59' + "'"
 
@@ -521,6 +523,13 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
         users = users.filter(email__in=staff_emails)
 
     users_id = [x.id for x in users]
+    if staff_id is not None and staff_id != '':
+        staff = Staff.objects.filter(pk=staff_id).first()
+        user = User.objects.filter(email=staff.email)[0]
+        if user.id in users_id:
+            users_id = [user.id]
+        else:
+            users_id = []
     filter_user = 'and created_by_id in {}'.format(tuple(users_id)) if len(users_id) > 0 else 'and false'
     if filter_user.endswith(",)"):
         filter_user = filter_user[:-2] + ")"
@@ -648,7 +657,6 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
                           GROUP  BY created_by_id) AS data_statistic 
                       ON data_statistic.id = au.id; 
     ''' % (filter_time, filter_user)
-    print(raw_query)
     return raw_query
 
 
@@ -884,9 +892,10 @@ def get_statistic_data(request):
     from_date = request.query_params.get('from_date', None)
     to_date = request.query_params.get('to_date', None)
     team_id = request.GET.get('team_id', None)
+    staff_id = request.query_params.get('staff_id', None)
 
     raw_query = get_raw_query_statistic(request.user, from_date=from_date, to_date=to_date,
-                                        team_id=team_id)
+                                        team_id=team_id, staff_id=staff_id)
 
     if raw_query == '':
         return []
