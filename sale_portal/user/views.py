@@ -231,7 +231,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         areas = []
 
-        for item in user_info.area_set.all():
+        for item in user.area_set.all():
             area = {
                 'id': item.id,
                 'name': item.name,
