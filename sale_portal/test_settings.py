@@ -141,6 +141,7 @@ INSTALLED_APPS = [
     'sale_portal.merchant',
     'sale_portal.pos365',
     'sale_portal.qr_status',
+    'sale_portal.sale_portal_ingestion',
     'sale_portal.sale_report_form',
     'sale_portal.sale_promotion_form',
     'sale_portal.shop',

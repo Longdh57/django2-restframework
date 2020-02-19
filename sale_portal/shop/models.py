@@ -1,20 +1,21 @@
 import logging
 
+from django.db import models
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.search import SearchVectorField, SearchVector
-from django.db import models
 from django.db.models import Q, Count, Func, Subquery
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 
-from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
-from sale_portal.area.models import Area
-from sale_portal.merchant.models import Merchant
-from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
-from sale_portal.shop_cube.models import ShopCube
-from sale_portal.staff_care import StaffCareType
 from sale_portal.user.models import User
+from sale_portal.area.models import Area
+from sale_portal.staff.models import Staff
+from sale_portal.staff_care import StaffCareType
+from sale_portal.merchant.models import Merchant
+from sale_portal.shop_cube.models import ShopCube
+from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
+from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 
 
 class ShopQuerySet(models.QuerySet):
@@ -153,6 +154,12 @@ class Shop(models.Model):
         staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_SHOP).first()
         if staff_care is None:
             try:
+                staff = Staff.objects.filter(pk=staff_id).first()
+                if staff is None:
+                    raise Exception('Staff is not exist')
+                if staff.status != 1:
+                    raise Exception('Staff status not activate')
+
                 staff_care = self.staff_cares.create(
                     staff_id=staff_id,
                     merchant_id=None,
@@ -162,6 +169,7 @@ class Shop(models.Model):
                 return staff_care.staff
             except Exception as e:
                 logging.error('Create staff-shop exception: %s', e)
+                raise Exception('Create staff-shop exception: %s', e)
         else:
             raise Exception('Shop already exist a staff ')
 
@@ -170,6 +178,7 @@ class Shop(models.Model):
             remove_staff_care(self, StaffCareType.STAFF_SHOP, request)
         except Exception as e:
             logging.error('Delete staff-shop exception: %s', e)
+            raise Exception('Delete staff-shop exception: %s', e)
 
     def staff_of_chain_create(self, staff_id, request=None):
         staff_care = self.staff_cares.filter(type=StaffCareType.STAFF_OF_CHAIN_SHOP).first()
