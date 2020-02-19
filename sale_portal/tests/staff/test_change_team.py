@@ -2,6 +2,7 @@ import json
 import pytest
 
 from mixer.backend.django import mixer
+from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
 from sale_portal.staff import StaffTeamRoleType
@@ -100,20 +101,94 @@ def test_update_team_not_found(test_data, data, status_code, response_message):
     assert response_message in str(json.loads(response.content))
 
 
-# @pytest.mark.django_db
-# @pytest.mark.parametrize(('data', 'status_code', 'response_message'),
-#                          [({'staff_id': test_data['staff_have_team_id'],
-#                             'team_id': test_data['team_after_id']
-#                             }, 404, 'TEAM NOT FOUND')], indirect=True)
-# def test_create_data_invalid(test_data, data, status_code, response_message):
-#
-#     request = APIRequestFactory().post('/api/staffs/team', data=json.dumps(data), content_type='application/json')
-#     request.user = test_data['user']
-#
-#     response = change_staff_team(request=request)
-#
-#     assert response.status_code == status_code
-#     assert response_message in str(json.loads(response.content))
+@pytest.mark.django_db
+def test_add_team_invalid(test_data):
+    # ------------------------------ case 1 ----------------------------------
+    data = {
+        'staff_id': test_data['staff_have_team_id'],
+        'team_id': test_data['team_after_id']
+    }
+    request = APIRequestFactory().post('/api/staffs/team', data=json.dumps(data), content_type='application/json')
+    request.user = test_data['user']
+
+    response = change_staff_team(request=request)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Staff đang thuộc 1 Team khác' in str(json.loads(response.content))
+
+    # ------------------------------ case 1 ----------------------------------
+
+    data = {
+        'staff_id': test_data['staff_have_team_id'],
+        'team_id': test_data['team_before_id']
+    }
+    request = APIRequestFactory().post('/api/staffs/team', data=json.dumps(data), content_type='application/json')
+    request.user = test_data['user']
+
+    response = change_staff_team(request=request)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Staff đã thuộc team này từ trước' in str(json.loads(response.content))
+
+
+@pytest.mark.django_db
+def test_update_team_invalid(test_data):
+    # ------------------------------ case 1 ----------------------------------
+    data = {
+        'staff_id': test_data['staff_no_team_id'],
+        'team_id': test_data['team_after_id']
+    }
+    request = APIRequestFactory().put('/api/staffs/team', data=json.dumps(data), content_type='application/json')
+    request.user = test_data['user']
+
+    response = change_staff_team(request=request)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Staff đang không thuộc team nào, không thể chuyển Team' in str(json.loads(response.content))
+
+    # ------------------------------ case 1 ----------------------------------
+
+    data = {
+        'staff_id': test_data['staff_have_team_id'],
+        'team_id': test_data['team_before_id']
+    }
+    request = APIRequestFactory().put('/api/staffs/team', data=json.dumps(data), content_type='application/json')
+    request.user = test_data['user']
+
+    response = change_staff_team(request=request)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Staff đã thuộc team này từ trước' in str(json.loads(response.content))
+
+
+@pytest.mark.django_db
+def test_delete_team_invalid(test_data):
+    # ------------------------------ case 1 ----------------------------------
+    data = {
+        'staff_id': test_data['staff_no_team_id'],
+        'team_id': test_data['team_after_id']
+    }
+    request = APIRequestFactory().delete('/api/staffs/team', data=json.dumps(data), content_type='application/json')
+    request.user = test_data['user']
+
+    response = change_staff_team(request=request)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Staff đang không thuộc team nào, không thể xóa Team' in str(json.loads(response.content))
+
+    # ------------------------------ case 1 ----------------------------------
+
+    data = {
+        'staff_id': test_data['staff_have_team_id'],
+        'team_id': test_data['team_after_id']
+    }
+    request = APIRequestFactory().delete('/api/staffs/team', data=json.dumps(data), content_type='application/json')
+    request.user = test_data['user']
+
+    response = change_staff_team(request=request)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Staff không thuộc team hiện tại' in str(json.loads(response.content))
 
 
 @pytest.mark.django_db
