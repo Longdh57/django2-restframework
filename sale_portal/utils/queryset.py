@@ -98,6 +98,6 @@ def get_staffs_viewable_queryset(user):
 def get_users_viewable_queryset(user):
     if not user.is_superuser:
         staffs_viewable_email = [s.email for s in get_staffs_viewable_queryset(user)]
-        user_viewable = User.objects.all().filter(Q(email__in=staffs_viewable_email) & Q(pk=user.id))
+        user_viewable = User.objects.filter(Q(email__in=staffs_viewable_email) | Q(pk=user.id)).all()
         return user_viewable
     return User.objects.all()
