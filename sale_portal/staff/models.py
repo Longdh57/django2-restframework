@@ -105,7 +105,7 @@ class Staff(models.Model):
                     staff_id=kwargs.get('staff_id'),
                     team_id=kwargs.get('team_id'),
                     team_code=kwargs.get('team_code'),
-                    role=kwargs.get('role_id'),
+                    role=kwargs.get('role'),
                     type=StaffLogType.JOIN_TEAM,
                     description=kwargs.get('description'),
                     created_by=kwargs.get('user'),

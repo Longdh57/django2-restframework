@@ -229,8 +229,19 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         user_permissions = user.user_permissions.all()
         group_permissions = Permission.objects.filter(group__user=user).all()
 
+        areas = []
+
+        for item in user_info.area_set.all():
+            area = {
+                'id': item.id,
+                'name': item.name,
+                'code': item.code
+            }
+            areas.append(area)
+
         data = {
             'user': AccountSerializer(user).data,
+            'areas': areas,
             'user_permissions': PermissionSerializer(user_permissions, many=True).data,
             'group_permissions': PermissionSerializer(group_permissions, many=True).data,
         }
