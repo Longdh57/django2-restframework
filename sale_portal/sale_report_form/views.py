@@ -521,7 +521,7 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
         users = users.filter(email__in=staff_emails)
 
     users_id = [x.id for x in users]
-    filter_user = 'and created_by_id in {}'.format(tuple(users_id))
+    filter_user = 'and created_by_id in {}'.format(tuple(users_id)) if len(users_id) > 0 else 'and false'
     if filter_user.endswith(",)"):
         filter_user = filter_user[:-2] + ")"
     elif filter_user.endswith(", )"):
@@ -648,6 +648,7 @@ def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=Non
                           GROUP  BY created_by_id) AS data_statistic 
                       ON data_statistic.id = au.id; 
     ''' % (filter_time, filter_user)
+    print(raw_query)
     return raw_query
 
 
