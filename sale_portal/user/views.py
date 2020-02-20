@@ -274,7 +274,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             if is_active is None or is_active not in ['true', 'false']:
                 return custom_response(Code.INVALID_BODY, 'status user not valid')
 
-            if role_name is None or role_name == '':
+            if role_name is None or role_name == '' or not isinstance(role_name, str):
                 return custom_response(Code.INVALID_BODY, 'role_name not valid')
 
             if user_permissions is None or not isinstance(user_permissions, list):
