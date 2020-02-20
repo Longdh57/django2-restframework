@@ -55,7 +55,7 @@ class TerminalViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
 
-        queryset = Terminal.objects.terminal_register_vnpayment.all()
+        queryset = Terminal.objects.terminal_register_vnpayment()
 
         if self.request.user.is_superuser is False:
             if self.request.user.is_area_manager or self.request.user.is_sale_admin:
