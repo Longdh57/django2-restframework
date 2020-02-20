@@ -97,11 +97,11 @@ class QrTerminalContact(models.Model):
 
 class TerminalQueryset(models.QuerySet):
     def terminal_register_vnpayment(self):
-        """Return register_vnpayment terminals."""
+        """Trả về danh sách terminal cổng."""
         return self.filter(register_vnpayment=1)
 
     def terminal_un_register_vnpayment(self):
-        """Return un register_vnpayment terminals."""
+        """Trả về danh sách terminal ko phải cổng."""
         return self.exclude(register_vnpayment=1)
 
 
