@@ -84,6 +84,16 @@ class QrTerminalContact(models.Model):
     def __str__(self):
         return self.terminal_id
 
+    @property
+    def terminal_phone(self):
+        if self.phone is not None:
+            return self.phone
+        if self.phone1 is not None:
+            return self.phone1
+        if self.phone2 is not None:
+            return self.phone2
+        return None
+
 
 class TerminalQueryset(models.QuerySet):
     def terminal_register_vnpayment(self):
@@ -172,7 +182,8 @@ class Terminal(models.Model):
             qr_terminal = None
         return qr_terminal
 
-    def get_qr_terminal_contact(self):
+    @property
+    def qr_terminal_contact(self):
         try:
             qr_terminal_contact = QrTerminalContact.objects.filter(terminal_id=self.terminal_id).first()
         except QrTerminalContact.DoesNotExist:
