@@ -15,6 +15,7 @@ from django.template.loader import render_to_string
 
 from sale_portal.shop.models import Shop
 from sale_portal.user.models import User
+from sale_portal.shop import ShopActivateType
 from sale_portal.terminal.models import Terminal
 from sale_portal.cronjob.models import CronjobLog
 from sale_portal.utils.excel_util import check_or_create_excel_folder
@@ -25,9 +26,7 @@ class Command(BaseCommand):
 
     def get_count_shop_need_update(self):
         shops = Terminal.objects.filter(Q(shop_id__isnull=False)).exclude(status__exact=-1).values('shop_id')
-
-        count = Shop.objects.filter(activated=1).exclude(id__in=shops).count()
-
+        count = Shop.objects.filter(activated=ShopActivateType.ACTIVATE).exclude(id__in=shops).count()
         return count
 
     def get_first_date_of_previous_month(self):
@@ -56,7 +55,8 @@ class Command(BaseCommand):
             'code',
             'merchant__merchant_brand',
             'created_date',
-            'inactivated_date').order_by('-inactivated_date')
+            'inactivated_date'
+        ).order_by('-inactivated_date')
 
         return shops
 
@@ -118,7 +118,7 @@ class Command(BaseCommand):
         cron_log.save()
 
         try:
-            self.stdout.write(self.style.SUCCESS('Start update mapping shop-terminal processing...'))
+            self.stdout.write(self.style.SUCCESS('START PROCESSING...'))
 
             self.stdout.write('Start set shop_id = null where terminal has status = -1 ...')
             for terminal in Terminal.objects.filter(status=-1, shop_id__isnull=False).all():
@@ -126,15 +126,17 @@ class Command(BaseCommand):
                 terminal.save()
             self.stdout.write('Success set shop_id = null where terminal has status = -1')
 
-            self.stdout.write('Start set in_activate shop do not have any terminal ...')
+            self.stdout.write('Start set activated = 0 với shop không có terminal nào...')
             if self.get_count_shop_need_update() != 0:
                 shop_activates = Terminal.objects.filter(
                     Q(shop_id__isnull=False),
                     ~Q(status=-1)).all().values('shop_id')
                 list_shop_to_disable = Shop.objects.shop_active().filter(~Q(pk__in=shop_activates)).all()
                 for shop in list_shop_to_disable:
+                    shop.activated = ShopActivateType.DISABLE
+                    shop.save()
                     shop.staff_delete()
-            self.stdout.write('Success - Shop do not have terminals set: shop.activated=0 !')
+            self.stdout.write('Success - Đã set activated = 0 với shop không có terminal !')
 
             self.stdout.write('Start send email to Sale Manager... !')
             file_path = self.render_excel_disabled_shop(return_url=False)
@@ -146,7 +148,7 @@ class Command(BaseCommand):
             }
             html_message = render_to_string('shop/mail_template/disable_shop_list.html', ctx)
             mail = EmailMessage(
-                'Vnpay SALE PORTAL - Danh sách các shop bị dissable ' + date.today().strftime("%d/%m/%Y"),
+                '[SALE PORTAL] - Danh sách cửa hàng bị DISSABLE ngày ' + date.today().strftime("%d/%m/%Y"),
                 html_message,
                 settings.EMAIL_HOST_USER,
                 self.get_list_email()
@@ -156,7 +158,7 @@ class Command(BaseCommand):
             mail.send()
             self.stdout.write('Success - Send email to Sale Manager !')
 
-            self.stdout.write(self.style.SUCCESS('Finish update mapping shop-terminal processing!'))
+            self.stdout.write(self.style.SUCCESS('FINISH PROCESSING!'))
 
             cron_log.status = 1
 
