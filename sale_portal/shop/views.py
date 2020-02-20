@@ -306,6 +306,8 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'code': shop.code,
             'address': shop.address,
             'street': shop.street,
+            'phone': first_terminal.qr_terminal_contact.terminal_phone if (
+                    first_terminal and first_terminal.qr_terminal_contact) else None,
             'created_date': formats.date_format(shop.created_date,
                                                 "SHORT_DATETIME_FORMAT") if shop.created_date else '',
             'first_terminal_created_date': formats.date_format(
