@@ -33,14 +33,16 @@ class Command(BaseCommand):
     def shop_list_action(self, db_name='sale_portal_ingestion'):
         self.stdout.write('Table shop_list processing...')
 
-        limit, offset = 1000, 0
+        limit, offset = 1500, 0
 
         shop_without_register_vnpayments = Terminal.objects.filter(
             Q(shop_id__isnull=False),
             ~Q(register_vnpayment=1)).values('shop_id').distinct()
 
-        count_shop = Shop.objects.order_by('id').filter(activated=ShopActivateType.ACTIVATE,
-                                                        id__in=shop_without_register_vnpayments).count()
+        count_shop = Shop.objects.filter(
+            activated=ShopActivateType.ACTIVATE,
+            pk__in=shop_without_register_vnpayments
+        ).count()
 
         # Truncate table shop_list before synchronize all data from MMS
         print('Truncate shop_list before processing')
@@ -52,33 +54,41 @@ class Command(BaseCommand):
                 activated=ShopActivateType.ACTIVATE,
                 id__in=shop_without_register_vnpayments)[offset:(offset + limit)]
 
-            objs = (ShopList(
-                shop_id=item.code,
-                shop_province_code=item.province.province_code if item.province is not None else None,
-                shop_province_name=item.province.province_name if item.province is not None else None,
-                shop_district_code=item.district.district_code if item.district is not None else None,
-                shop_district_name=item.district.district_name if item.district is not None else None,
-                shop_ward_code=item.wards.wards_code if item.wards is not None else None,
-                shop_ward_name=item.wards.wards_name if item.wards is not None else None,
-                shop_area=item.street,
-                shop_address=item.address,
-                merchant_code=item.merchant.merchant_code if item.merchant is not None else None,
-                merchant_brand=item.merchant.merchant_brand if item.merchant is not None else None,
-                department_name=item.team.code if item.team is not None else None,
-                sale_name=item.staff.full_name if item.staff is not None else None,
-                sale_email=item.staff.email if item.staff is not None else None,
-                merchant_group_bussiness_type=item.merchant.get_type().type_code if item.merchant.get_type() is not None else None,
-                status='Chăm sóc' if item.take_care_status == 1 else 'Không chăm sóc',
-                shop_created_date=item.created_date,
-                longitude=item.longitude,
-                latitude=item.latitude
-            ) for item in shops)
+            objs = []
+
+            for item in shops:
+                staff = item.staff
+                merchant = item.merchant
+
+                objs.append(
+                    ShopList(
+                        shop_id=item.code,
+                        shop_province_code=item.province.province_code if item.province is not None else None,
+                        shop_province_name=item.province.province_name if item.province is not None else None,
+                        shop_district_code=item.district.district_code if item.district is not None else None,
+                        shop_district_name=item.district.district_name if item.district is not None else None,
+                        shop_ward_code=item.wards.wards_code if item.wards is not None else None,
+                        shop_ward_name=item.wards.wards_name if item.wards is not None else None,
+                        shop_area=item.street,
+                        shop_address=item.address,
+                        merchant_code=merchant.merchant_code if merchant is not None else None,
+                        merchant_brand=merchant.merchant_brand if merchant is not None else None,
+                        department_name=item.team.code if item.team is not None else None,
+                        sale_name=staff.full_name if staff is not None else None,
+                        sale_email=staff.email if staff is not None else None,
+                        merchant_group_bussiness_type=merchant.get_type().type_code if merchant.get_type() is not None else None,
+                        status='Chăm sóc' if item.take_care_status == 1 else 'Không chăm sóc',
+                        shop_created_date=item.created_date,
+                        longitude=item.longitude,
+                        latitude=item.latitude
+                    )
+                )
 
             batch = list(islice(objs, limit))
 
             ShopList.objects.using(db_name).bulk_create(batch, limit)
 
-            print('ShopList synchronize processing. Row: ', offset)
+            print(f'ShopList synchronize processing. Row: {offset}/{count_shop}')
 
             offset = offset + limit
 
@@ -90,7 +100,7 @@ class Command(BaseCommand):
 
         self.stdout.write('Table mid_tid_shop processing...')
 
-        limit, offset = 1000, 0
+        limit, offset = 1500, 0
 
         count_terminal = Terminal.objects.filter(Q(shop_id__isnull=False), ~Q(register_vnpayment=1)).count()
 
@@ -100,9 +110,10 @@ class Command(BaseCommand):
             cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(MidTidShop._meta.db_table))
 
         while offset < count_terminal:
-            terminals = Terminal.objects.order_by('id').filter(
+            terminals = Terminal.objects.filter(
                 Q(shop_id__isnull=False),
-                ~Q(register_vnpayment=1))[offset:(offset + limit)]
+                ~Q(register_vnpayment=1)
+            ).order_by('id')[offset:(offset + limit)]
 
             objs = (MidTidShop(
                 terminal_id=item.terminal_id,
@@ -116,7 +127,7 @@ class Command(BaseCommand):
 
             MidTidShop.objects.using(db_name).bulk_create(batch, limit)
 
-            print('MidTidShop synchronize processing. Row: ', offset)
+            print(f'MidTidShop synchronize processing. Row: {offset}/{count_terminal}')
 
             offset = offset + limit
 
