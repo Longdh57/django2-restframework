@@ -206,15 +206,15 @@ class Merchant(models.Model):
         number_of_tran_w_22_end = 0
 
         for shop_cube in shop_cubes:
-            if shop_cube.number_of_tran.isdigit():
+            if shop_cube.number_of_tran:
                 number_of_tran = number_of_tran + int(shop_cube.number_of_tran)
-            if shop_cube.number_of_tran_w_1_7.isdigit():
+            if shop_cube.number_of_tran_w_1_7:
                 number_of_tran_w_1_7 = number_of_tran_w_1_7 + int(shop_cube.number_of_tran_w_1_7)
-            if shop_cube.number_of_tran_w_8_14.isdigit():
+            if shop_cube.number_of_tran_w_8_14:
                 number_of_tran_w_8_14 = number_of_tran_w_8_14 + int(shop_cube.number_of_tran_w_8_14)
-            if shop_cube.number_of_tran_w_15_21.isdigit():
+            if shop_cube.number_of_tran_w_15_21:
                 number_of_tran_w_15_21 = number_of_tran_w_15_21 + int(shop_cube.number_of_tran_w_15_21)
-            if shop_cube.number_of_tran_w_22_end.isdigit():
+            if shop_cube.number_of_tran_w_22_end:
                 number_of_tran_w_22_end = number_of_tran_w_22_end + int(shop_cube.number_of_tran_w_22_end)
 
         merchant_cube = {
