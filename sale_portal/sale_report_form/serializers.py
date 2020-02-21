@@ -8,6 +8,7 @@ from sale_portal.staff.models import Staff
 class SaleReportSerializer(serializers.ModelSerializer):
     created_by = serializers.SerializerMethodField()
     merchant = serializers.SerializerMethodField()
+    shop_name = serializers.SerializerMethodField()
     created_date = serializers.SerializerMethodField()
     updated_date = serializers.SerializerMethodField()
 
@@ -47,6 +48,10 @@ class SaleReportSerializer(serializers.ModelSerializer):
                 }
         return None
 
+    def get_shop_name(self, sale_report):
+        shop = sale_report.get_shop()
+        return shop.name if shop else ''
+
     def get_created_date(self, sale_report):
         return formats.date_format(sale_report.created_date,
                                    "SHORT_DATETIME_FORMAT") if sale_report.created_date else ''
@@ -75,6 +80,7 @@ class SaleReportSerializer(serializers.ModelSerializer):
             'new_using_application',
             'shop_code',
             'shop_status',
+            'shop_name',
             'cessation_of_business_note',
             'cessation_of_business_image',
             'customer_care_posm',
