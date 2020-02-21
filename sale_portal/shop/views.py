@@ -1,5 +1,4 @@
 import itertools
-import sys
 import os
 import time
 import xlsxwriter
@@ -418,27 +417,27 @@ def render_excel(request=None, return_url=True):
     worksheet.write('N1', 'Ngày tạo', merge_format)
     worksheet.freeze_panes(1, 0)
 
-    shops = get_shop_exports(request)
-
-    print("sjdhfksdhfkjshkjfhskjd")
-
-    print(len(shops))
+    shop_list = get_shop_exports(request)
 
     row_num = 1
-    for item in shops:
+    for item in shop_list.all():
+        shop_cube = ShopCube.objects.filter(shop_id=item.pk).order_by('-report_date').first()
+
+        staff_id = StaffCare.objects.filter(shop=item, type=StaffCareType.STAFF_SHOP).values('staff')
+        staff = Staff.objects.filter(pk=staff_id[0]['staff']).first() if staff_id else None
         worksheet.write(row_num, 0, item.id)
-        worksheet.write(row_num, 1, item.merchant_brand if item.merchant_brand else '')
-        worksheet.write(row_num, 2, item.staff_email if item.staff_email else '')
-        worksheet.write(row_num, 3, item.team_code if item.team_code else '')
-        worksheet.write(row_num, 4, item.province_name if item.province_name else '')
-        worksheet.write(row_num, 5, item.district_name if item.district_name else '')
-        worksheet.write(row_num, 6, item.wards_name if item.wards_name else '')
+        worksheet.write(row_num, 1, item.merchant.merchant_brand if item.merchant else '')
+        worksheet.write(row_num, 2, staff.email if staff else '')
+        worksheet.write(row_num, 3, staff.team.code if staff and staff.team else '')
+        worksheet.write(row_num, 4, item.province.province_name if item.province else '')
+        worksheet.write(row_num, 5, item.district.district_name if item.district else '')
+        worksheet.write(row_num, 6, item.wards.wards_name if item.wards else '')
         worksheet.write(row_num, 7, item.address if item.address else '')
-        worksheet.write(row_num, 8, item.count_ter if item.count_ter else 0)
-        worksheet.write(row_num, 9, item.k1 if item.k1 else 0)
-        worksheet.write(row_num, 10, item.k2 if item.k2 else 0)
-        worksheet.write(row_num, 11, item.k3 if item.k3 else 0)
-        worksheet.write(row_num, 12, item.k4 if item.k4 else 0)
+        worksheet.write(row_num, 8, item.terminals.count())
+        worksheet.write(row_num, 9, shop_cube.number_of_tran_w_1_7 if shop_cube else 0)
+        worksheet.write(row_num, 10, shop_cube.number_of_tran_w_8_14 if shop_cube else 0)
+        worksheet.write(row_num, 11, shop_cube.number_of_tran_w_15_21 if shop_cube else 0)
+        worksheet.write(row_num, 12, shop_cube.number_of_tran_w_22_end if shop_cube else 0)
         worksheet.write(row_num, 13,
                         formats.date_format(item.created_date, "SHORT_DATETIME_FORMAT") if item.created_date else '')
 
@@ -524,24 +523,25 @@ def get_shop_exports(request):
         queryset = queryset.filter(
             created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
-    if len(queryset) > 10000:
+    if len(queryset) > 2000:
         raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
 
     if len(queryset) == 0:
         return Shop.objects.none()
 
-    shop_ids = '('
+    return queryset
 
-    for shop in queryset.values('id'):
-        shop_ids += str(shop['id']) + ','
-    shop_ids = shop_ids[:-1]
-    shop_ids += ')'
+    # shop_ids = '('
+    #
+    # for shop in queryset.values('id'):
+    #     shop_ids += str(shop['id']) + ','
+    # shop_ids = shop_ids[:-1]
+    # shop_ids += ')'
+    #
+    # sql_path = '/shop/management/sql_query/export_shop.txt'
+    # f = open(os.path.normpath(os.path.join(os.path.dirname(__file__), '..')) + sql_path, 'r')
+    # raw_query = f.read()
+    # raw_query += ' where s.id in ' + shop_ids
+    #
+    # return Shop.objects.raw(raw_query)
 
-    print(shop_ids)
-
-    sql_path = '/shop/management/sql_query/export_shop.txt'
-    f = open(os.path.normpath(os.path.join(os.path.dirname(__file__), '..')) + sql_path, 'r')
-    raw_query = f.read()
-    raw_query += ' where s.id in ' + shop_ids
-
-    return Shop.objects.raw(raw_query)
