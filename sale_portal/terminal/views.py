@@ -12,6 +12,7 @@ from django.utils import formats
 from django.utils.html import conditional_escape
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import APIException
 
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
@@ -483,35 +484,29 @@ def render_excel(request=None, return_url=True):
     worksheet.write('R1', 'Team', merge_format)
     worksheet.freeze_panes(1, 0)
 
-    terminals = get_queryset_terminal(request)
-
-    if len(terminals) > 2000:
-        return 'Số lượng bản ghi lớn hơn 2000, không thể xuất dữ liệu'
+    terminals = get_terminal_exports(request)
 
     row_num = 1
-    for terminal in terminals:
-        staff_id = StaffCare.objects.filter(shop=terminal.shop, type=StaffCareType.STAFF_SHOP).values('staff') if terminal.shop else None
-        staff = Staff.objects.filter(pk=staff_id[0]['staff']).first() if staff_id else None
-
-        worksheet.write(row_num, 0, terminal.merchant.merchant_code if terminal.merchant else '')
-        worksheet.write(row_num, 1, terminal.merchant.merchant_brand if terminal.merchant else '')
-        worksheet.write(row_num, 2, terminal.merchant.merchant_name if terminal.merchant else '')
-        worksheet.write(row_num, 3, terminal.terminal_id)
-        worksheet.write(row_num, 4, terminal.terminal_name)
-        worksheet.write(row_num, 5, terminal.business_address)
-        worksheet.write(row_num, 6, terminal.province_code if terminal.province_code else '')
-        worksheet.write(row_num, 7, terminal.get_province().province_name if terminal.province_code and terminal.get_province() else '')
-        worksheet.write(row_num, 8, terminal.district_code if terminal.district_code else '')
-        worksheet.write(row_num, 9, terminal.get_district().district_name if terminal.district_code and terminal.get_district() else '')
-        worksheet.write(row_num, 10, terminal.wards_code if terminal.wards_code else '')
-        worksheet.write(row_num, 11, terminal.get_wards().wards_name if terminal.wards_code and terminal.get_wards() else '')
+    for item in terminals:
+        worksheet.write(row_num, 0, item.merchant_code if item.merchant_code else '')
+        worksheet.write(row_num, 1, item.merchant_brand if item.merchant_brand else '')
+        worksheet.write(row_num, 2, item.merchant_name if item.merchant_name else '')
+        worksheet.write(row_num, 3, item.terminal_id)
+        worksheet.write(row_num, 4, item.terminal_name)
+        worksheet.write(row_num, 5, item.business_address)
+        worksheet.write(row_num, 6, item.province_code if item.province_code else '')
+        worksheet.write(row_num, 7, item.province_name if item.province_name else '')
+        worksheet.write(row_num, 8, item.district_code if item.district_code else '')
+        worksheet.write(row_num, 9, item.district_name if item.district_name else '')
+        worksheet.write(row_num, 10, item.wards_code if item.wards_code else '')
+        worksheet.write(row_num, 11, item.wards_name if item.wards_name else '')
         worksheet.write(row_num, 12,
-                        formats.date_format(terminal.created_date, "SHORT_DATETIME_FORMAT") if terminal.created_date else '')
-        worksheet.write(row_num, 13, terminal.shop.code if terminal.shop else '')
-        worksheet.write(row_num, 14, terminal.shop.name if terminal.shop else '')
-        worksheet.write(row_num, 15, terminal.shop.street if terminal.shop else '')
-        worksheet.write(row_num, 16, staff.email if staff else '')
-        worksheet.write(row_num, 17, staff.team.code if staff and staff.team else '')
+                        formats.date_format(item.created_date, "SHORT_DATETIME_FORMAT") if item.created_date else '')
+        worksheet.write(row_num, 13, item.shop_code if item.shop_code else '')
+        worksheet.write(row_num, 14, item.shop_name if item.shop_name else '')
+        worksheet.write(row_num, 15, item.shop_address if item.shop_address else '')
+        worksheet.write(row_num, 16, item.staff_email if item.staff_email else '')
+        worksheet.write(row_num, 17, item.team_code if item.team_code else '')
 
         row_num += 1
 
@@ -522,7 +517,7 @@ def render_excel(request=None, return_url=True):
     return settings.MEDIA_ROOT + '/excel/terminal/' + file_name
 
 
-def get_queryset_terminal(request):
+def get_terminal_exports(request):
     queryset = Terminal.objects.terminal_un_register_vnpayment()
 
     if request.user.is_superuser is False:
@@ -590,4 +585,20 @@ def get_queryset_terminal(request):
         queryset = queryset.filter(
             created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
-    return queryset
+    if len(queryset) > 10000:
+        raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
+
+    terminal_ids = '('
+
+    for terminal in queryset.values('id'):
+        terminal_ids += str(terminal['id']) + ','
+    terminal_ids = terminal_ids[:-1]
+    terminal_ids += ')'
+
+    sql_path = '/terminal/management/sql_query/export_terminal.txt'
+    f = open(os.path.normpath(os.path.join(os.path.dirname(__file__), '..')) + sql_path, 'r')
+    raw_query = f.read()
+    raw_query += ' where t.id in ' + terminal_ids
+
+    return Terminal.objects.raw(raw_query)
+
