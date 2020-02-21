@@ -1,3 +1,6 @@
+import os
+import time
+import xlsxwriter
 import logging
 from datetime import datetime, date, timedelta
 
@@ -13,6 +16,7 @@ from rest_framework.decorators import api_view
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
 from sale_portal.team import TeamType
+from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 from .models import Terminal
@@ -406,3 +410,177 @@ def count_terminal_30_days_before_heatmap(request):
         'date_list': date_list,
         'hour_list': hour_list
     })
+
+
+@api_view(['GET'])
+@login_required
+@permission_required('terminal.terminal_export', raise_exception=True)
+def export(request):
+    """
+        API export data Terminal \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - shop_id -- text
+        - terminal_id -- text
+        - terminal_name -- text
+        - merchant_id -- number
+        - staff_id -- number
+        - team_id -- number
+        - province_code -- text
+        - district_code -- text
+        - ward_code -- text
+        - status -- number in {-1,1,2,3,4,5,6}
+        - from_date -- dd/mm/yyyy
+        - to_date -- dd/mm/yyyy
+    """
+
+    file_path = render_excel(request)
+
+    return successful_response(file_path)
+
+
+@login_required
+def render_excel(request=None, return_url=True):
+    check_or_create_excel_folder()
+
+    if not os.path.exists(settings.MEDIA_ROOT + '/excel/terminal'):
+        os.mkdir(os.path.join(settings.MEDIA_ROOT + '/excel', 'terminal'))
+
+    file_name = 'terminal' + str(int(time.time())) + '.xlsx'
+    workbook = xlsxwriter.Workbook(settings.MEDIA_ROOT + '/excel/terminal/' + file_name)
+    worksheet = workbook.add_worksheet('DANH SÁCH TERMINAL')
+
+    # ------------------- font style -----------------------
+    merge_format = workbook.add_format({
+        'bold': 1,
+        'border': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'fg_color': '#74beff',
+        'font_color': '#ffffff',
+    })
+
+    # ------------------- header -----------------------
+    worksheet.write('A1', 'Merchant Code', merge_format)
+    worksheet.write('B1', 'Merchant Brand', merge_format)
+    worksheet.write('C1', 'Merchant Name', merge_format)
+    worksheet.write('D1', 'Terminal ID', merge_format)
+    worksheet.write('E1', 'Terminal Name', merge_format)
+    worksheet.write('F1', 'Địa chỉ', merge_format)
+    worksheet.write('G1', 'Mã Tỉnh thành', merge_format)
+    worksheet.write('H1', 'Tỉnh thành', merge_format)
+    worksheet.write('I1', 'Mã Quận huyện', merge_format)
+    worksheet.write('J1', 'Quận huyện', merge_format)
+    worksheet.write('K1', 'Mã Phường xã', merge_format)
+    worksheet.write('L1', 'Phường xã', merge_format)
+    worksheet.write('M1', 'Ngày tạo', merge_format)
+    worksheet.write('N1', 'Shop Code', merge_format)
+    worksheet.write('O1', 'Shop Name', merge_format)
+    worksheet.write('P1', 'Shop Street', merge_format)
+    worksheet.write('Q1', 'Nhân viên (Phụ trách Shop)', merge_format)
+    worksheet.write('R1', 'Team', merge_format)
+    worksheet.freeze_panes(1, 0)
+
+    terminals = get_queryset_terminal(request).all()
+
+    row_num = 1
+    for terminal in terminals:
+        staff = StaffCare.objects.filter(shop=terminal.shop, type=StaffCareType.STAFF_SHOP).first() if terminal.shop else None
+
+        worksheet.write(row_num, 0, terminal.merchant.merchant_code if terminal.merchant else '')
+        worksheet.write(row_num, 1, terminal.merchant.merchant_brand if terminal.merchant else '')
+        worksheet.write(row_num, 2, terminal.merchant.merchant_name if terminal.merchant else '')
+        worksheet.write(row_num, 3, terminal.terminal_id)
+        worksheet.write(row_num, 4, terminal.terminal_name)
+        worksheet.write(row_num, 5, terminal.business_address)
+        worksheet.write(row_num, 6, terminal.province_code if terminal.province_code else '')
+        worksheet.write(row_num, 7, terminal.get_province().province_name if terminal.province_code and terminal.get_province() else '')
+        worksheet.write(row_num, 8, terminal.district_code if terminal.district_code else '')
+        worksheet.write(row_num, 9, terminal.get_district().district_name() if terminal.district_code and terminal.get_district() else '')
+        worksheet.write(row_num, 10, terminal.wards_code if terminal.wards_code else '')
+        worksheet.write(row_num, 11, terminal.get_wards().wards_name if terminal.wards_code and terminal.get_wards() else '')
+        worksheet.write(row_num, 12,
+                        formats.date_format(terminal.created_date, "SHORT_DATETIME_FORMAT") if terminal.created_date else '')
+        worksheet.write(row_num, 13, terminal.shop.code if terminal.shop else '')
+        worksheet.write(row_num, 14, terminal.shop.name if terminal.shop else '')
+        worksheet.write(row_num, 15, terminal.shop.street if terminal.shop else '')
+        worksheet.write(row_num, 16, staff.email if staff else '')
+        worksheet.write(row_num, 17, staff.team.code if staff and staff.team else '')
+
+        row_num += 1
+
+    workbook.close()
+
+    if return_url:
+        return settings.MEDIA_URL + '/excel/team/' + file_name
+    return settings.MEDIA_ROOT + '/excel/team/' + file_name
+
+
+def get_queryset_terminal(request):
+    queryset = Terminal.objects.terminal_un_register_vnpayment()
+
+    if request.user.is_superuser is False:
+        if request.user.is_area_manager or request.user.is_sale_admin:
+            provinces = get_provinces_viewable_queryset(request.user)
+            queryset = queryset.filter(province_code__in=provinces.values('province_code'))
+        else:
+            shops = get_shops_viewable_queryset(request.user)
+            queryset = queryset.filter(shop__in=shops)
+
+    shop_id = request.query_params.get('shop_id', None)
+    terminal_id = request.query_params.get('terminal_id', None)
+    terminal_name = request.query_params.get('terminal_name', None)
+    merchant_id = request.query_params.get('merchant_id', None)
+    staff_id = request.query_params.get('staff_id', None)
+    team_id = request.query_params.get('team_id', None)
+    status = request.query_params.get('status', None)
+    province_code = request.query_params.get('province_code', None)
+    district_code = request.query_params.get('district_code', None)
+    ward_code = request.query_params.get('ward_code', None)
+    from_date = request.query_params.get('from_date', None)
+    to_date = request.query_params.get('to_date', None)
+
+    if shop_id is not None and shop_id != '':
+        shop_id = format_string(shop_id)
+        queryset = queryset.filter(shop_id=shop_id)
+
+    if terminal_id is not None and terminal_id != '':
+        terminal_id = format_string(terminal_id)
+        queryset = queryset.filter(terminal_id__icontains=terminal_id)
+
+    if terminal_name is not None and terminal_name != '':
+        terminal_name = format_string(terminal_name)
+        queryset = queryset.filter(terminal_name__icontains=terminal_name)
+
+    if merchant_id is not None and merchant_id != '':
+        queryset = queryset.filter(merchant_id=merchant_id)
+
+    if staff_id is not None and staff_id != '':
+        shops = StaffCare.objects.filter(staff_id=staff_id, type=StaffCareType.STAFF_SHOP).values('shop')
+        queryset = queryset.filter(shop__in=shops)
+
+    if team_id is not None and team_id != '':
+        staffs = Staff.objects.filter(team_id=team_id)
+        shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
+        queryset = queryset.filter(shop__in=shops)
+
+    if status is not None and status != '':
+        queryset = queryset.filter(status=int(status))
+
+    if province_code is not None and province_code != '':
+        queryset = queryset.filter(province_code=province_code)
+
+    if district_code is not None and district_code != '':
+        queryset = queryset.filter(district_code=district_code)
+
+    if ward_code is not None and ward_code != '':
+        queryset = queryset.filter(wards_code=ward_code)
+
+    if from_date is not None and from_date != '':
+        queryset = queryset.filter(
+            created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+
+    if to_date is not None and to_date != '':
+        queryset = queryset.filter(
+            created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
+
+    return queryset
