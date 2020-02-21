@@ -446,7 +446,7 @@ def render_excel(request=None, return_url=True):
     if not os.path.exists(settings.MEDIA_ROOT + '/excel/terminal'):
         os.mkdir(os.path.join(settings.MEDIA_ROOT + '/excel', 'terminal'))
 
-    file_name = 'terminal' + str(int(time.time())) + '.xlsx'
+    file_name = 'terminal_' + str(int(time.time())) + '.xlsx'
     workbook = xlsxwriter.Workbook(settings.MEDIA_ROOT + '/excel/terminal/' + file_name)
     worksheet = workbook.add_worksheet('DANH SÁCH TERMINAL')
 
@@ -584,6 +584,9 @@ def get_terminal_exports(request):
 
     if len(queryset) > 10000:
         raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
+
+    if len(queryset) == 0:
+        return Terminal.objects.none()
 
     terminal_ids = '('
 
