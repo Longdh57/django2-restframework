@@ -435,6 +435,9 @@ def export(request):
 
     file_path = render_excel(request)
 
+    if file_path == 'Số lượng bản ghi lớn hơn 2000, không thể xuất dữ liệu':
+        return custom_response(Code.BAD_REQUEST, file_path)
+
     return successful_response(file_path)
 
 
