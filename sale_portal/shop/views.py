@@ -524,7 +524,7 @@ def get_shop_exports(request):
             created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
     if len(queryset) > 2000:
-        raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
+        raise APIException(detail='Số lượng bản ghi quá lớn (>2.000), không thể xuất dữ liệu.', code=400)
 
     if len(queryset) == 0:
         return Shop.objects.none()
