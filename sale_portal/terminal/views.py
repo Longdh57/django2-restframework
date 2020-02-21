@@ -518,8 +518,8 @@ def render_excel(request=None, return_url=True):
     workbook.close()
 
     if return_url:
-        return settings.MEDIA_URL + '/excel/team/' + file_name
-    return settings.MEDIA_ROOT + '/excel/team/' + file_name
+        return settings.MEDIA_URL + '/excel/terminal/' + file_name
+    return settings.MEDIA_ROOT + '/excel/terminal/' + file_name
 
 
 def get_queryset_terminal(request):
