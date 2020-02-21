@@ -1,0 +1,16 @@
+select t.id as id, m.merchant_code, m.merchant_brand, m.merchant_name,
+t.terminal_id, t.terminal_name, t.business_address,
+t.province_code, qr_pro.province_name,
+t.district_code, qr_dis.district_name,
+t.wards_code, qr_war.wards_name,
+t.created_date, sh.code as shop_code, sh.name as shop_name, sh.address as shop_address,
+stt.email as staff_email, stt.team as team_code
+from terminal t
+left join merchant m on t.merchant_id = m.id
+left join qr_province qr_pro on qr_pro.province_code = t.province_code
+left join qr_district qr_dis on qr_dis.district_code = t.district_code
+left join qr_wards qr_war on qr_war.wards_code = t.wards_code
+left join shop sh on t.shop_id = sh.id
+left join (select st.email, tm.code as team, stc.shop_id from staff st
+				inner join team tm on st.team_id = tm.id
+				inner join staff_care stc on st.id = stc.staff_id and stc.type = 0) stt on stt.shop_id = t.shop_id
