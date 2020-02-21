@@ -480,11 +480,15 @@ def render_excel(request=None, return_url=True):
     worksheet.write('R1', 'Team', merge_format)
     worksheet.freeze_panes(1, 0)
 
-    terminals = get_queryset_terminal(request).all()
+    terminals = get_queryset_terminal(request)
+
+    if len(terminals) > 2000:
+        return 'Số lượng bản ghi lớn hơn 2000, không thể xuất dữ liệu'
 
     row_num = 1
     for terminal in terminals:
-        staff = StaffCare.objects.filter(shop=terminal.shop, type=StaffCareType.STAFF_SHOP).first() if terminal.shop else None
+        staff_id = StaffCare.objects.filter(shop=terminal.shop, type=StaffCareType.STAFF_SHOP).values('staff') if terminal.shop else None
+        staff = Staff.objects.filter(pk=staff_id[0]['staff']).first() if staff_id else None
 
         worksheet.write(row_num, 0, terminal.merchant.merchant_code if terminal.merchant else '')
         worksheet.write(row_num, 1, terminal.merchant.merchant_brand if terminal.merchant else '')
@@ -495,7 +499,7 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 6, terminal.province_code if terminal.province_code else '')
         worksheet.write(row_num, 7, terminal.get_province().province_name if terminal.province_code and terminal.get_province() else '')
         worksheet.write(row_num, 8, terminal.district_code if terminal.district_code else '')
-        worksheet.write(row_num, 9, terminal.get_district().district_name() if terminal.district_code and terminal.get_district() else '')
+        worksheet.write(row_num, 9, terminal.get_district().district_name if terminal.district_code and terminal.get_district() else '')
         worksheet.write(row_num, 10, terminal.wards_code if terminal.wards_code else '')
         worksheet.write(row_num, 11, terminal.get_wards().wards_name if terminal.wards_code and terminal.get_wards() else '')
         worksheet.write(row_num, 12,
