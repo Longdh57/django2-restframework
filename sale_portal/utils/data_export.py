@@ -3,12 +3,12 @@ from django.db import connection
 merchant_raw_query = '''select * from merchant
 '''
 
-terminal_raw_query = '''select t.id as id, m.merchant_code, m.merchant_brand, m.merchant_name,
-t.terminal_id, t.terminal_name, t.business_address,
-t.province_code, qr_pro.province_name,
-t.district_code, qr_dis.district_name,
-t.wards_code, qr_war.wards_name,
-t.created_date, sh.code as shop_code, sh.name as shop_name, sh.address as shop_address,
+terminal_raw_query = '''select t.id as id, t.terminal_id, t.terminal_name, t.business_address,
+m.merchant_code, m.merchant_brand,
+qr_pro.province_name,
+qr_dis.district_name,
+qr_war.wards_name,
+t.created_date, sh.code as shop_code, sh.name as shop_name,
 stt.email as staff_email, stt.team as team_code
 from terminal t
 left join merchant m on t.merchant_id = m.id
