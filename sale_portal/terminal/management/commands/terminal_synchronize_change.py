@@ -127,6 +127,11 @@ class Command(BaseCommand):
                         terminal.modify_date = qr_terminal.modify_date
                         terminal.save()
 
+                        if Terminal.objects.filter(shop=terminal.shop).count() == 1:
+                            shop = terminal.shop
+                            shop.address = qr_terminal.business_address
+                            shop.save()
+
                         updated += 1
                         if updated % 100 == 0:
                             print('Terminal updated: {}'.format(updated))
