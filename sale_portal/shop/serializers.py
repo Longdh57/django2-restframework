@@ -11,7 +11,7 @@ class MerchantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Merchant
         fields = (
-            'id', 'merchant_brand'
+            'id', 'merchant_code', 'merchant_brand'
         )
 
 
