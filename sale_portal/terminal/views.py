@@ -17,6 +17,7 @@ from rest_framework.exceptions import APIException
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
 from sale_portal.team import TeamType
+from sale_portal.utils.data_export import ExportType, get_data_export
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
@@ -485,25 +486,25 @@ def render_excel(request=None, return_url=True):
 
     row_num = 1
     for item in terminals:
-        worksheet.write(row_num, 0, item.merchant_code if item.merchant_code else '')
-        worksheet.write(row_num, 1, item.merchant_brand if item.merchant_brand else '')
-        worksheet.write(row_num, 2, item.merchant_name if item.merchant_name else '')
-        worksheet.write(row_num, 3, item.terminal_id)
-        worksheet.write(row_num, 4, item.terminal_name)
-        worksheet.write(row_num, 5, item.business_address)
-        worksheet.write(row_num, 6, item.province_code if item.province_code else '')
-        worksheet.write(row_num, 7, item.province_name if item.province_name else '')
-        worksheet.write(row_num, 8, item.district_code if item.district_code else '')
-        worksheet.write(row_num, 9, item.district_name if item.district_name else '')
-        worksheet.write(row_num, 10, item.wards_code if item.wards_code else '')
-        worksheet.write(row_num, 11, item.wards_name if item.wards_name else '')
+        worksheet.write(row_num, 0, item['merchant_code'] if item['merchant_code'] else '')
+        worksheet.write(row_num, 1, item['merchant_brand'] if item['merchant_brand'] else '')
+        worksheet.write(row_num, 2, item['merchant_name']if item['merchant_name'] else '')
+        worksheet.write(row_num, 3, item['terminal_id'])
+        worksheet.write(row_num, 4, item['terminal_name'])
+        worksheet.write(row_num, 5, item['business_address'] if item['business_address'] else '')
+        worksheet.write(row_num, 6, item['province_code'] if item['province_code'] else '')
+        worksheet.write(row_num, 7, item['province_name'] if item['province_name'] else '')
+        worksheet.write(row_num, 8, item['district_code'] if item['district_code'] else '')
+        worksheet.write(row_num, 9, item['district_name'] if item['district_name'] else '')
+        worksheet.write(row_num, 10, item['wards_code'] if item['wards_code'] else '')
+        worksheet.write(row_num, 11, item['wards_name'] if item['wards_name'] else '')
         worksheet.write(row_num, 12,
-                        formats.date_format(item.created_date, "SHORT_DATETIME_FORMAT") if item.created_date else '')
-        worksheet.write(row_num, 13, item.shop_code if item.shop_code else '')
-        worksheet.write(row_num, 14, item.shop_name if item.shop_name else '')
-        worksheet.write(row_num, 15, item.shop_address if item.shop_address else '')
-        worksheet.write(row_num, 16, item.staff_email if item.staff_email else '')
-        worksheet.write(row_num, 17, item.team_code if item.team_code else '')
+                        formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item['created_date'] else '')
+        worksheet.write(row_num, 13, item['shop_code'] if item['shop_code'] else '')
+        worksheet.write(row_num, 14, item['shop_name'] if item['shop_name'] else '')
+        worksheet.write(row_num, 15, item['shop_address'] if item['shop_address'] else '')
+        worksheet.write(row_num, 16, item['staff_email'] if item['staff_email'] else '')
+        worksheet.write(row_num, 17, item['team_code'] if item['team_code'] else '')
 
         row_num += 1
 
@@ -588,17 +589,5 @@ def get_terminal_exports(request):
     if len(queryset) == 0:
         return Terminal.objects.none()
 
-    terminal_ids = '('
-
-    for terminal in queryset.values('id'):
-        terminal_ids += str(terminal['id']) + ','
-    terminal_ids = terminal_ids[:-1]
-    terminal_ids += ')'
-
-    sql_path = '/terminal/management/sql_query/export_terminal.txt'
-    f = open(os.path.normpath(os.path.join(os.path.dirname(__file__), '..')) + sql_path, 'r')
-    raw_query = f.read()
-    raw_query += ' where t.id in ' + terminal_ids
-
-    return Terminal.objects.raw(raw_query)
+    return get_data_export(queryset, ExportType.TERMINAL)
 

@@ -419,10 +419,10 @@ def render_excel(request=None, return_url=True):
     worksheet.write('N1', 'Ngày tạo', merge_format)
     worksheet.freeze_panes(1, 0)
 
-    shop_list = get_shop_exports(request)
+    shops = get_shop_exports(request)
 
     row_num = 1
-    for item in shop_list:
+    for item in shops:
         worksheet.write(row_num, 0, item['id'])
         worksheet.write(row_num, 1, item['merchant_brand'] if item['merchant_brand'] else '')
         worksheet.write(row_num, 2, item['staff_email'] if item['staff_email'] else '')
