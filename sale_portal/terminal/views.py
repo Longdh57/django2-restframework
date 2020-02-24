@@ -491,7 +491,7 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 2, item['merchant_name']if item['merchant_name'] else '')
         worksheet.write(row_num, 3, item['terminal_id'])
         worksheet.write(row_num, 4, item['terminal_name'])
-        worksheet.write(row_num, 5, item['business_address'])
+        worksheet.write(row_num, 5, item['business_address'] if item['business_address'] else '')
         worksheet.write(row_num, 6, item['province_code'] if item['province_code'] else '')
         worksheet.write(row_num, 7, item['province_name'] if item['province_name'] else '')
         worksheet.write(row_num, 8, item['district_code'] if item['district_code'] else '')
