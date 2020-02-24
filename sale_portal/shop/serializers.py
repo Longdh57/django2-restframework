@@ -11,14 +11,13 @@ class MerchantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Merchant
         fields = (
-            'id', 'merchant_name', 'merchant_code', 'merchant_brand'
+            'id', 'merchant_brand'
         )
 
 
 class ShopSerializer(serializers.ModelSerializer):
     merchant = MerchantSerializer()
     staff = serializers.SerializerMethodField()
-    team = serializers.SerializerMethodField()
     province_name = serializers.SerializerMethodField()
     street = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
@@ -27,19 +26,17 @@ class ShopSerializer(serializers.ModelSerializer):
     shop_cube = serializers.SerializerMethodField()
 
     def get_staff(self, shop):
+        team = None
         staff = shop.staff
+        if staff is not None:
+            team = staff.team
         return {
             'staff_id': staff.id if staff else '',
-            'staff_code': staff.staff_code if staff else '',
-            'full_name': staff.full_name if staff else '',
             'email': staff.email if staff else '',
-        }
-
-    def get_team(self, shop):
-        team = shop.team
-        return {
-            'name': team.name if team else '',
-            'code': team.code if team else ''
+            'team': {
+                'name': team.name if team else '',
+                'code': team.code if team else ''
+            }
         }
 
     def get_province_name(self, shop):
@@ -80,7 +77,6 @@ class ShopSerializer(serializers.ModelSerializer):
             'code',
             'merchant',
             'staff',
-            'team',
             'province_name',
             'street',
             'address',

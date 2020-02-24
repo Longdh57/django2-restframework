@@ -203,6 +203,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = ShopSerializer
 
     def get_permissions(self):
+        permission_classes = []
         if self.action == 'list':
             permission_classes = get_user_permission_classes('shop.shop_list_data', self.request)
         if self.action == 'retrieve':
