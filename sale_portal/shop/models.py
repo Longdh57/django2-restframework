@@ -73,7 +73,7 @@ class Shop(models.Model):
     def __init__(self, *args, **kwargs):
         super(Shop, self).__init__(*args, **kwargs)
         self.__important_fields = ['name', 'take_care_status', 'merchant_id',
-                                   'province_id', 'district_id', 'wards_id', 'street', 'activated']
+                                   'province_id', 'district_id', 'wards_id', 'street', 'address', 'activated']
         for field in self.__important_fields:
             setattr(self, '__original_%s' % field, getattr(self, field))
 
