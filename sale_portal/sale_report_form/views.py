@@ -410,11 +410,13 @@ class SaleReportViewSet(mixins.ListModelMixin,
             image_outside = sale_report.image_outside.url if sale_report.image_outside else ''
             image_inside = sale_report.image_inside.url if sale_report.image_inside else ''
             image_store_cashier = sale_report.image_store_cashier.url if sale_report.image_store_cashier else ''
-            posm = ''
+            cessation_of_business_image = sale_report.cessation_of_business_image.url if sale_report.cessation_of_business_image else ''
+            posm = None
         else:
             image_outside = sale_report.image_outside_v2
             image_inside = sale_report.image_inside_v2
             image_store_cashier = sale_report.image_store_cashier_v2
+            cessation_of_business_image = sale_report.cessation_of_business_image_v2
             posm = sale_report.posm_v2
         data = {
             'purpose': sale_report.purpose,
@@ -450,7 +452,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
 
             # nghỉ kinh doanh
             'cessation_of_business_note': sale_report.cessation_of_business_note,
-            'cessation_of_business_image': sale_report.cessation_of_business_image.url if sale_report.cessation_of_business_image else '',
+            'cessation_of_business_image': cessation_of_business_image,
 
             # chăm sóc
             'customer_care_cashier_reward': sale_report.customer_care_cashier_reward,
