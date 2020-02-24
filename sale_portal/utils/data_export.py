@@ -61,9 +61,9 @@ def get_data_export(ids_queryset, type=None):
     if type == ExportType.MERCHANT:
         raw_query = merchant_raw_query + ' where m.id in ' + ids
     elif type == ExportType.TERMINAL:
-        raw_query = terminal_raw_query + ' where t.id in ' + ids
+        raw_query = terminal_raw_query + ' where t.id in ' + ids + ' order by t.created_date desc'
     elif type == ExportType.SHOP:
-        raw_query = shop_raw_query + ' where s.id in ' + ids
+        raw_query = shop_raw_query + ' where s.id in ' + ids + ' order by s.created_date desc'
     else:
         return []
 
