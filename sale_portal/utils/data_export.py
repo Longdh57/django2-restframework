@@ -17,7 +17,7 @@ left join qr_district qr_dis on qr_dis.district_code = t.district_code
 left join qr_wards qr_war on qr_war.wards_code = t.wards_code
 left join shop sh on t.shop_id = sh.id
 left join (select st.email, tm.code as team, stc.shop_id from staff st
-            inner join team tm on st.team_id = tm.id
+            left join team tm on st.team_id = tm.id
             inner join staff_care stc on st.id = stc.staff_id and stc.type = 0) stt on stt.shop_id = t.shop_id
 '''
 
@@ -29,7 +29,7 @@ s.created_date
 from shop s
 left join merchant m on s.merchant_id = m.id
 left join (select st.email, tm.code as team, stc.shop_id from staff st
-            inner join team tm on st.team_id = tm.id
+            left join team tm on st.team_id = tm.id
             inner join staff_care stc on st.id = stc.staff_id and stc.type = 0) stt on stt.shop_id = s.id
 left join qr_province qr_pro on qr_pro.id = s.province_id
 left join qr_district qr_dis on qr_dis.id = s.district_id
