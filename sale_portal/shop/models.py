@@ -20,8 +20,7 @@ from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWar
 
 class ShopQuerySet(models.QuerySet):
     def shop_active(self):
-        return self.annotate(count_terminals=Count('terminals')).filter(~Q(count_terminals=0)).filter(
-            activated=ShopActivateType.ACTIVATE)
+        return self.filter(activated=ShopActivateType.ACTIVATE)
 
     def shop_disable(self):
         return self.annotate(count_terminals=Count('terminals')).filter(
