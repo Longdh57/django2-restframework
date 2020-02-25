@@ -4,23 +4,25 @@ import xlsxwriter
 import logging
 from datetime import datetime
 
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
+from django.conf import settings
 from django.utils import formats
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
+from django.contrib.auth.decorators import login_required, permission_required
 
+from sale_portal.area.models import Area
+from sale_portal.merchant.models import Merchant
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.administrative_unit.models import QrProvince
+from sale_portal.merchant.serializers import MerchantSerializer
+from sale_portal.qr_status.views import get_merchant_status_list
+from sale_portal.utils.queryset import get_shops_viewable_queryset
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.data_export import get_data_export, ExportType
 from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.utils.queryset import get_shops_viewable_queryset
-from .models import Merchant
-from .serializers import MerchantSerializer
-from ..common.standard_response import successful_response, custom_response, Code
-from ..qr_status.views import get_merchant_status_list
-from ..utils.field_formatter import format_string
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 
 
 class MerchantViewSet(mixins.ListModelMixin,
@@ -28,9 +30,9 @@ class MerchantViewSet(mixins.ListModelMixin,
     """
         API get list Merchant \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
-        - merchant_code -- text
-        - merchant_brand -- text
-        - merchant_name -- text
+        - merchant_text -- text
+        - area_id -- interger
+        - province_id -- interger
         - status -- number in {-1,1,2,3,4,5,6}
         - from_date -- dd/mm/yyyy
         - to_date -- dd/mm/yyyy
@@ -38,6 +40,7 @@ class MerchantViewSet(mixins.ListModelMixin,
     serializer_class = MerchantSerializer
 
     def get_permissions(self):
+        permission_classes = []
         if self.action == 'list':
             permission_classes = get_user_permission_classes('merchant.merchant_list_data', self.request)
         if self.action == 'retrieve':
@@ -52,22 +55,30 @@ class MerchantViewSet(mixins.ListModelMixin,
             shops = get_shops_viewable_queryset(self.request.user)
             queryset = queryset.filter(pk__in=shops.values('merchant'))
 
-        merchant_code = self.request.query_params.get('merchant_code', None)
-        merchant_name = self.request.query_params.get('merchant_name', None)
-        merchant_brand = self.request.query_params.get('merchant_brand', None)
+        merchant_text = self.request.query_params.get('merchant_text', None)
+        area_id = self.request.query_params.get('area_id', None)
+        province_id = self.request.query_params.get('province_id', None)
         status = self.request.query_params.get('status', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 
-        if merchant_code is not None and merchant_code != '':
-            merchant_code = format_string(merchant_code)
-            queryset = queryset.filter(merchant_code__icontains=merchant_code)
-        if merchant_name is not None and merchant_name != '':
-            merchant_name = format_string(merchant_name)
-            queryset = queryset.filter(merchant_name__icontains=merchant_name)
-        if merchant_brand is not None and merchant_brand != '':
-            merchant_brand = format_string(merchant_brand)
-            queryset = queryset.filter(merchant_brand__icontains=merchant_brand)
+        if merchant_text is not None and merchant_text != '':
+            merchant_text = format_string(merchant_text)
+            queryset = queryset.filter(
+                Q(merchant_code__icontains=merchant_text) | Q(merchant_name__icontains=merchant_text) | Q(
+                    merchant_brand__icontains=merchant_text))
+        if area_id is not None and area_id != '':
+            if area_id.isdigit():
+                province_codes = []
+                area = Area.objects.get(pk=int(area_id))
+                provinces = area.get_provinces()
+                for item in provinces:
+                    province_codes.append(item.province_code)
+                queryset = queryset.filter(province_code__in=province_codes)
+        if province_id is not None and province_id != '':
+            if province_id.isdigit():
+                province = QrProvince.objects.get(pk=int(province_id))
+                queryset = queryset.filter(province_code=province.province_code)
         if status is not None and status != '':
             queryset = queryset.filter(status=status)
         if from_date is not None and from_date != '':

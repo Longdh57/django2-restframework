@@ -1,33 +1,34 @@
-import itertools
 import os
 import time
+import itertools
 import xlsxwriter
 from django.conf import settings
 from datetime import datetime, date
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.postgres.search import SearchQuery, SearchRank
+from unidecode import unidecode
+from django.utils import formats
 from django.db import connection
 from django.db.models import F, Q
-from django.shortcuts import get_object_or_404
-from django.utils import formats
 from rest_framework import viewsets, mixins
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
-from unidecode import unidecode
+from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.contrib.auth.decorators import login_required, permission_required
 
-from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.area.models import Area
 from sale_portal.shop.models import Shop
-from sale_portal.shop.serializers import ShopSerializer
-from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff.models import Staff
 from sale_portal.staff_care import StaffCareType
+from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff_care.models import StaffCare
+from sale_portal.utils.geo_utils import findDistance
+from sale_portal.shop.serializers import ShopSerializer
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.data_export import get_data_export, ExportType
 from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.utils.field_formatter import format_string
-from sale_portal.utils.geo_utils import findDistance
-from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
@@ -194,6 +195,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - merchant_id -- number
         - team_id -- number
         - staff_id -- number
+        - area_id -- number
         - province_id -- number
         - district_id -- number
         - ward_id -- number
@@ -250,6 +252,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         merchant_id = self.request.query_params.get('merchant_id', None)
         team_id = self.request.query_params.get('team_id', None)
         staff_id = self.request.query_params.get('staff_id', None)
+        area_id = self.request.query_params.get('area_id', None)
         province_id = self.request.query_params.get('province_id', None)
         district_id = self.request.query_params.get('district_id', None)
         ward_id = self.request.query_params.get('ward_id', None)
@@ -271,6 +274,12 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         if staff_id is not None and staff_id != '':
             shop_ids = StaffCare.objects.filter(staff=staff_id, type=StaffCareType.STAFF_SHOP).values('shop_id')
             queryset = queryset.filter(pk__in=shop_ids)
+
+        if area_id is not None and area_id != '':
+            if area_id.isdigit():
+                area = Area.objects.get(pk=int(area_id))
+                provinces = area.get_provinces()
+                queryset = queryset.filter(province__in=provinces)
 
         if province_id is not None and province_id != '':
             queryset = queryset.filter(province=province_id)

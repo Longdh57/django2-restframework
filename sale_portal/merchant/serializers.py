@@ -7,6 +7,7 @@ from sale_portal.merchant.models import Merchant
 class MerchantSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     staff = serializers.SerializerMethodField()
+    province_name = serializers.SerializerMethodField()
     staff_care = serializers.SerializerMethodField()
     created_date = serializers.SerializerMethodField()
     merchant_cube = serializers.SerializerMethodField()
@@ -22,6 +23,10 @@ class MerchantSerializer(serializers.ModelSerializer):
             "email": staff.email,
         } if staff else ''
 
+    def get_province_name(self, merchant):
+        province = merchant.province
+        return province.province_name if province else ''
+
     def get_staff_care(self, merchant):
         staff_care = merchant.staff_care
         return {
@@ -31,7 +36,7 @@ class MerchantSerializer(serializers.ModelSerializer):
         } if staff_care else ''
 
     def get_created_date(self, merchant):
-        return formats.date_format(merchant.created_date, "SHORT_DATETIME_FORMAT") if merchant.created_date else ''
+        return formats.date_format(merchant.created_date, "SHORT_DATE_FORMAT") if merchant.created_date else ''
 
     def get_merchant_cube(self, merchant):
         return merchant.get_merchant_cube()
@@ -52,6 +57,7 @@ class MerchantSerializer(serializers.ModelSerializer):
             'status',
             'department',
             'staff',
+            'province_name',
             'staff_care',
             'created_date',
             'modify_date',
