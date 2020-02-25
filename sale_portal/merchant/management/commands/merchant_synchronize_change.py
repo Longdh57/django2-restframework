@@ -32,6 +32,9 @@ class Command(BaseCommand):
                     'description': merchant.description,
                     'status': merchant.status,
                     'department': merchant.department,
+                    'province_code': qr_merchant.province_code,
+                    'district_code': qr_merchant.district_code,
+                    'wards_code': qr_merchant.wards_code,
                     'staff': merchant.staff,
                     'created_date': str(merchant.created_date),
                     'modify_date': str(merchant.modify_date),
@@ -47,6 +50,9 @@ class Command(BaseCommand):
                     'description': qr_merchant.description,
                     'status': qr_merchant.status,
                     'department': qr_merchant.department,
+                    'province_code': qr_merchant.province_code,
+                    'district_code': qr_merchant.district_code,
+                    'wards_code': qr_merchant.wards_code,
                     'staff': qr_merchant.staff,
                     'created_date': str(qr_merchant.created_date),
                     'modify_date': str(qr_merchant.modify_date),
@@ -74,6 +80,9 @@ class Command(BaseCommand):
             description=qr_merchant.description,
             status=qr_merchant.status,
             department=qr_merchant.department,
+            province_code=qr_merchant.province_code,
+            district_code=qr_merchant.district_code,
+            wards_code=qr_merchant.wards_code,
             staff=qr_merchant.staff,
             created_date=qr_merchant.created_date,
             modify_date=qr_merchant.modify_date,
@@ -115,6 +124,9 @@ class Command(BaseCommand):
                         merchant.description = qr_merchant.description
                         merchant.status = qr_merchant.status
                         merchant.department = qr_merchant.department
+                        merchant.province_code = qr_merchant.province_code
+                        merchant.district_code = qr_merchant.district_code
+                        merchant.wards_code = qr_merchant.wards_code
                         merchant.staff = qr_merchant.staff
                         merchant.created_date = qr_merchant.created_date
                         merchant.modify_date = qr_merchant.modify_date
