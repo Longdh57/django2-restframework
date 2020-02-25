@@ -239,7 +239,6 @@ class SaleReportViewSet(mixins.ListModelMixin,
             implement_career_guideline = datajson.get('implement_career_guideline')
             implement_confirm = datajson.get('implement_confirm')
             implement_new_address = datajson.get('new_address_input')
-            print(implement_new_address)
             standeeQr = datajson.get('standeeQr')
             stickerTable = datajson.get('stickerTable')
             wobbler = datajson.get('wobbler')
@@ -412,12 +411,24 @@ class SaleReportViewSet(mixins.ListModelMixin,
             image_store_cashier = sale_report.image_store_cashier.url if sale_report.image_store_cashier else ''
             cessation_of_business_image = sale_report.cessation_of_business_image.url if sale_report.cessation_of_business_image else ''
             posm = None
+            implement_merchant_view = sale_report.implement_merchant_view
+            implement_career_guideline = sale_report.implement_career_guideline
+            if implement_merchant_view is not None:
+                implement_merchant_view = '[' + implement_merchant_view + ']'
+                implement_merchant_view = implement_merchant_view.replace('0', "'Web'") \
+                    .replace('1', "'App'").replace('2', "'Other'")
+            if implement_career_guideline is not None:
+                implement_career_guideline = '[' + implement_career_guideline + ']'
+                implement_career_guideline = implement_career_guideline.replace('0', "'Thu ngân'") \
+                    .replace('1', "'Cửa hàng trưởng'")
         else:
             image_outside = sale_report.image_outside_v2
             image_inside = sale_report.image_inside_v2
             image_store_cashier = sale_report.image_store_cashier_v2
             cessation_of_business_image = sale_report.cessation_of_business_image_v2
             posm = sale_report.posm_v2
+            implement_merchant_view = sale_report.implement_merchant_view
+            implement_career_guideline = sale_report.implement_career_guideline
         data = {
             'purpose': sale_report.purpose,
             'longitude': sale_report.longitude,
@@ -459,8 +470,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
             'customer_care_transaction': sale_report.customer_care_transaction,
 
             # triển khai
-            'implement_merchant_view': sale_report.implement_merchant_view,
-            'implement_career_guideline': sale_report.implement_career_guideline,
+            'implement_merchant_view': implement_merchant_view,
+            'implement_career_guideline': implement_career_guideline,
             'implement_confirm': sale_report.implement_confirm,
             'implement_new_address': sale_report.implement_new_address
         }
