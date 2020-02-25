@@ -473,15 +473,16 @@ def render_excel(request=None, return_url=True):
     worksheet.write('B1', 'Terminal Name', merge_format)
     worksheet.write('C1', 'Merchant Code', merge_format)
     worksheet.write('D1', 'Merchant Brand', merge_format)
-    worksheet.write('E1', 'Shop Code', merge_format)
-    worksheet.write('F1', 'Shop Name', merge_format)
-    worksheet.write('G1', 'Nhân viên (Phụ trách Shop)', merge_format)
-    worksheet.write('H1', 'Team', merge_format)
-    worksheet.write('I1', 'Địa chỉ', merge_format)
-    worksheet.write('J1', 'Tỉnh thành', merge_format)
-    worksheet.write('K1', 'Quận huyện', merge_format)
-    worksheet.write('L1', 'Phường xã', merge_format)
-    worksheet.write('M1', 'Ngày tạo', merge_format)
+    worksheet.write('E1', 'Merchant Name', merge_format)
+    worksheet.write('F1', 'Sale ký HĐ MC', merge_format)
+    worksheet.write('G1', 'Shop Code', merge_format)
+    worksheet.write('H1', 'Nhân viên (Phụ trách Shop)', merge_format)
+    worksheet.write('I1', 'Team', merge_format)
+    worksheet.write('J1', 'Địa chỉ', merge_format)
+    worksheet.write('K1', 'Tỉnh thành', merge_format)
+    worksheet.write('L1', 'Quận huyện', merge_format)
+    worksheet.write('M1', 'Phường xã', merge_format)
+    worksheet.write('N1', 'Ngày tạo', merge_format)
     worksheet.freeze_panes(1, 0)
 
     terminals = get_terminal_exports(request)
@@ -489,20 +490,20 @@ def render_excel(request=None, return_url=True):
     row_num = 1
     for item in terminals:
         worksheet.write(row_num, 0, item['terminal_id'])
-        worksheet.write(row_num, 1, item['terminal_name'])
+        worksheet.write(row_num, 1, item['terminal_name'] if item['terminal_name'] else '')
         worksheet.write(row_num, 2, item['merchant_code'] if item['merchant_code'] else '')
         worksheet.write(row_num, 3, item['merchant_brand'] if item['merchant_brand'] else '')
-        worksheet.write(row_num, 4, item['shop_code'] if item['shop_code'] else '')
-        worksheet.write(row_num, 5, item['shop_name'] if item['shop_name'] else '')
-        worksheet.write(row_num, 6, item['staff_email'] if item['staff_email'] else '')
-        worksheet.write(row_num, 7, item['team_code'] if item['team_code'] else '')
-        worksheet.write(row_num, 8, item['business_address'] if item['business_address'] else '')
-        worksheet.write(row_num, 9, item['province_name'] if item['province_name'] else '')
-        worksheet.write(row_num, 10, item['district_name'] if item['district_name'] else '')
-        worksheet.write(row_num, 11, item['wards_name'] if item['wards_name'] else '')
-        worksheet.write(row_num, 12,
-                        formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item[
-                            'created_date'] else '')
+        worksheet.write(row_num, 4, item['merchant_name'] if item['merchant_name'] else '')
+        worksheet.write(row_num, 5, item['email'] if item['email'] else '')
+        worksheet.write(row_num, 6, item['shop_id'] if item['shop_id'] else '')
+        worksheet.write(row_num, 7, item['staff_email'] if item['staff_email'] else '')
+        worksheet.write(row_num, 8, item['team_code'] if item['team_code'] else '')
+        worksheet.write(row_num, 9, item['business_address'] if item['business_address'] else '')
+        worksheet.write(row_num, 10, item['province_name'] if item['province_name'] else '')
+        worksheet.write(row_num, 11, item['district_name'] if item['district_name'] else '')
+        worksheet.write(row_num, 12, item['wards_name'] if item['wards_name'] else '')
+        worksheet.write(row_num, 13,
+                        formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item['created_date'] else '')
 
         row_num += 1
 
