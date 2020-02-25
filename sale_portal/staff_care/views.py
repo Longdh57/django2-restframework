@@ -64,7 +64,6 @@ def import_sale_shop(request):
 
         if result == 'Thành công':
             row_update += 1
-            row_no_change += 1
         elif result == 'No change':
             row_no_change += 1
         else:
