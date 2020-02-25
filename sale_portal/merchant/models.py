@@ -117,6 +117,7 @@ class Merchant(models.Model):
         permissions = (
             ('merchant_list_data', 'Can get merchant list data'),
             ('merchant_detail', 'Can get merchant detail'),
+            ('merchant_export', 'Can export data merchant'),
         )
 
     def __str__(self):
