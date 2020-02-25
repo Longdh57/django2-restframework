@@ -486,16 +486,16 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 1, item['terminal_name'] if item['terminal_name'] else '')
         worksheet.write(row_num, 2, item['merchant_code'] if item['merchant_code'] else '')
         worksheet.write(row_num, 3, item['merchant_brand'] if item['merchant_brand'] else '')
-        worksheet.write(row_num, 3, item['merchant_name'] if item['merchant_name'] else '')
-        worksheet.write(row_num, 3, item['email'] if item['email'] else '')
-        worksheet.write(row_num, 4, item['shop_id'] if item['shop_id'] else '')
-        worksheet.write(row_num, 6, item['staff_email'] if item['staff_email'] else '')
-        worksheet.write(row_num, 7, item['team_code'] if item['team_code'] else '')
-        worksheet.write(row_num, 8, item['business_address'] if item['business_address'] else '')
-        worksheet.write(row_num, 9, item['province_name'] if item['province_name'] else '')
-        worksheet.write(row_num, 10, item['district_name'] if item['district_name'] else '')
-        worksheet.write(row_num, 11, item['wards_name'] if item['wards_name'] else '')
-        worksheet.write(row_num, 12,
+        worksheet.write(row_num, 4, item['merchant_name'] if item['merchant_name'] else '')
+        worksheet.write(row_num, 5, item['email'] if item['email'] else '')
+        worksheet.write(row_num, 6, item['shop_id'] if item['shop_id'] else '')
+        worksheet.write(row_num, 7, item['staff_email'] if item['staff_email'] else '')
+        worksheet.write(row_num, 8, item['team_code'] if item['team_code'] else '')
+        worksheet.write(row_num, 9, item['business_address'] if item['business_address'] else '')
+        worksheet.write(row_num, 10, item['province_name'] if item['province_name'] else '')
+        worksheet.write(row_num, 11, item['district_name'] if item['district_name'] else '')
+        worksheet.write(row_num, 12, item['wards_name'] if item['wards_name'] else '')
+        worksheet.write(row_num, 13,
                         formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item['created_date'] else '')
 
         row_num += 1
