@@ -1,7 +1,7 @@
-from django.contrib.auth.models import AbstractUser, UserManager, Group
 from django.db import models
-from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db.models.signals import post_save
+from django.contrib.auth.models import AbstractUser, UserManager, Group
 
 from sale_portal.staff import StaffTeamRoleType
 from sale_portal.user import ROLE_ADMIN, ROLE_OTHER, ROLE_SALE_LEADER, ROLE_SALE

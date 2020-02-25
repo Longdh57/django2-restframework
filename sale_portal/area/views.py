@@ -8,9 +8,9 @@ from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
 from sale_portal.area.serializers import AreaSerializer
-from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.administrative_unit.models import QrProvince
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.common.standard_response import successful_response, custom_response, Code
 
 
@@ -25,6 +25,7 @@ class AreaViewSet(mixins.ListModelMixin,
     serializer_class = AreaSerializer
 
     def get_permissions(self):
+        permission_classes = []
         if self.action == 'list':
             permission_classes = get_user_permission_classes('area.area_list_data', self.request)
         if self.action == 'retrieve':

@@ -9,6 +9,7 @@ from sale_portal.staff_care import StaffCareType
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.qr_status.models import QrStatus
 from sale_portal.staff.models import Staff, QrStaff
+from sale_portal.administrative_unit.models import QrProvince
 
 
 class QrMerchant(models.Model):
@@ -107,6 +108,9 @@ class Merchant(models.Model):
     staff = models.IntegerField(null=True, help_text='Equivalent with qr_merchant.staff')
     created_date = models.DateTimeField(null=True, help_text='Equivalent with qr_merchant.created_date')
     modify_date = models.DateTimeField(null=True, help_text='Equivalent with qr_merchant.modify_date')
+    province_code = models.CharField(max_length=10, null=True, help_text='Equivalent with qr_terminal.province_code')
+    district_code = models.CharField(max_length=10, null=True, help_text='Equivalent with qr_terminal.district_code')
+    wards_code = models.CharField(max_length=10, null=True, help_text='Equivalent with qr_terminal.wards_code')
     is_care = models.IntegerField(default=1)
     un_care_date = models.DateTimeField(null=True, blank=True)
 
@@ -150,6 +154,13 @@ class Merchant(models.Model):
         except Exception as e:
             logging.ERROR("Exception merchant model get_staff: {}".format(e))
             return None
+
+    @property
+    def province(self):
+        province = QrProvince.objects.filter(province_code=self.province_code).first()
+        if province is not None:
+            return province
+        return None
 
     @property
     def staff_care(self):

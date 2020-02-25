@@ -2,13 +2,14 @@ from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
-from rest_framework.decorators import api_view
 from unidecode import unidecode
+from rest_framework.decorators import api_view
 
+from sale_portal.area.models import Area
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.common.standard_response import successful_response
-from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 from sale_portal.utils.queryset import get_provinces_viewable_queryset
+from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 
 
 @api_view(['GET'])
@@ -17,6 +18,7 @@ def list_provinces(request):
     """
         API get list Province to select \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - area_id -- interger
         - code -- text
     """
     queryset = QrProvince.objects.values('id', 'province_code', 'province_name')
@@ -25,7 +27,17 @@ def list_provinces(request):
         provinces = get_provinces_viewable_queryset(request.user)
         queryset = queryset.filter(pk__in=provinces)
 
+    area_id = request.GET.get('area_id', None)
     code = request.GET.get('code', None)
+
+    if area_id is not None and area_id != '':
+        if area_id.isdigit():
+            province_codes = []
+            area = Area.objects.get(pk=int(area_id))
+            provinces = area.get_provinces()
+            for item in provinces:
+                province_codes.append(item.province_code)
+            queryset = queryset.filter(province_code__in=province_codes)
 
     if code is not None and code != '':
         code = unidecode(format_string(code))

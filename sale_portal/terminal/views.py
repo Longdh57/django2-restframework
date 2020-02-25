@@ -1,33 +1,34 @@
 import os
 import time
-import xlsxwriter
 import logging
+import xlsxwriter
 from datetime import datetime, date, timedelta
 
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from django.db import connection
 from django.db.models import Q
+from django.conf import settings
+from django.db import connection
 from django.utils import formats
-from django.utils.html import conditional_escape
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
+from django.utils.html import conditional_escape
 from rest_framework.exceptions import APIException
+from django.contrib.auth.decorators import login_required, permission_required
 
-from sale_portal.staff_care import StaffCareType
-from sale_portal.staff_care.models import StaffCare
 from sale_portal.team import TeamType
+from sale_portal.area.models import Area
+from sale_portal.shop.models import Shop
+from sale_portal.staff.models import Staff
+from sale_portal.staff_care import StaffCareType
+from sale_portal.terminal.models import Terminal
+from sale_portal.staff_care.models import StaffCare
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.terminal.serializers import TerminalSerializer
+from sale_portal.qr_status.views import get_terminal_status_list
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.data_export import ExportType, get_data_export
 from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
-from .models import Terminal
-from .serializers import TerminalSerializer
-from ..common.standard_response import successful_response, custom_response, Code
-from ..qr_status.views import get_terminal_status_list
-from ..shop.models import Shop
-from ..staff.models import Staff
-from ..utils.field_formatter import format_string
 
 
 class TerminalViewSet(mixins.ListModelMixin,
@@ -36,11 +37,11 @@ class TerminalViewSet(mixins.ListModelMixin,
         API get list Terminal \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - shop_id -- text
-        - terminal_id -- text
-        - terminal_name -- text
+        - terminal_text -- text
         - merchant_id -- number
         - staff_id -- number
         - team_id -- number
+        - area_id -- number
         - province_code -- text
         - district_code -- text
         - ward_code -- text
@@ -72,8 +73,8 @@ class TerminalViewSet(mixins.ListModelMixin,
                 queryset = queryset.filter(shop__in=shops)
 
         shop_id = self.request.query_params.get('shop_id', None)
-        terminal_id = self.request.query_params.get('terminal_id', None)
-        terminal_name = self.request.query_params.get('terminal_name', None)
+        terminal_text = self.request.query_params.get('terminal_text', None)
+        area_id = self.request.query_params.get('area_id', None)
         merchant_id = self.request.query_params.get('merchant_id', None)
         staff_id = self.request.query_params.get('staff_id', None)
         team_id = self.request.query_params.get('team_id', None)
@@ -88,13 +89,19 @@ class TerminalViewSet(mixins.ListModelMixin,
             shop_id = format_string(shop_id)
             queryset = queryset.filter(shop_id=shop_id)
 
-        if terminal_id is not None and terminal_id != '':
-            terminal_id = format_string(terminal_id)
-            queryset = queryset.filter(terminal_id__icontains=terminal_id)
+        if terminal_text is not None and terminal_text != '':
+            terminal_text = format_string(terminal_text)
+            queryset = queryset.filter(
+                Q(terminal_id__icontains=terminal_text) | Q(terminal_name__icontains=terminal_text))
 
-        if terminal_name is not None and terminal_name != '':
-            terminal_name = format_string(terminal_name)
-            queryset = queryset.filter(terminal_name__icontains=terminal_name)
+        if area_id is not None and area_id != '':
+            if area_id.isdigit():
+                province_codes = []
+                area = Area.objects.get(pk=int(area_id))
+                provinces = area.get_provinces()
+                for item in provinces:
+                    province_codes.append(item.province_code)
+                queryset = queryset.filter(province_code__in=province_codes)
 
         if merchant_id is not None and merchant_id != '':
             queryset = queryset.filter(merchant_id=merchant_id)
@@ -494,7 +501,8 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 10, item['district_name'] if item['district_name'] else '')
         worksheet.write(row_num, 11, item['wards_name'] if item['wards_name'] else '')
         worksheet.write(row_num, 12,
-                        formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item['created_date'] else '')
+                        formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item[
+                            'created_date'] else '')
 
         row_num += 1
 
@@ -580,4 +588,3 @@ def get_terminal_exports(request):
         return Terminal.objects.none()
 
     return get_data_export(queryset, ExportType.TERMINAL)
-
