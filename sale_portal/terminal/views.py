@@ -475,6 +475,7 @@ def get_queryset_terminal_list(request):
     ward_code = request.query_params.get('ward_code', None)
     from_date = request.query_params.get('from_date', None)
     to_date = request.query_params.get('to_date', None)
+    assign_shop = request.query_params.get('assign_shop', None)
 
     if shop_id is not None and shop_id != '':
         shop_id = format_string(shop_id)
@@ -517,6 +518,12 @@ def get_queryset_terminal_list(request):
 
     if ward_code is not None and ward_code != '':
         queryset = queryset.filter(wards_code=ward_code)
+
+    if assign_shop is not None and assign_shop != '':
+        if assign_shop == '1':
+            queryset = queryset.filter(shop__isnull=False)
+        else:
+            queryset = queryset.filter(shop__isnull=True)
 
     if from_date is not None and from_date != '':
         queryset = queryset.filter(

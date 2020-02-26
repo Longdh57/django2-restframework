@@ -1,10 +1,9 @@
-from django.urls import reverse
 from django.utils import formats
 from rest_framework import serializers
 
+from .models import Terminal
 from ..merchant.models import Merchant
 from ..shop.models import Shop
-from .models import Terminal
 
 
 class MerchantSerializer(serializers.ModelSerializer):
@@ -33,9 +32,9 @@ class TerminalSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     staff = serializers.SerializerMethodField()
     team = serializers.SerializerMethodField()
-    province_name = serializers.SerializerMethodField()
-    district_name = serializers.SerializerMethodField()
-    ward_name = serializers.SerializerMethodField()
+    province = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
+    ward = serializers.SerializerMethodField()
     created_date = serializers.SerializerMethodField()
 
     def get_status(self, terminal):
@@ -49,17 +48,38 @@ class TerminalSerializer(serializers.ModelSerializer):
         team = terminal.get_team()
         return team.code if team else ''
 
-    def get_province_name(self, terminal):
+    def get_province(self, terminal):
         province = terminal.get_province()
-        return province.province_name if province else ''
+        if province:
+            return {
+                'id': province.id,
+                'code': province.province_code,
+                'name': province.province_name
+            }
+        else:
+            return None
 
-    def get_district_name(self, terminal):
+    def get_district(self, terminal):
         district = terminal.get_district()
-        return district.district_name if district else ''
+        if district:
+            return {
+                'id': district.id,
+                'code': district.district_code,
+                'name': district.district_name
+            }
+        else:
+            return None
 
-    def get_ward_name(self, terminal):
-        wards = terminal.get_wards()
-        return wards.wards_name if wards else ''
+    def get_ward(self, terminal):
+        ward = terminal.get_wards()
+        if ward:
+            return {
+                'id': ward.id,
+                'code': ward.wards_code,
+                'name': ward.wards_name
+            }
+        else:
+            return None
 
     def get_created_date(self, terminal):
         return formats.date_format(terminal.created_date, "SHORT_DATETIME_FORMAT") if terminal.created_date else ''
@@ -68,5 +88,5 @@ class TerminalSerializer(serializers.ModelSerializer):
         model = Terminal
         fields = (
             'id', 'terminal_id', 'terminal_name', 'merchant', 'shop', 'staff', 'team', 'terminal_address', 'status',
-            'province_name', 'district_name', 'ward_name', 'business_address', 'created_date'
+            'province', 'district', 'ward', 'business_address', 'created_date'
         )

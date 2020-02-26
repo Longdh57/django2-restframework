@@ -6,6 +6,7 @@ import xlsxwriter
 from django.conf import settings
 from datetime import datetime, date
 
+from django.utils.html import conditional_escape
 from unidecode import unidecode
 from django.utils import formats
 from django.db import connection
@@ -23,6 +24,8 @@ from sale_portal.staff.models import Staff
 from sale_portal.staff_care import StaffCareType
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff_care.models import StaffCare
+from sale_portal.team import TeamType
+from sale_portal.terminal.models import Terminal
 from sale_portal.utils.geo_utils import findDistance
 from sale_portal.shop.serializers import ShopSerializer
 from sale_portal.utils.field_formatter import format_string
@@ -463,7 +466,7 @@ def get_queryset_shop_list(request):
         queryset = queryset.filter(district=district_id)
 
     if ward_id is not None and ward_id != '':
-        queryset = queryset.filter(ward=ward_id)
+        queryset = queryset.filter(wards=ward_id)
 
     if from_date is not None and from_date != '':
         queryset = queryset.filter(
@@ -471,5 +474,83 @@ def get_queryset_shop_list(request):
     if to_date is not None and to_date != '':
         queryset = queryset.filter(
             created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
-
     return queryset
+
+
+@api_view(['POST'])
+@login_required
+@permission_required('shop.shop_assign', raise_exception=True)
+def create_from_terminal(request):
+    if request.method == 'POST':
+        terminal_id = request.POST.get('terminal_id', None)
+        address = request.POST.get('address', None)
+        street = request.POST.get('street', None)
+        auto_create = request.POST.get('auto_create', None)
+
+        terminal = Terminal.objects.get(pk=int(terminal_id))
+
+    elif request.method == 'OTHER':
+        terminal = request.terminal
+        address = request.address
+        street = request.street
+
+    else:
+        return custom_response(Code.NOT_IMPLEMENTED)
+
+    staff = None
+    staff_of_chain = None
+    merchant = terminal.merchant
+    if merchant is not None:
+        staff = merchant.get_staff()
+        if staff is not None:
+            team = staff.team
+            if team is not None and team.type != TeamType.TEAM_SALE:
+                staff_of_chain = merchant.get_staff()
+
+    shop = Shop(
+        merchant=terminal.merchant,
+        name=conditional_escape(terminal.terminal_name),
+        address=conditional_escape(address),
+        province_id=terminal.get_province().id if (terminal.get_province() is not None) else None,
+        district_id=terminal.get_district().id if (terminal.get_district() is not None) else None,
+        wards_id=terminal.get_wards().id if (terminal.get_wards() is not None) else None,
+        street=conditional_escape(street),
+        created_by=request.user
+    )
+    shop.save()
+
+    terminal.shop = shop
+    terminal.save()
+
+    if staff is not None:
+        shop.staff_create(staff.id)
+
+    if staff_of_chain is not None:
+        shop.staff_of_chain_create(staff.id)
+
+    if request.method == 'OTHER':
+        return True
+
+    data = {
+        'shop_id': shop.pk
+    }
+    return successful_response(data)
+
+
+@api_view(['POST'])
+@login_required
+@permission_required('shop.shop_assign', raise_exception=True)
+def assign_ter_to_shop(request):
+    ter_id = request.POST.get('ter_id')
+    shop_id = request.POST.get('shop_id')
+
+    terminal = get_object_or_404(Terminal, pk=ter_id)
+    shop = get_object_or_404(Shop, pk=shop_id)
+
+    if shop.merchant != terminal.merchant:
+        return custom_response(Code.DATA_ERROR, "Shop và terminal không cùng merchant")
+    else:
+        terminal.shop = shop
+        terminal.save()
+    return custom_response(Code.SUCCESS, "update method")
+
