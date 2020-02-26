@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.db.models import Q
@@ -79,6 +80,7 @@ class AreaViewSet(mixins.ListModelMixin,
             data = {
                 'name': area.name,
                 'code': area.code,
+                'proportion_kpi_s73': area.proportion_kpi_s73,
                 'provinces': province_lists,
                 'proportion_kpi_team': proportion_kpi_lists
             }
@@ -86,6 +88,35 @@ class AreaViewSet(mixins.ListModelMixin,
         except Exception as e:
             logging.error('Get detail area exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
+
+
+@api_view(['PUT'])
+@login_required
+@permission_required('area.area_edit', raise_exception=True)
+def update_proportion_kpi_s73(request, pk):
+    """
+        API update proportion kpi s73 cho Area \n
+        Request body for this api : Không được bỏ trống
+        {
+                "proportion_kpi_s73": 90  -- number {min: 0, max: 100}
+        }
+    """
+
+    try:
+        area = Area.objects.filter(pk=pk).first()
+        if area is None:
+            return custom_response(Code.AREA_NOT_FOUND)
+
+        body = json.loads(request.body)
+        proportion_kpi_s73 = body.get('proportion_kpi_s73')
+        if isinstance(proportion_kpi_s73, int):
+            area.proportion_kpi_s73 = proportion_kpi_s73
+            area.save()
+        return successful_response()
+
+    except Exception as e:
+        logging.error('Update area proportion_kpi_s73 exception: %s', e)
+        return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

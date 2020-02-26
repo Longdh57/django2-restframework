@@ -1,12 +1,15 @@
 from django.db import models
-from sale_portal.administrative_unit.models import QrProvince
+from django.core.validators import MaxValueValidator, MinValueValidator
+
 from sale_portal.user.models import User
+from sale_portal.administrative_unit.models import QrProvince
 
 
 class Area(models.Model):
     name = models.CharField(max_length=100, null=False)
     code = models.CharField(max_length=10, null=False)
     provinces = models.TextField()
+    proportion_kpi_s73 = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     user = models.ManyToManyField(User)
 
     class Meta:
