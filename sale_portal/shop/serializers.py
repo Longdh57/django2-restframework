@@ -62,7 +62,7 @@ class ShopSerializer(serializers.ModelSerializer):
         if shop_cube is None:
             return None
 
-        # voucher_code_list = ast.literal_eval(shop.shop_cube.voucher_code_list)
+        voucher_code_list = ast.literal_eval(shop.shop_cube.voucher_code_list) if shop.shop_cube.voucher_code else '',
 
         return {
             'report_date': shop.shop_cube.report_date,
@@ -71,7 +71,7 @@ class ShopSerializer(serializers.ModelSerializer):
             'number_of_tran_w_8_14': shop.shop_cube.number_of_tran_w_8_14,
             'number_of_tran_w_15_21': shop.shop_cube.number_of_tran_w_15_21,
             'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
-            # 'voucher_code_list': voucher_code_list,
+            'voucher_code_list': voucher_code_list,
         }
 
     class Meta:
