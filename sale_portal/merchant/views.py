@@ -48,47 +48,7 @@ class MerchantViewSet(mixins.ListModelMixin,
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-
-        queryset = Merchant.objects.all()
-
-        if self.request.user.is_superuser is False:
-            shops = get_shops_viewable_queryset(self.request.user)
-            queryset = queryset.filter(pk__in=shops.values('merchant'))
-
-        merchant_text = self.request.query_params.get('merchant_text', None)
-        area_id = self.request.query_params.get('area_id', None)
-        province_id = self.request.query_params.get('province_id', None)
-        status = self.request.query_params.get('status', None)
-        from_date = self.request.query_params.get('from_date', None)
-        to_date = self.request.query_params.get('to_date', None)
-
-        if merchant_text is not None and merchant_text != '':
-            merchant_text = format_string(merchant_text)
-            queryset = queryset.filter(
-                Q(merchant_code__icontains=merchant_text) | Q(merchant_name__icontains=merchant_text) | Q(
-                    merchant_brand__icontains=merchant_text))
-        if area_id is not None and area_id != '':
-            if area_id.isdigit():
-                province_codes = []
-                area = Area.objects.get(pk=int(area_id))
-                provinces = area.get_provinces()
-                for item in provinces:
-                    province_codes.append(item.province_code)
-                queryset = queryset.filter(province_code__in=province_codes)
-        if province_id is not None and province_id != '':
-            if province_id.isdigit():
-                province = QrProvince.objects.get(pk=int(province_id))
-                queryset = queryset.filter(province_code=province.province_code)
-        if status is not None and status != '':
-            queryset = queryset.filter(status=status)
-        if from_date is not None and from_date != '':
-            queryset = queryset.filter(
-                created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
-        if to_date is not None and to_date != '':
-            queryset = queryset.filter(
-                created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
-
-        return queryset
+        return get_queryset_merchant_list(self.request)
 
     def retrieve(self, request, pk):
         """
@@ -185,9 +145,9 @@ def export(request):
     """
         API export data Merchant \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
-        - merchant_code -- text
-        - merchant_brand -- text
-        - merchant_name -- text
+        - merchant_text -- text
+        - area_id -- interger
+        - province_id -- interger
         - status -- number in {-1,1,2,3,4,5,6}
         - from_date -- dd/mm/yyyy
         - to_date -- dd/mm/yyyy
@@ -266,28 +226,48 @@ def render_excel(request=None, return_url=True):
 
 
 def get_merchant_exports(request):
+    queryset = get_queryset_merchant_list(request)
+
+    if len(queryset) > 10000:
+        raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
+
+    if len(queryset) == 0:
+        return Merchant.objects.none()
+
+    return get_data_export(queryset, ExportType.MERCHANT)
+
+
+def get_queryset_merchant_list(request):
     queryset = Merchant.objects.all()
 
     if request.user.is_superuser is False:
         shops = get_shops_viewable_queryset(request.user)
         queryset = queryset.filter(pk__in=shops.values('merchant'))
 
-    merchant_code = request.query_params.get('merchant_code', None)
-    merchant_name = request.query_params.get('merchant_name', None)
-    merchant_brand = request.query_params.get('merchant_brand', None)
+    merchant_text = request.query_params.get('merchant_text', None)
+    area_id = request.query_params.get('area_id', None)
+    province_id = request.query_params.get('province_id', None)
     status = request.query_params.get('status', None)
     from_date = request.query_params.get('from_date', None)
     to_date = request.query_params.get('to_date', None)
 
-    if merchant_code is not None and merchant_code != '':
-        merchant_code = format_string(merchant_code)
-        queryset = queryset.filter(merchant_code__icontains=merchant_code)
-    if merchant_name is not None and merchant_name != '':
-        merchant_name = format_string(merchant_name)
-        queryset = queryset.filter(merchant_name__icontains=merchant_name)
-    if merchant_brand is not None and merchant_brand != '':
-        merchant_brand = format_string(merchant_brand)
-        queryset = queryset.filter(merchant_brand__icontains=merchant_brand)
+    if merchant_text is not None and merchant_text != '':
+        merchant_text = format_string(merchant_text)
+        queryset = queryset.filter(
+            Q(merchant_code__icontains=merchant_text) | Q(merchant_name__icontains=merchant_text) | Q(
+                merchant_brand__icontains=merchant_text))
+    if area_id is not None and area_id != '':
+        if area_id.isdigit():
+            province_codes = []
+            area = Area.objects.get(pk=int(area_id))
+            provinces = area.get_provinces()
+            for item in provinces:
+                province_codes.append(item.province_code)
+            queryset = queryset.filter(province_code__in=province_codes)
+    if province_id is not None and province_id != '':
+        if province_id.isdigit():
+            province = QrProvince.objects.get(pk=int(province_id))
+            queryset = queryset.filter(province_code=province.province_code)
     if status is not None and status != '':
         queryset = queryset.filter(status=status)
     if from_date is not None and from_date != '':
@@ -297,10 +277,5 @@ def get_merchant_exports(request):
         queryset = queryset.filter(
             created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
-    if len(queryset) > 10000:
-        raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
+    return queryset
 
-    if len(queryset) == 0:
-        return Merchant.objects.none()
-
-    return get_data_export(queryset, ExportType.MERCHANT)

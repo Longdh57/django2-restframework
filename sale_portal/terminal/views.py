@@ -61,81 +61,7 @@ class TerminalViewSet(mixins.ListModelMixin,
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-
-        queryset = Terminal.objects.terminal_un_register_vnpayment()
-
-        if self.request.user.is_superuser is False:
-            if self.request.user.is_area_manager or self.request.user.is_sale_admin:
-                provinces = get_provinces_viewable_queryset(self.request.user)
-                queryset = queryset.filter(province_code__in=provinces.values('province_code'))
-            else:
-                shops = get_shops_viewable_queryset(self.request.user)
-                queryset = queryset.filter(shop__in=shops)
-
-        shop_id = self.request.query_params.get('shop_id', None)
-        terminal_text = self.request.query_params.get('terminal_text', None)
-        area_id = self.request.query_params.get('area_id', None)
-        merchant_id = self.request.query_params.get('merchant_id', None)
-        staff_id = self.request.query_params.get('staff_id', None)
-        team_id = self.request.query_params.get('team_id', None)
-        status = self.request.query_params.get('status', None)
-        province_code = self.request.query_params.get('province_code', None)
-        district_code = self.request.query_params.get('district_code', None)
-        ward_code = self.request.query_params.get('ward_code', None)
-        from_date = self.request.query_params.get('from_date', None)
-        to_date = self.request.query_params.get('to_date', None)
-
-        if shop_id is not None and shop_id != '':
-            shop_id = format_string(shop_id)
-            queryset = queryset.filter(shop_id=shop_id)
-
-        if terminal_text is not None and terminal_text != '':
-            terminal_text = format_string(terminal_text)
-            queryset = queryset.filter(
-                Q(terminal_id__icontains=terminal_text) | Q(terminal_name__icontains=terminal_text))
-
-        if area_id is not None and area_id != '':
-            if area_id.isdigit():
-                province_codes = []
-                area = Area.objects.get(pk=int(area_id))
-                provinces = area.get_provinces()
-                for item in provinces:
-                    province_codes.append(item.province_code)
-                queryset = queryset.filter(province_code__in=province_codes)
-
-        if merchant_id is not None and merchant_id != '':
-            queryset = queryset.filter(merchant_id=merchant_id)
-
-        if staff_id is not None and staff_id != '':
-            shops = StaffCare.objects.filter(staff_id=staff_id, type=StaffCareType.STAFF_SHOP).values('shop')
-            queryset = queryset.filter(shop__in=shops)
-
-        if team_id is not None and team_id != '':
-            staffs = Staff.objects.filter(team_id=team_id)
-            shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
-            queryset = queryset.filter(shop__in=shops)
-
-        if status is not None and status != '':
-            queryset = queryset.filter(status=int(status))
-
-        if province_code is not None and province_code != '':
-            queryset = queryset.filter(province_code=province_code)
-
-        if district_code is not None and district_code != '':
-            queryset = queryset.filter(district_code=district_code)
-
-        if ward_code is not None and ward_code != '':
-            queryset = queryset.filter(wards_code=ward_code)
-
-        if from_date is not None and from_date != '':
-            queryset = queryset.filter(
-                created_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
-
-        if to_date is not None and to_date != '':
-            queryset = queryset.filter(
-                created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
-
-        return queryset
+        return get_queryset_terminal_list(self.request)
 
     def retrieve(self, request, pk):
         """
@@ -429,11 +355,11 @@ def export(request):
         API export data Terminal \n
         Parameters for this api : Có thể bỏ trống hoặc không gửi lên
         - shop_id -- text
-        - terminal_id -- text
-        - terminal_name -- text
+        - terminal_text -- text
         - merchant_id -- number
         - staff_id -- number
         - team_id -- number
+        - area_id -- number
         - province_code -- text
         - district_code -- text
         - ward_code -- text
@@ -515,6 +441,18 @@ def render_excel(request=None, return_url=True):
 
 
 def get_terminal_exports(request):
+    queryset = get_queryset_terminal_list(request)
+
+    if len(queryset) > 15000:
+        raise APIException(detail='Số lượng bản ghi quá lớn (>15.000), không thể xuất dữ liệu.', code=400)
+
+    if len(queryset) == 0:
+        return Terminal.objects.none()
+
+    return get_data_export(queryset, ExportType.TERMINAL)
+
+
+def get_queryset_terminal_list(request):
     queryset = Terminal.objects.terminal_un_register_vnpayment()
 
     if request.user.is_superuser is False:
@@ -526,8 +464,8 @@ def get_terminal_exports(request):
             queryset = queryset.filter(shop__in=shops)
 
     shop_id = request.query_params.get('shop_id', None)
-    terminal_id = request.query_params.get('terminal_id', None)
-    terminal_name = request.query_params.get('terminal_name', None)
+    terminal_text = request.query_params.get('terminal_text', None)
+    area_id = request.query_params.get('area_id', None)
     merchant_id = request.query_params.get('merchant_id', None)
     staff_id = request.query_params.get('staff_id', None)
     team_id = request.query_params.get('team_id', None)
@@ -542,13 +480,19 @@ def get_terminal_exports(request):
         shop_id = format_string(shop_id)
         queryset = queryset.filter(shop_id=shop_id)
 
-    if terminal_id is not None and terminal_id != '':
-        terminal_id = format_string(terminal_id)
-        queryset = queryset.filter(terminal_id__icontains=terminal_id)
+    if terminal_text is not None and terminal_text != '':
+        terminal_text = format_string(terminal_text)
+        queryset = queryset.filter(
+            Q(terminal_id__icontains=terminal_text) | Q(terminal_name__icontains=terminal_text))
 
-    if terminal_name is not None and terminal_name != '':
-        terminal_name = format_string(terminal_name)
-        queryset = queryset.filter(terminal_name__icontains=terminal_name)
+    if area_id is not None and area_id != '':
+        if area_id.isdigit():
+            province_codes = []
+            area = Area.objects.get(pk=int(area_id))
+            provinces = area.get_provinces()
+            for item in provinces:
+                province_codes.append(item.province_code)
+            queryset = queryset.filter(province_code__in=province_codes)
 
     if merchant_id is not None and merchant_id != '':
         queryset = queryset.filter(merchant_id=merchant_id)
@@ -582,10 +526,4 @@ def get_terminal_exports(request):
         queryset = queryset.filter(
             created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
 
-    if len(queryset) > 10000:
-        raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
-
-    if len(queryset) == 0:
-        return Terminal.objects.none()
-
-    return get_data_export(queryset, ExportType.TERMINAL)
+    return queryset
