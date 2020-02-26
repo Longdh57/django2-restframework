@@ -383,7 +383,7 @@ def render_excel(request=None, return_url=True):
 def get_shop_exports(request):
     queryset = get_queryset_shop_list(request)
 
-    if len(queryset) > 15000:
+    if len(queryset) > 15000 and request.user.is_superuser is False:
         raise APIException(detail='Số lượng bản ghi quá lớn (>15.000), không thể xuất dữ liệu.', code=400)
 
     if len(queryset) == 0:

@@ -228,7 +228,7 @@ def render_excel(request=None, return_url=True):
 def get_merchant_exports(request):
     queryset = get_queryset_merchant_list(request)
 
-    if len(queryset) > 10000:
+    if len(queryset) > 10000 and request.user.is_superuser is False:
         raise APIException(detail='Số lượng bản ghi quá lớn (>10.000), không thể xuất dữ liệu.', code=400)
 
     if len(queryset) == 0:
