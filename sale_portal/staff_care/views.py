@@ -8,8 +8,9 @@ from tablib import Dataset
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 
+from sale_portal import settings
 from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff
+from sale_portal.staff.models import Staff, QrStaff
 from sale_portal.merchant.models import Merchant
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCareImportLog
@@ -53,18 +54,28 @@ def import_sale_shop(request):
 
     data_error = []
 
+    ocg_staff_ids = QrStaff.objects.filter(email__in=settings.LIST_OCG_EMAIL).values('staff_id')
+    ocg_merchants = Merchant.objects.filter(staff__in=ocg_staff_ids)
+    ocg_shops = Shop.objects.filter(merchant__in=ocg_merchants).values('id')
+
+    ocg_shop_ids = []
+    for ocg_shop in ocg_shops:
+        ocg_shop_ids.append(ocg_shop['id'])
+
     for item in imported_data:
         data = {
             'code': int(item[0]) if (isinstance(item[0], int) and item[0] != '') else '',
             'street': item[1],
-            'staff_email': str(item[2]).strip(),
+            'staff_email': str(item[2]).strip() if item[2] else '',
         }
         total_row += 1
-        result = update_sale_shop(request, data, is_submit)
+        if isinstance(item[0], int) and int(item[0]) in ocg_shop_ids:
+            result = 'Shop này do OCG khai thác'
+        else:
+            result = update_sale_shop(request, data, is_submit)
 
         if result == 'Thành công':
             row_update += 1
-            row_no_change += 1
         elif result == 'No change':
             row_no_change += 1
         else:

@@ -264,6 +264,9 @@ EMAIL_USER_RECEIVER = os.environ.get('EMAIL_USER_RECEIVER', 'long.daohai4894@gma
 # Get LIST_ADMINISTRATOR_EMAIL
 LIST_ADMINISTRATOR_EMAIL = os.environ.get('LIST_ADMINISTRATOR_EMAIL', 'longdh@vnpay.vn').split()
 
+# Get LIST_OCG_EMAIL
+LIST_OCG_EMAIL = os.environ.get('LIST_OCG_EMAIL', ['longdd@vnpay.vn', 'quyenbtl@vnpay.vn'])
+
 # Internationalization
 LANGUAGE_CODE = 'vi'
 USE_TZ = False

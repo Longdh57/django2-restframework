@@ -5,8 +5,8 @@ from django.contrib.postgres.fields import JSONField
 
 from sale_portal.user.models import User
 from sale_portal.team.models import Team
-from sale_portal.staff import StaffLogType, StaffTeamRoleType
 from sale_portal.staff_care import StaffCareType
+from sale_portal.staff import StaffLogType, StaffTeamRoleType
 
 
 class QrStaff(models.Model):
