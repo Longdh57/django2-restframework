@@ -1,4 +1,5 @@
 import os
+import ast
 import time
 import itertools
 import xlsxwriter
@@ -281,6 +282,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'number_of_tran_w_8_14': shop.shop_cube.number_of_tran_w_8_14,
                 'number_of_tran_w_15_21': shop.shop_cube.number_of_tran_w_15_21,
                 'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
+                'voucher_code_list': ast.literal_eval(shop.shop_cube.voucher_code_list),
             } if shop.shop_cube else None
         }
 
