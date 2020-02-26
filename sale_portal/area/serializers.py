@@ -20,5 +20,5 @@ class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
         fields = (
-            'id', 'name', 'code', 'provinces', 'proportion_kpi_team'
+            'id', 'name', 'code', 'provinces', 'proportion_kpi_s73', 'proportion_kpi_team'
         )
