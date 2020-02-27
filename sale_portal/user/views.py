@@ -557,3 +557,25 @@ def model_permissions(request):
         model_permissions[permission.content_type.model] = permissions
 
     return successful_response(collections.OrderedDict(sorted(model_permissions.items())))
+
+
+def update_role_for_staff(staff_ids=[], role_name=''):
+    try:
+        group = Group.objects.filter(name=role_name)
+        if not group:
+            return False
+        emails = Staff.objects.filter(pk__in=staff_ids).values('email')
+        users = User.objects.filter(email__in=emails).exclude(groups__name=role_name)
+
+        for user in users:
+            user.groups.set(group)
+            user.area_set.clear()
+            user.is_superuser = False
+            user.is_area_manager = False
+            user.is_sale_admin = False
+            user.save()
+
+        return True
+    except Exception as e:
+        logging.error(e)
+        return False

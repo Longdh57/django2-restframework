@@ -13,6 +13,8 @@ from rest_framework.decorators import api_view
 
 from sale_portal.area.models import Area
 from sale_portal.staff import StaffTeamRoleType
+from sale_portal.user import ROLE_SALE, ROLE_SALE_LEADER
+from sale_portal.user.views import update_role_for_staff
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.team import TeamType
 from sale_portal.team.models import Team
@@ -186,6 +188,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     role=role_staff,
                     description='Create new team: add staff'
                 )
+                update_role_for_staff(staff_ids, ROLE_SALE)
 
                 if team_lead_id is not None:
                     role_leader = StaffTeamRoleType.TEAM_MANAGEMENT
@@ -201,6 +204,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         description='Create new team: add management',
                         user=request.user
                     )
+                    update_role_for_staff([team_lead_id], ROLE_SALE_LEADER)
 
             return successful_response(team.id)
 
@@ -382,6 +386,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         role=StaffTeamRoleType.FREELANCE_STAFF,
                         description='Update team: remove staff from team'
                     )
+                    update_role_for_staff(remove_ids, ROLE_SALE)
 
                 if new_staff_ids:
                     Staff.objects.filter(pk__in=new_staff_ids).update(
@@ -395,6 +400,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         role=role_staff,
                         description='Update team: add new staff'
                     )
+                    update_role_for_staff(new_staff_ids, ROLE_SALE)
 
                 if new_leader_id is not None:
                     staff = Staff.objects.get(pk=new_leader_id)
@@ -409,6 +415,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         description='Update team: add new management',
                         user=request.user
                     )
+                    update_role_for_staff([new_leader_id], ROLE_SALE_LEADER)
 
                 if update_to_staff_id is not None:
                     staff = Staff.objects.get(pk=update_to_staff_id)
@@ -422,6 +429,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         description='Update team: demote to staff',
                         user=request.user
                     )
+                    update_role_for_staff([update_to_staff_id], ROLE_SALE)
 
                 if update_to_leader_id is not None:
                     staff = Staff.objects.get(pk=update_to_leader_id)
@@ -435,6 +443,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                         description='Update team: promote to management',
                         user=request.user
                     )
+                    update_role_for_staff([update_to_leader_id], ROLE_SALE_LEADER)
 
                 team.name = name
                 team.type = type
@@ -461,6 +470,7 @@ class TeamViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             remove_ids = []
             for id in staffs.values('id'):
                 remove_ids.append(id['id'])
+            update_role_for_staff(remove_ids, ROLE_SALE)
 
             StaffCare.objects.filter(staff__in=staffs).delete()
             StaffCareLog.objects.filter(staff__in=staffs, is_caring=True).update(
