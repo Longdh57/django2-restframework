@@ -62,7 +62,9 @@ class ShopSerializer(serializers.ModelSerializer):
         if shop_cube is None:
             return None
 
-        voucher_code_list = ast.literal_eval(shop.shop_cube.voucher_code_list) if shop.shop_cube.voucher_code_list else '',
+        voucher_code_list = None
+        if shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]':
+            voucher_code_list = ast.literal_eval(shop.shop_cube.voucher_code_list)
 
         return {
             'report_date': shop.shop_cube.report_date,

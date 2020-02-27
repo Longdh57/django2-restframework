@@ -285,7 +285,8 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'number_of_tran_w_8_14': shop.shop_cube.number_of_tran_w_8_14,
                 'number_of_tran_w_15_21': shop.shop_cube.number_of_tran_w_15_21,
                 'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
-                'voucher_code_list': ast.literal_eval(shop.shop_cube.voucher_code_list) if shop.shop_cube.voucher_code_list else '',
+                'voucher_code_list': ast.literal_eval(shop.shop_cube.voucher_code_list) if (
+                            shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]') else '',
             } if shop.shop_cube else None
         }
 
@@ -372,7 +373,8 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 10, item['k2'] if item['k2'] else 0)
         worksheet.write(row_num, 11, item['k3'] if item['k3'] else 0)
         worksheet.write(row_num, 12, item['k4'] if item['k4'] else 0)
-        worksheet.write(row_num, 13, formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item['created_date'] else '')
+        worksheet.write(row_num, 13, formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item[
+            'created_date'] else '')
 
         row_num += 1
 
@@ -553,4 +555,3 @@ def assign_ter_to_shop(request):
         terminal.shop = shop
         terminal.save()
     return custom_response(Code.SUCCESS, "update method")
-
