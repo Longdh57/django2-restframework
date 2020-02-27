@@ -21,6 +21,8 @@ class ShopSerializer(serializers.ModelSerializer):
     merchant = MerchantSerializer()
     staff = serializers.SerializerMethodField()
     province_name = serializers.SerializerMethodField()
+    district_name = serializers.SerializerMethodField()
+    ward_name = serializers.SerializerMethodField()
     street = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
     created_date = serializers.SerializerMethodField()
@@ -43,6 +45,12 @@ class ShopSerializer(serializers.ModelSerializer):
 
     def get_province_name(self, shop):
         return shop.province.province_name if shop.province else ''
+
+    def get_district_name(self, shop):
+        return shop.district.district_name if shop.district else ''
+
+    def get_ward_name(self, shop):
+        return shop.wards.wards_name if shop.wards else ''
 
     def get_street(self, shop):
         return shop.street if shop.street else ''
@@ -85,6 +93,8 @@ class ShopSerializer(serializers.ModelSerializer):
             'merchant',
             'staff',
             'province_name',
+            'district_name',
+            'ward_name',
             'street',
             'address',
             'activated',
