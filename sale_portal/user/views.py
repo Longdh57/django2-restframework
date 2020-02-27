@@ -570,12 +570,10 @@ def update_role_for_staff(staff_ids=[], role_name=''):
         for user in users:
             user.groups.set(group)
             user.area_set.clear()
-
-        users.update(
-            is_superuser=False,
-            is_area_manager=False,
-            is_sale_admin=False
-        )
+            user.is_superuser = False
+            user.is_area_manager = False
+            user.is_sale_admin = False
+            user.save()
 
         return True
     except Exception as e:
