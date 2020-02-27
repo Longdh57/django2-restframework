@@ -11,6 +11,8 @@ from rest_framework.decorators import api_view
 from rest_framework import viewsets, mixins
 
 from sale_portal.staff import StaffTeamRoleType
+from sale_portal.user import ROLE_SALE
+from sale_portal.user.views import update_role_for_staff
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.staff_care.models import StaffCare, StaffCareLog
 from sale_portal.team.models import Team
@@ -265,6 +267,8 @@ def change_staff_team(request):
                     updated_by=request.user,
                     updated_date=datetime.now(),
                 )
+
+        update_role_for_staff([staff_id], ROLE_SALE)
 
         return successful_response()
     except Exception as e:
