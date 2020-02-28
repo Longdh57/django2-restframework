@@ -6,7 +6,6 @@ from datetime import date
 from django.db.models import Q
 from django.conf import settings
 from django.utils import formats
-from django.db import connections
 from django.utils import timezone
 from django.core.mail import EmailMessage
 from datetime import datetime as datedatetime
@@ -133,7 +132,7 @@ class Command(BaseCommand):
                     ~Q(status=-1)).all().values('shop_id')
                 list_shop_to_disable = Shop.objects.shop_active().filter(~Q(pk__in=shop_activates)).all()
                 for shop in list_shop_to_disable:
-                    if shop is not None:
+                    if shop is not None and shop.staff is not None:
                         shop.activated = ShopActivateType.DISABLE
                         shop.save()
                         shop.staff_delete()
