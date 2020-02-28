@@ -2,8 +2,11 @@ import os
 import logging
 
 from django.db import connection
+from django.http import HttpRequest
 from django.core.management.base import BaseCommand, CommandError
 
+from sale_portal.user.models import User
+from sale_portal.terminal.views import shop_store
 from sale_portal.utils.cronjob_util import cron_create, cron_update
 from sale_portal.terminal.models import Terminal, QrTerminal, TerminalLog
 
@@ -101,6 +104,7 @@ class Command(BaseCommand):
                 ]
 
             for data in data_cursor:
+                is_update_business_address = False
                 if data['status'] == 0:
                     self.create_new_terminal(terminal_id=data['terminal_id'], merchant_id=data['merchant_id'])
                     created += 1
@@ -113,6 +117,8 @@ class Command(BaseCommand):
                         terminal = Terminal.objects.filter(terminal_id=data['terminal_id'],
                                                            merchant_id=data['merchant_id']).first()
                         self.create_terminal_log(terminal=terminal, qr_terminal=qr_terminal, status=data['status'])
+                        if terminal.business_address != qr_terminal.business_address:
+                            is_update_business_address = True
 
                         terminal.status = qr_terminal.status
                         terminal.terminal_address = qr_terminal.terminal_address
@@ -127,14 +133,25 @@ class Command(BaseCommand):
                         terminal.modify_date = qr_terminal.modify_date
                         terminal.save()
 
-                        if Terminal.objects.filter(shop=terminal.shop).count() == 1:
-                            shop = terminal.shop
-                            shop.address = qr_terminal.business_address
-                            shop.save()
+                        if is_update_business_address:
+                            if Terminal.objects.filter(shop=terminal.shop).count() == 1:
+                                shop = terminal.shop
+                                shop.address = qr_terminal.business_address
+                                shop.save()
+                            else:
+                                request = HttpRequest()
+                                request.method = 'OTHER'
+                                request.user = User.objects.get(pk=1)
+                                request.terminal = terminal
+                                request.address = terminal.business_address
+                                request.street = ''
+                                if shop_store(request=request):
+                                    self.style.WARNING('Ter update address => Created new shop - ter_id: {}'.format(
+                                        terminal.terminal_id))
 
                         updated += 1
                         if updated % 100 == 0:
-                            print('Terminal updated: {}'.format(updated))
+                            print(f'Terminal updated: {updated}')
 
                     except Terminal.DoesNotExist:
                         raise CommandError('Terminal with terminal_id: "%s" | merchant_id: "%s" does not exist' % (
