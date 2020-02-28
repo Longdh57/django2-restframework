@@ -133,9 +133,10 @@ class Command(BaseCommand):
                     ~Q(status=-1)).all().values('shop_id')
                 list_shop_to_disable = Shop.objects.shop_active().filter(~Q(pk__in=shop_activates)).all()
                 for shop in list_shop_to_disable:
-                    shop.activated = ShopActivateType.DISABLE
-                    shop.save()
-                    shop.staff_delete()
+                    if shop is not None:
+                        shop.activated = ShopActivateType.DISABLE
+                        shop.save()
+                        shop.staff_delete()
             self.stdout.write('Success - Đã set activated = 0 với shop không có terminal !')
 
             self.stdout.write('Start send email to Sale Manager... !')
