@@ -30,7 +30,7 @@ class ExchangePointPos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet)
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        queryset = ExchangePointPos365.objects.all()
+        queryset = ExchangePointPos365.objects.all().order_by('id')
         return queryset
 
     def create(self, request):
@@ -74,6 +74,7 @@ class ExchangePointPos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet)
 
             for update_item in exchange_point_pos365s:
                 ExchangePointPos365.objects.get_or_create(type=update_item['type_code'])
+                print(update_item['point'])
                 ExchangePointPos365.objects.filter(type=update_item['type_code']).update(point=update_item['point'])
 
             return successful_response('Update or create ExchangePointPos365 success')
