@@ -342,7 +342,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             if ward.get_district().id != district_id or ward.get_province().id != province_id:
                 return custom_response(Code.INVALID_BODY, 'ward, district or province do not mapping')
 
-            if not isinstance(staff_id, int):
+            if not isinstance(staff_id, int) or staff_id is None or staff_id == '':
                 if shop.staff is not None:
                     shop.staff_delete(request=request)
             else:
