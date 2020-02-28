@@ -54,12 +54,12 @@ class QrWards(models.Model):
 
     def get_province(self):
         province = QrProvince.objects.filter(province_code=self.province_code).first()
-        if QrProvince.DoesNotExist:
+        if province is None:
             province = None
         return province
 
     def get_district(self):
         district = QrDistrict.objects.filter(district_code=self.district_code).first()
-        if QrDistrict.DoesNotExist:
+        if district is None:
             district = None
         return district
