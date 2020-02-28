@@ -69,7 +69,7 @@ class ExchangePointPos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet)
                     validate_type_code.append(item['type_code'])
                 if item['type_code'] not in type_code_list:
                     return custom_response(Code.INVALID_BODY, 'type_code Invalid')
-                if not isinstance(item['point'], int):
+                if not isinstance(item['point'], float):
                     return custom_response(Code.INVALID_BODY, 'point Invalid')
 
             for update_item in exchange_point_pos365s:
