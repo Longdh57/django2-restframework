@@ -1,6 +1,8 @@
 import os
 import ast
 import time
+import json
+import logging
 import itertools
 import xlsxwriter
 from django.conf import settings
@@ -18,20 +20,21 @@ from rest_framework.exceptions import APIException
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.contrib.auth.decorators import login_required, permission_required
 
+from sale_portal.team import TeamType
 from sale_portal.area.models import Area
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
+from sale_portal.terminal.models import Terminal
 from sale_portal.staff_care import StaffCareType
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.team import TeamType
-from sale_portal.terminal.models import Terminal
 from sale_portal.utils.geo_utils import findDistance
 from sale_portal.shop.serializers import ShopSerializer
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.data_export import get_data_export, ExportType
 from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
@@ -286,11 +289,85 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'number_of_tran_w_15_21': shop.shop_cube.number_of_tran_w_15_21,
                 'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
                 'voucher_code_list': ast.literal_eval(shop.shop_cube.voucher_code_list) if (
-                            shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]') else '',
+                        shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]') else '',
             } if shop.shop_cube else None
         }
 
         return successful_response(data)
+
+    def update(self, request, pk):
+        """
+            API update Shop \n
+            Request body for this api : Không được bỏ trống \n
+                {
+                    "name": "shop name" -- text,
+                    "street": "Hoàng Cầu" -- text,
+                    "address": "36 Hoàng Cầu, Đống Đa, Hà Nội" -- text,
+                    "province_id": 57 -- number,
+                    "district_id": 612 -- number,
+                    "ward_id": 9464 -- number,
+                    "description": "description" -- text,
+                    "staff_id": 1016 -- number -- có thể để trống,
+
+                }
+        """
+        try:
+            shop = Shop.objects.filter(pk=pk).first()
+            if shop is None:
+                return custom_response(Code.SHOP_NOT_FOUND)
+            body = json.loads(request.body)
+
+            name = body.get('name')
+            street = body.get('street')
+            address = body.get('address')
+            province_id = body.get('province_id')
+            district_id = body.get('district_id')
+            ward_id = body.get('ward_id')
+            description = body.get('description')
+            staff_id = body.get('staff_id')
+
+            if name is None or name == '':
+                return custom_response(Code.INVALID_BODY, 'name Invalid')
+
+            if province_id is None or province_id == '' or not isinstance(province_id, int):
+                return custom_response(Code.INVALID_BODY, 'province_id Invalid')
+            if district_id is None or district_id == '' or not isinstance(district_id, int):
+                return custom_response(Code.INVALID_BODY, 'district_id Invalid')
+            if ward_id is None or ward_id == '' or not isinstance(ward_id, int):
+                return custom_response(Code.INVALID_BODY, 'ward_id Invalid')
+
+            ward = QrWards.objects.get(pk=ward_id)
+            if ward.get_district() is None or ward.get_province() is None:
+                return custom_response(Code.INVALID_BODY, 'can not find district or province from ward')
+            if ward.get_district().id != district_id or ward.get_province().id != province_id:
+                return custom_response(Code.INVALID_BODY, 'ward, district or province do not mapping')
+
+            if not isinstance(staff_id, int):
+                if shop.staff is not None:
+                    shop.staff_delete(request=request)
+            else:
+                staff = Staff.objects.get(pk=staff_id)
+                if staff is None:
+                    return custom_response(Code.INVALID_BODY, 'staff_id Invalid')
+                if shop.staff != staff:
+                    if shop.staff is not None:
+                        shop.staff_delete(request=request)
+                    shop.staff_create(staff_id=staff_id, request=request)
+
+            shop.name = name
+            shop.street = street
+            shop.address = address
+            shop.province_id = province_id
+            shop.district_id = district_id
+            shop.ward_id = ward_id
+            shop.description = description
+            shop.save()
+
+            return successful_response()
+
+        except Exception as e:
+            logging.error('Update shop exception: %s', e)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
