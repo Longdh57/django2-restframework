@@ -1,9 +1,12 @@
 import ast
+import base64
+import datetime
 import json
 import os
 import time as time_t
 from datetime import date, time
 from datetime import datetime as dt_datetime
+from time import time as time_f
 
 import xlsxwriter
 from django.contrib.auth.decorators import login_required, permission_required
@@ -180,6 +183,12 @@ class SaleReportViewSet(mixins.ListModelMixin,
         elif sale_report.created_date.date() != date.today():
             return self.response(status=400, message='Only allow access to drafts created on today')
 
+        # Tao folder save image
+        location = settings.FS_IMAGE_UPLOADS + datetime.date.today().isoformat()
+        base_url = settings.FS_IMAGE_URL + datetime.date.today().isoformat()
+        if not os.path.exists(location):
+            os.makedirs(location)
+
         # Xu ly request Mở Mới
         if str(purpose) == '0':
             new_merchant_name = datajson.get('new_merchant_name')
@@ -296,9 +305,24 @@ class SaleReportViewSet(mixins.ListModelMixin,
                         message='Validate error: image_outside, image_inside, image_store_cashier are required'
                     )
                 else:
-                    sale_report.image_outside_v2 = format_string(image_outside_v2, True)
-                    sale_report.image_inside_v2 = format_string(image_inside_v2, True)
-                    sale_report.image_store_cashier_v2 = format_string(image_store_cashier_v2, True)
+                    image_outside_filename = str(request.user.username) + '-image_outside' + str(time_f()) + '.png'
+                    with open(location + '/' + image_outside_filename, "wb") as f:
+                        f.write(base64.b64decode(image_outside_v2))
+                        f.close()
+                        sale_report.image_outside_v2 = base_url + '/' + image_outside_filename
+
+                    image_inside_filename = str(request.user.username) + '-image_inside' + str(time_f()) + '.png'
+                    with open(location + '/' + image_inside_filename, "wb") as f:
+                        f.write(base64.b64decode(image_inside_v2))
+                        f.close()
+                        sale_report.image_inside_v2 = base_url + '/' + image_inside_filename
+
+                    image_store_cashier_filename = str(request.user.username) + '-image_store_cashier' + str(
+                        time_f()) + '.png'
+                    with open(location + '/' + image_store_cashier_filename, "wb") as f:
+                        f.write(base64.b64decode(image_store_cashier_v2))
+                        f.close()
+                        sale_report.image_store_cashier_v2 = base_url + '/' + image_store_cashier_filename
 
         # Xu ly request Chăm sóc
         else:
@@ -371,16 +395,37 @@ class SaleReportViewSet(mixins.ListModelMixin,
                         or image_store_cashier is None or image_store_cashier == '':
                     return self.response(
                         status=400, message='image_outside, image_inside, image_store_cashier are required')
-                sale_report.image_outside_v2 = image_outside
-                sale_report.image_inside_v2 = image_inside
-                sale_report.image_store_cashier_v2 = image_store_cashier
+
+                image_outside_filename = str(request.user.username) + '-image_outside' + str(time_f()) + '.png'
+                with open(location + '/' + image_outside_filename, "wb") as f:
+                    f.write(base64.b64decode(image_outside))
+                    f.close()
+                    sale_report.image_outside_v2 = base_url + '/' + image_outside_filename
+
+                image_inside_filename = str(request.user.username) + '-image_inside' + str(time_f()) + '.png'
+                with open(location + '/' + image_inside_filename, "wb") as f:
+                    f.write(base64.b64decode(image_inside))
+                    f.close()
+                    sale_report.image_inside_v2 = base_url + '/' + image_inside_filename
+
+                image_store_cashier_filename = str(request.user.username) + '-image_store_cashier' + str(
+                    time_f()) + '.png'
+                with open(location + '/' + image_store_cashier_filename, "wb") as f:
+                    f.write(base64.b64decode(image_store_cashier))
+                    f.close()
+                    sale_report.image_store_cashier_v2 = base_url + '/' + image_store_cashier_filename
 
             if not is_draft and shop_status != 2:
                 if cessation_of_business_image_v2 is None or cessation_of_business_image_v2 == '':
                     return self.response(
                         status=400, message='cessation_of_business_image is required')
 
-                sale_report.cessation_of_business_image_v2 = cessation_of_business_image_v2
+                cessation_of_business_image_filename = str(request.user.username) + '-cessation_of_business' + str(
+                    time_f()) + '.png'
+                with open(location + '/' + cessation_of_business_image_filename, "wb") as f:
+                    f.write(base64.b64decode(cessation_of_business_image_v2))
+                    f.close()
+                    sale_report.cessation_of_business_image_v2 = base_url + '/' + cessation_of_business_image_filename
 
         sale_report.purpose = purpose
         sale_report.longitude = float(longitude)
