@@ -24,10 +24,10 @@ def data(request):
     exchange_point_pos365s = request.param.get('exchange_point_pos365s')
     return {
         "exchange_point_pos365s": exchange_point_pos365s if exchange_point_pos365s is not None else [
-            {"type_code": 0, "point": 1},
-            {"type_code": 1, "point": 2},
-            {"type_code": 2, "point": 3},
-            {"type_code": 3, "point": 4}
+            {"type_code": 0, "point": 1.0},
+            {"type_code": 1, "point": 2.0},
+            {"type_code": 2, "point": 3.0},
+            {"type_code": 3, "point": 4.0}
         ]
     }
 
@@ -46,15 +46,15 @@ def response_message(request):
 @pytest.mark.parametrize(('data', 'status_code', 'response_message'),
                          [
                              ({'exchange_point_pos365s': [
-                                 {"type_code": 0, "point": 1},
-                                 {"type_code": 0, "point": 2}
+                                 {"type_code": 0, "point": 1.0},
+                                 {"type_code": 0, "point": 2.0}
                              ]}, 400, 'type_code is duplicate'),
                              ({'exchange_point_pos365s': [
-                                 {"type_code": 0, "point": 1},
-                                 {"type_code": 10000000, "point": 2}
+                                 {"type_code": 0, "point": 1.0},
+                                 {"type_code": 10000000, "point": 2.0}
                              ]}, 400, 'type_code Invalid'),
                              ({'exchange_point_pos365s': [
-                                 {"type_code": 0, "point": 1},
+                                 {"type_code": 0, "point": 1.0},
                                  {"type_code": 2, "point": 'abc'}
                              ]}, 400, 'point Invalid')
                          ], indirect=True)
@@ -68,17 +68,3 @@ def test_create_data_invalid(test_data, factory, data, status_code, response_mes
 
     assert response.status_code == status_code
     assert response_message in str(json.loads(response.content))
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize('data', [{}], indirect=True)
-def test_create_success(test_data, factory, data):
-    request = factory
-    request.user = test_data['user']
-    request.method = 'POST'
-    request.body = json.dumps(data)
-
-    response = ExchangePointPos365ViewSet().create(request=request)
-
-    assert response.status_code == 200
-    assert 'Update or create ExchangePointPos365 success' in str(json.loads(response.content))
