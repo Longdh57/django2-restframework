@@ -1,15 +1,24 @@
-from django.shortcuts import render
+import json
+import logging
 
-from datetime import datetime
+from django.utils import formats
+from django.core.files.storage import FileSystemStorage
+from django.shortcuts import render, get_object_or_404
+
+from datetime import datetime as dt_datetime
+import datetime
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from django.contrib.auth.decorators import login_required, permission_required
 
+from sale_portal import settings
+from sale_portal.config_kpi.models import ExchangePointPos365
 from sale_portal.pos365.models import Pos365
 from sale_portal.pos365 import Pos365ContractDuration
 from sale_portal.pos365.serializers import Pos365Serializer
+from sale_portal.staff.models import Staff
 from sale_portal.utils.field_formatter import format_string
-from sale_portal.common.standard_response import successful_response
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 
 
 class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -45,11 +54,115 @@ class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             queryset = queryset.filter(contract_duration=contract_duration)
         if from_date is not None and from_date != '':
             queryset = queryset.filter(
-                contract_start_date__gte=datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+                contract_start_date__gte=dt_datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
         if to_date is not None and to_date != '':
             queryset = queryset.filter(
-                contract_start_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
+                contract_start_date__lte=(dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
         return queryset
+
+    def create(self, request):
+        """
+            API create Pos365 \n
+            Request body for this api : Định dạng form-data \n
+                "code": "IRNARF",
+                "name": "Hợp đồng với Canifa",
+                "contract_duration": 1, (type in {0,1,2,3} )
+                "staff_id": 1210,
+                "contract_start_date": "25/01/2020" (format date in %d/%m/%Y),
+                "contract_file": "",
+                "customer_name": "Đào Hải Long",
+                "customer_phone": "038123456",
+                "customer_delegate_person": "Long Đào Hải",
+                "customer_address": "36 Hoàng Cầu, Q Đống Đa, Hà Nội"
+        """
+        try:
+            data = json.loads(request.POST.get('data'))
+            code = data.get('code', None)
+            name = data.get('name', None)
+            contract_duration = data.get('contract_duration', None)
+            staff_id = data.get('staff_id', None)
+            contract_start_date = data.get('contract_start_date', None)
+            contract_file = request.FILES['contract_file'] if 'contract_file' in request.FILES else None
+            customer_name = data.get('customer_name', None)
+            customer_phone = data.get('customer_phone', None)
+            customer_delegate_person = data.get('customer_delegate_person', None)
+            customer_address = data.get('customer_address', None)
+
+            if contract_duration is not None and contract_duration != '':
+                if not (isinstance(contract_duration, int) and 0 <= contract_duration <= 3):
+                    return custom_response(Code.INVALID_BODY, 'contract_duration Invalid')
+
+            if name is None or name == '' or code is None or code == '':
+                return custom_response(Code.INVALID_BODY, 'name or code Invalid')
+            name = format_string(name)
+            code = format_string(code)
+
+            if Pos365.objects.filter(code__iexact=code):
+                return custom_response(Code.BAD_REQUEST, 'code be used by other Pos365')
+
+            if (not isinstance(staff_id, int)) or (Staff.objects.filter(pk=staff_id).count() != 1):
+                return custom_response(Code.STAFF_NOT_FOUND)
+
+            if contract_file is not None:
+                fs = FileSystemStorage(
+                    location=settings.FS_DOCUMENT_UPLOADS + datetime.date.today().isoformat(),
+                    base_url=settings.FS_DOCUMENT_URL + datetime.date.today().isoformat()
+                )
+                filename = fs.save(contract_file.name, contract_file)
+                uploaded_file_url = fs.url(filename)
+            else:
+                uploaded_file_url = None
+            contract_start_date = dt_datetime.strptime(contract_start_date[:10], '%Y-%m-%d')
+            customer_name = format_string(customer_name)
+            customer_phone = format_string(customer_phone)
+            customer_delegate_person = format_string(customer_delegate_person)
+            customer_address = format_string(customer_address)
+            pos365 = Pos365(
+                code=code,
+                name=name,
+                contract_duration=contract_duration,
+                staff_id=staff_id,
+                contract_start_date=contract_start_date,
+                contract_file=uploaded_file_url,
+                customer_name=customer_name,
+                customer_phone=customer_phone,
+                customer_delegate_person=customer_delegate_person,
+                customer_address=customer_address,
+                created_by=request.user,
+                updated_by=request.user
+            )
+            pos365.save()
+
+            return successful_response(pos365.id)
+
+        except Exception as e:
+            logging.error('Create team exception: %s', e)
+            return custom_response(Code.INTERNAL_SERVER_ERROR)
+
+    def retrieve(self, request, pk):
+        pos365 = get_object_or_404(Pos365, pk=pk)
+        contract_start_date = formats.date_format(pos365.contract_start_date, "SHORT_DATETIME_FORMAT") \
+            if pos365.contract_start_date else ''
+        staff = pos365.staff.email if pos365.staff is not None else None
+        team = pos365.team.name if pos365.team is not None else None
+        try:
+            if pos365.contract_duration is not None:
+                point = ExchangePointPos365.objects.get(type=pos365.contract_duration).point
+            else:
+                point = 0
+        except Exception as e:
+            point = 0
+        return successful_response({
+            'id': pos365.id,
+            'code': pos365.code,
+            'name': pos365.name,
+            'contract_duration': pos365.contract_duration,
+            'customer_name': pos365.customer_name,
+            'staff': staff,
+            'team': team,
+            'point': point,
+            'contract_start_date': contract_start_date
+        })
 
 
 @api_view(['GET'])
