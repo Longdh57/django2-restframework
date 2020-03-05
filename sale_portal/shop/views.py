@@ -369,6 +369,49 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             logging.error('Update shop exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
 
+    def create(self, request):
+        assign_terminal_id = request.POST.get('assign_terminal_id', None)
+        merchant_id = request.POST.get('merchant_id', None)
+        team_id = request.POST.get('team_id', None)
+        staff_id = request.POST.get('staff_id', None)
+        status = request.POST.get('status', True)
+        name = request.POST.get('name', None)
+        code = request.POST.get('code', None)
+        address = request.POST.get('address', None)
+        province_code = request.POST.get('province_id', None)
+        district_code = request.POST.get('district_id', None)
+        wards_code = request.POST.get('wards_id', None)
+        street = request.POST.get('street', None)
+        description = request.POST.get('description', None)
+
+        # province = QrProvince.objects.filter(province_code=province_code).first()
+        # district = QrDistrict.objects.filter(district_code=district_code).first()
+        # wards = QrWards.objects.filter(wards_code=wards_code).first()
+        # if code is None:
+        #     code = Shop.objects.all().order_by("-id")[0].id + 1
+        #
+        # shop = Shop(
+        #     merchant_id=merchant_id,
+        #     team_id=team_id,
+        #     staff_id=staff_id,
+        #     status=True if status == 'true' else False,
+        #     name=conditional_escape(name),
+        #     code=conditional_escape(code),
+        #     address=conditional_escape(address),
+        #     province_id=province.id,
+        #     district_id=district.id,
+        #     wards_id=wards.id,
+        #     street=conditional_escape(street),
+        #     description=conditional_escape(description),
+        #     created_by=request.user
+        # )
+        # shop.save()
+        # if int(assign_terminal_id) != 0:
+        #     terminal = Terminal.objects.get(pk=assign_terminal_id)
+        #     if shop.merchant == terminal.merchant:
+        #         terminal.shop = shop
+        #         terminal.save()
+        return successful_response('created')
 
 @api_view(['GET'])
 @login_required
