@@ -1,33 +1,33 @@
+import logging
 import os
 import time
-import logging
-import xlsxwriter
 from datetime import datetime, date, timedelta
 
-from django.db.models import Q
+import xlsxwriter
 from django.conf import settings
+from django.contrib.auth.decorators import login_required, permission_required
 from django.db import connection
+from django.db.models import Q
 from django.utils import formats
+from django.utils.html import conditional_escape
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
-from django.utils.html import conditional_escape
 from rest_framework.exceptions import APIException
-from django.contrib.auth.decorators import login_required, permission_required
 
-from sale_portal.team import TeamType
 from sale_portal.area.models import Area
+from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.qr_status.views import get_terminal_status_list
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
 from sale_portal.staff_care import StaffCareType
-from sale_portal.terminal.models import Terminal
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.utils.field_formatter import format_string
+from sale_portal.team import TeamType
+from sale_portal.terminal.models import Terminal
 from sale_portal.terminal.serializers import TerminalSerializer
-from sale_portal.qr_status.views import get_terminal_status_list
-from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.data_export import ExportType, get_data_export
 from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
@@ -139,9 +139,12 @@ def detail(request, pk):
             'terminal_id': terminal.terminal_id,
             'terminal_name': terminal.terminal_name,
             'terminal_address': terminal.terminal_address,
-            'province_name': terminal.get_province().province_name if terminal.get_province() else '',
-            'district_name': terminal.get_district().district_name if terminal.get_district() else '',
-            'wards_name': terminal.get_wards().wards_name if terminal.get_wards() else '',
+            'province': {'name': terminal.get_province().province_name,
+                         'code': terminal.get_province().province_code} if terminal.get_province() else None,
+            'district': {'name': terminal.get_district().district_name,
+                         'code': terminal.get_district().district_code} if terminal.get_district() else None,
+            'wards': {'name': terminal.get_wards().wards_name,
+                      'code': terminal.get_wards().wards_code} if terminal.get_wards() else None,
             'business_address': terminal.business_address,
             'merchant': {
                 'id': merchant.id if merchant else '',
@@ -429,7 +432,8 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 11, item['district_name'] if item['district_name'] else '')
         worksheet.write(row_num, 12, item['wards_name'] if item['wards_name'] else '')
         worksheet.write(row_num, 13,
-                        formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item['created_date'] else '')
+                        formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item[
+                            'created_date'] else '')
 
         row_num += 1
 

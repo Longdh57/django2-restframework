@@ -49,31 +49,6 @@ def list_shop_for_search(request):
     name = request.GET.get('name', None)
     user_info = request.user
     queryset = get_shops_viewable_queryset(user_info)
-    # if not user_info.is_superuser:
-    #     group = user_info.get_group()
-    #     if group is None or group.status is False:
-    #         return successful_response([])
-    #     if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
-    #         provinces = QrProvince.objects.none()
-    #         for area in user_info.area_set.all():
-    #             provinces |= area.get_provinces()
-    #         queryset = Shop.objects.filter(province__in=provinces)
-    #     else:
-    #         staff = Staff.objects.filter(email=user_info.email).first()
-    #         if staff and staff.team:
-    #             if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
-    #                 staffs = Staff.objects.filter(team_id=staff.team.id)
-    #                 list_shop_id = [s.shop_id for s in
-    #                                 StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP)]
-    #                 queryset = Shop.objects.filter(pk__in=list_shop_id)
-    #             else:
-    #                 list_shop_id = [s.shop_id for s in StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP)]
-    #                 queryset = Shop.objects.filter(pk__in=list_shop_id)
-    #         else:
-    #             return successful_response([])
-    # else:
-    #     queryset = Shop.objects.all()
-
     if name is not None and name != '':
         name = format_string(name)
         querysetABS = queryset.filter(
@@ -114,6 +89,7 @@ def list_recommend_shops(request, pk):
     API for get shop number_transaction and nearly shops \n
     :param shop_id
     '''
+    all_shop = get_shops_viewable_queryset(request.user)
     current_shop = get_object_or_404(Shop, pk=pk)
     current_shop_shop_cube = ShopCube.objects.filter(shop_id=pk).first()
 
@@ -126,8 +102,8 @@ def list_recommend_shops(request, pk):
         current_shop_number_of_tran = 'N/A'
 
     nearly_shops_by_latlong = []
-    if current_shop.district != '' and current_shop.district is not None:
-        for shop in Shop.objects.filter(district=current_shop.district).exclude(pk=pk):
+    if current_shop.wards != '' and current_shop.wards is not None and all_shop is not None:
+        for shop in all_shop.filter(wards=current_shop.wards).exclude(pk=pk):
             code = shop.code if shop.code is not None else 'N/A'
             address = shop.address if shop.address is not None else 'N/A'
             merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
@@ -151,7 +127,7 @@ def list_recommend_shops(request, pk):
         'number_of_tran': current_shop_number_of_tran,
         'latitude': current_shop.latitude,
         'longitude': current_shop.longitude,
-        'nearly_shops': nearly_shops_by_latlong_sorted[:3]
+        'nearly_shops': nearly_shops_by_latlong_sorted
     }
     return successful_response(data)
 
@@ -369,6 +345,49 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             logging.error('Update shop exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
 
+    def create(self, request):
+        assign_terminal_id = request.POST.get('assign_terminal_id', None)
+        merchant_id = request.POST.get('merchant_id', None)
+        team_id = request.POST.get('team_id', None)
+        staff_id = request.POST.get('staff_id', None)
+        status = request.POST.get('status', True)
+        name = request.POST.get('name', None)
+        code = request.POST.get('code', None)
+        address = request.POST.get('address', None)
+        province_code = request.POST.get('province_id', None)
+        district_code = request.POST.get('district_id', None)
+        wards_code = request.POST.get('wards_id', None)
+        street = request.POST.get('street', None)
+        description = request.POST.get('description', None)
+
+        # province = QrProvince.objects.filter(province_code=province_code).first()
+        # district = QrDistrict.objects.filter(district_code=district_code).first()
+        # wards = QrWards.objects.filter(wards_code=wards_code).first()
+        # if code is None:
+        #     code = Shop.objects.all().order_by("-id")[0].id + 1
+        #
+        # shop = Shop(
+        #     merchant_id=merchant_id,
+        #     team_id=team_id,
+        #     staff_id=staff_id,
+        #     status=True if status == 'true' else False,
+        #     name=conditional_escape(name),
+        #     code=conditional_escape(code),
+        #     address=conditional_escape(address),
+        #     province_id=province.id,
+        #     district_id=district.id,
+        #     wards_id=wards.id,
+        #     street=conditional_escape(street),
+        #     description=conditional_escape(description),
+        #     created_by=request.user
+        # )
+        # shop.save()
+        # if int(assign_terminal_id) != 0:
+        #     terminal = Terminal.objects.get(pk=assign_terminal_id)
+        #     if shop.merchant == terminal.merchant:
+        #         terminal.shop = shop
+        #         terminal.save()
+        return successful_response('created')
 
 @api_view(['GET'])
 @login_required
