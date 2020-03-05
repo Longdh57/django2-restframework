@@ -139,9 +139,9 @@ def detail(request, pk):
             'terminal_id': terminal.terminal_id,
             'terminal_name': terminal.terminal_name,
             'terminal_address': terminal.terminal_address,
-            'province_name': terminal.get_province().province_name if terminal.get_province() else '',
-            'district_name': terminal.get_district().district_name if terminal.get_district() else '',
-            'wards_name': terminal.get_wards().wards_name if terminal.get_wards() else '',
+            'province': terminal.get_province(),
+            'district': terminal.get_district(),
+            'wards': terminal.get_wards(),
             'business_address': terminal.business_address,
             'merchant': {
                 'id': merchant.id if merchant else '',
