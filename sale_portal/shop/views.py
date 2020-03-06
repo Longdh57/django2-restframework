@@ -20,9 +20,10 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
 from unidecode import unidecode
 
-from sale_portal.administrative_unit.models import QrWards
+from sale_portal.administrative_unit.models import QrWards, QrProvince, QrDistrict
 from sale_portal.area.models import Area
 from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.merchant.models import Merchant
 from sale_portal.shop.models import Shop
 from sale_portal.shop.serializers import ShopSerializer
 from sale_portal.shop_cube.models import ShopCube
@@ -382,39 +383,41 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         staff_id = request.POST.get('staff_id', None)
         name = request.POST.get('name', None)
         address = request.POST.get('address', None)
-        province_code = request.POST.get('province_id', None)
-        district_code = request.POST.get('district_id', None)
-        wards_code = request.POST.get('wards_id', None)
+        province_id = request.POST.get('province_id', None)
+        district_id = request.POST.get('district_id', None)
+        wards_id = request.POST.get('wards_id', None)
         street = request.POST.get('street', None)
         description = request.POST.get('description', None)
 
-        # province = QrProvince.objects.filter(province_code=province_code).first()
-        # district = QrDistrict.objects.filter(district_code=district_code).first()
-        # wards = QrWards.objects.filter(wards_code=wards_code).first()
-        # if code is None:
-        #     code = Shop.objects.all().order_by("-id")[0].id + 1
-        #
-        # shop = Shop(
-        #     merchant_id=merchant_id,
-        #     team_id=team_id,
-        #     staff_id=staff_id,
-        #     status=True if status == 'true' else False,
-        #     name=conditional_escape(name),
-        #     code=conditional_escape(code),
-        #     address=conditional_escape(address),
-        #     province_id=province.id,
-        #     district_id=district.id,
-        #     wards_id=wards.id,
-        #     street=conditional_escape(street),
-        #     description=conditional_escape(description),
-        #     created_by=request.user
-        # )
-        # shop.save()
-        # if int(assign_terminal_id) != 0:
-        #     terminal = Terminal.objects.get(pk=assign_terminal_id)
-        #     if shop.merchant == terminal.merchant:
-        #         terminal.shop = shop
-        #         terminal.save()
+        province = QrProvince.objects.filter(id=province_id).first()
+        district = QrDistrict.objects.filter(id=district_id).first()
+        wards = QrWards.objects.filter(id=wards_id).first()
+        merchant = Merchant.objects.filter(id=merchant_id).first()
+        staff = Staff.objects.filter(id=staff_id).first()
+
+        code = Shop.objects.all().order_by("-id")[0].id + 1
+        shop = Shop(
+            merchant=merchant,
+            name=conditional_escape(name),
+            code=conditional_escape(code),
+            address=conditional_escape(address),
+            province=province,
+            district=district,
+            wards=wards,
+            street=conditional_escape(street),
+            description=conditional_escape(description),
+            created_by=request.user
+        )
+        shop.save()
+
+        if staff is not None:
+            shop.staff_create(staff.id)
+
+        if int(assign_terminal_id) != 0:
+            terminal = Terminal.objects.get(pk=assign_terminal_id)
+            if shop.merchant == terminal.merchant:
+                terminal.shop = shop
+                terminal.save()
         return successful_response('created')
 
 
