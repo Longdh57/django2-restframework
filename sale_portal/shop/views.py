@@ -1,41 +1,41 @@
-import os
 import ast
-import time
+import itertools
 import json
 import logging
-import itertools
-import xlsxwriter
-from django.conf import settings
+import os
+import time
 from datetime import datetime, date
 
-from django.utils.html import conditional_escape
-from unidecode import unidecode
-from django.utils import formats
+import xlsxwriter
+from django.conf import settings
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db import connection
 from django.db.models import F, Q
-from rest_framework import viewsets, mixins
 from django.shortcuts import get_object_or_404
+from django.utils import formats
+from django.utils.html import conditional_escape
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
-from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.contrib.auth.decorators import login_required, permission_required
+from unidecode import unidecode
 
-from sale_portal.team import TeamType
+from sale_portal.administrative_unit.models import QrWards
 from sale_portal.area.models import Area
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff
-from sale_portal.terminal.models import Terminal
-from sale_portal.staff_care import StaffCareType
-from sale_portal.shop_cube.models import ShopCube
-from sale_portal.staff_care.models import StaffCare
-from sale_portal.utils.geo_utils import findDistance
 from sale_portal.shop.serializers import ShopSerializer
-from sale_portal.utils.field_formatter import format_string
-from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.shop_cube.models import ShopCube
+from sale_portal.staff.models import Staff
+from sale_portal.staff_care import StaffCareType
+from sale_portal.staff_care.models import StaffCare
+from sale_portal.team import TeamType
+from sale_portal.terminal.models import Terminal
 from sale_portal.utils.data_export import get_data_export, ExportType
 from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
-from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.geo_utils import findDistance
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
@@ -92,12 +92,28 @@ def list_recommend_shops(request, pk):
     all_shop = get_shops_viewable_queryset(request.user)
     current_shop = get_object_or_404(Shop, pk=pk)
     current_shop_shop_cube = ShopCube.objects.filter(shop_id=pk).first()
-
+    day = date.today().day
     if current_shop_shop_cube is not None:
-        current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_30d \
-            if current_shop_shop_cube.number_of_tran_30d is not None \
-               and current_shop_shop_cube.number_of_tran_30d != '' \
-            else 'N/A'
+        if 1 <= day <= 7:
+            current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_1_7 \
+                if current_shop_shop_cube.number_of_tran_w_1_7 is not None \
+                   and current_shop_shop_cube.number_of_tran_w_1_7 != '' \
+                else 'N/A'
+        if 8 <= day <= 14:
+            current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_8_14 \
+                if current_shop_shop_cube.number_of_tran_w_8_14 is not None \
+                   and current_shop_shop_cube.number_of_tran_w_8_14 != '' \
+                else 'N/A'
+        if 15 <= day <= 21:
+            current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_15_21 \
+                if current_shop_shop_cube.number_of_tran_w_15_21 is not None \
+                   and current_shop_shop_cube.number_of_tran_w_15_21 != '' \
+                else 'N/A'
+        if 22 <= day:
+            current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_22_end \
+                if current_shop_shop_cube.number_of_tran_w_22_end is not None \
+                   and current_shop_shop_cube.number_of_tran_w_22_end != '' \
+                else 'N/A'
     else:
         current_shop_number_of_tran = 'N/A'
 
@@ -388,6 +404,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         #         terminal.shop = shop
         #         terminal.save()
         return successful_response('created')
+
 
 @api_view(['GET'])
 @login_required
