@@ -4,6 +4,7 @@ __pycache__/
 /backend-static/*
 /media/excel/*
 /media/images/*
+/media/documents/*
 /media/sale_report_form/*
 .venv/*
 venv/*

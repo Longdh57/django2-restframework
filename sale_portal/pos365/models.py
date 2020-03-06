@@ -16,7 +16,6 @@ class Pos365(models.Model):
     customer_phone = models.CharField(max_length=50, null=True)
     customer_delegate_person = models.CharField(max_length=255, null=True)
     customer_address = models.CharField(max_length=255, null=True)
-    point = models.IntegerField(blank=False, null=False, default=0)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
