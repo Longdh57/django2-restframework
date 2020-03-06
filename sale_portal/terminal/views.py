@@ -167,18 +167,22 @@ def detail(request, pk):
                 'district_name': shop.district.district_name if (shop and shop.district) else '',
                 'wards_name': shop.wards.wards_name if (shop and shop.wards) else '',
                 'staff': {
+                    'id': staff.id if staff else None,
                     'full_name': staff.full_name if staff else '',
                     'email': staff.email if staff else ''
                 },
                 'team': {
+                    'id': team.id if team else None,
                     'code': team.code if team else '',
                     'name': team.name if team else ''
                 },
                 'staff_chain': {
+                    'id': staff_chain.id if staff_chain else None,
                     'full_name': staff_chain.full_name if staff_chain else '',
                     'email': staff_chain.email if staff_chain else ''
                 },
                 'team_chain': {
+                    'id': team_chain.id if team_chain else None,
                     'code': team_chain.code if team_chain else '',
                     'name': team_chain.name if team_chain else ''
                 }

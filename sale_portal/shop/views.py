@@ -251,25 +251,30 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 first_terminal.created_date,
                 "SHORT_DATETIME_FORMAT") if first_terminal and first_terminal.created_date else None,
             'merchant': {
+                'id': shop.merchant.id if shop.merchant else None,
                 'merchant_code': shop.merchant.merchant_code if shop.merchant else None,
                 'merchant_name': shop.merchant.merchant_name if shop.merchant else None,
                 'merchant_brand': shop.merchant.merchant_brand if shop.merchant else None
             },
             'staff': {
+                'id': shop.staff.id if shop.staff else None,
                 'full_name': shop.staff.full_name if shop.staff else None,
                 'email': shop.staff.email if shop.staff else None,
                 'phone': shop.staff.mobile if shop.staff else None,
             },
             'team': {
+                'id': shop.team.id if shop.team else None,
                 'name': shop.team.name if shop.team else None,
                 'code': shop.team.code if shop.team else None
             },
             'staff_of_chain': {
+                'id': shop.staff_of_chain.id if shop.staff_of_chain else None,
                 'full_name': shop.staff_of_chain.full_name if shop.staff_of_chain else None,
                 'email': shop.staff_of_chain.email if shop.staff_of_chain else None,
                 'phone': shop.staff_of_chain.mobile if shop.staff_of_chain else None,
             },
             'team_of_chain': {
+                'id': shop.team_of_chain.id if shop.team_of_chain else None,
                 'name': shop.team_of_chain.name if shop.team_of_chain else None,
                 'code': shop.team_of_chain.code if shop.team_of_chain else None
             },
@@ -282,7 +287,16 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
                 'voucher_code_list': ast.literal_eval(shop.shop_cube.voucher_code_list) if (
                         shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]') else '',
-            } if shop.shop_cube else None
+            } if shop.shop_cube else None,
+            'province': {'id': shop.province.id,
+                         'name': shop.province.province_name,
+                         'code': shop.province.province_code} if shop.province else None,
+            'district': {'id': shop.district.id,
+                         'name': shop.district.district_name,
+                         'code': shop.district.district_code} if shop.district else None,
+            'wards': {'id': shop.wards.id,
+                      'name': shop.wards.wards_name,
+                      'code': shop.wards.wards_code} if shop.wards else None,
         }
 
         return successful_response(data)
@@ -366,9 +380,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         merchant_id = request.POST.get('merchant_id', None)
         team_id = request.POST.get('team_id', None)
         staff_id = request.POST.get('staff_id', None)
-        status = request.POST.get('status', True)
         name = request.POST.get('name', None)
-        code = request.POST.get('code', None)
         address = request.POST.get('address', None)
         province_code = request.POST.get('province_id', None)
         district_code = request.POST.get('district_id', None)
