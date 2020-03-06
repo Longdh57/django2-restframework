@@ -20,9 +20,10 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
 from unidecode import unidecode
 
-from sale_portal.administrative_unit.models import QrWards
+from sale_portal.administrative_unit.models import QrWards, QrProvince, QrDistrict
 from sale_portal.area.models import Area
 from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.merchant.models import Merchant
 from sale_portal.shop.models import Shop
 from sale_portal.shop.serializers import ShopSerializer
 from sale_portal.shop_cube.models import ShopCube
@@ -251,25 +252,30 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 first_terminal.created_date,
                 "SHORT_DATETIME_FORMAT") if first_terminal and first_terminal.created_date else None,
             'merchant': {
+                'id': shop.merchant.id if shop.merchant else None,
                 'merchant_code': shop.merchant.merchant_code if shop.merchant else None,
                 'merchant_name': shop.merchant.merchant_name if shop.merchant else None,
                 'merchant_brand': shop.merchant.merchant_brand if shop.merchant else None
             },
             'staff': {
+                'id': shop.staff.id if shop.staff else None,
                 'full_name': shop.staff.full_name if shop.staff else None,
                 'email': shop.staff.email if shop.staff else None,
                 'phone': shop.staff.mobile if shop.staff else None,
             },
             'team': {
+                'id': shop.team.id if shop.team else None,
                 'name': shop.team.name if shop.team else None,
                 'code': shop.team.code if shop.team else None
             },
             'staff_of_chain': {
+                'id': shop.staff_of_chain.id if shop.staff_of_chain else None,
                 'full_name': shop.staff_of_chain.full_name if shop.staff_of_chain else None,
                 'email': shop.staff_of_chain.email if shop.staff_of_chain else None,
                 'phone': shop.staff_of_chain.mobile if shop.staff_of_chain else None,
             },
             'team_of_chain': {
+                'id': shop.team_of_chain.id if shop.team_of_chain else None,
                 'name': shop.team_of_chain.name if shop.team_of_chain else None,
                 'code': shop.team_of_chain.code if shop.team_of_chain else None
             },
@@ -282,7 +288,16 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
                 'voucher_code_list': ast.literal_eval(shop.shop_cube.voucher_code_list) if (
                         shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]') else '',
-            } if shop.shop_cube else None
+            } if shop.shop_cube else None,
+            'province': {'id': shop.province.id,
+                         'name': shop.province.province_name,
+                         'code': shop.province.province_code} if shop.province else None,
+            'district': {'id': shop.district.id,
+                         'name': shop.district.district_name,
+                         'code': shop.district.district_code} if shop.district else None,
+            'wards': {'id': shop.wards.id,
+                      'name': shop.wards.wards_name,
+                      'code': shop.wards.wards_code} if shop.wards else None,
         }
 
         return successful_response(data)
@@ -366,43 +381,43 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         merchant_id = request.POST.get('merchant_id', None)
         team_id = request.POST.get('team_id', None)
         staff_id = request.POST.get('staff_id', None)
-        status = request.POST.get('status', True)
         name = request.POST.get('name', None)
-        code = request.POST.get('code', None)
         address = request.POST.get('address', None)
-        province_code = request.POST.get('province_id', None)
-        district_code = request.POST.get('district_id', None)
-        wards_code = request.POST.get('wards_id', None)
+        province_id = request.POST.get('province_id', None)
+        district_id = request.POST.get('district_id', None)
+        wards_id = request.POST.get('wards_id', None)
         street = request.POST.get('street', None)
         description = request.POST.get('description', None)
 
-        # province = QrProvince.objects.filter(province_code=province_code).first()
-        # district = QrDistrict.objects.filter(district_code=district_code).first()
-        # wards = QrWards.objects.filter(wards_code=wards_code).first()
-        # if code is None:
-        #     code = Shop.objects.all().order_by("-id")[0].id + 1
-        #
-        # shop = Shop(
-        #     merchant_id=merchant_id,
-        #     team_id=team_id,
-        #     staff_id=staff_id,
-        #     status=True if status == 'true' else False,
-        #     name=conditional_escape(name),
-        #     code=conditional_escape(code),
-        #     address=conditional_escape(address),
-        #     province_id=province.id,
-        #     district_id=district.id,
-        #     wards_id=wards.id,
-        #     street=conditional_escape(street),
-        #     description=conditional_escape(description),
-        #     created_by=request.user
-        # )
-        # shop.save()
-        # if int(assign_terminal_id) != 0:
-        #     terminal = Terminal.objects.get(pk=assign_terminal_id)
-        #     if shop.merchant == terminal.merchant:
-        #         terminal.shop = shop
-        #         terminal.save()
+        province = QrProvince.objects.filter(id=province_id).first()
+        district = QrDistrict.objects.filter(id=district_id).first()
+        wards = QrWards.objects.filter(id=wards_id).first()
+        merchant = Merchant.objects.filter(id=merchant_id).first()
+        staff = Staff.objects.filter(id=staff_id).first()
+
+        code = Shop.objects.all().order_by("-id")[0].id + 1
+        shop = Shop(
+            merchant=merchant,
+            name=conditional_escape(name),
+            code=conditional_escape(code),
+            address=conditional_escape(address),
+            province=province,
+            district=district,
+            wards=wards,
+            street=conditional_escape(street),
+            description=conditional_escape(description),
+            created_by=request.user
+        )
+        shop.save()
+
+        if staff is not None:
+            shop.staff_create(staff.id)
+
+        if int(assign_terminal_id) != 0:
+            terminal = Terminal.objects.get(pk=assign_terminal_id)
+            if shop.merchant == terminal.merchant:
+                terminal.shop = shop
+                terminal.save()
         return successful_response('created')
 
 
