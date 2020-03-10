@@ -136,6 +136,7 @@ def detail(request, pk):
         team_chain = staff_chain.team if staff_chain else None
 
         data = {
+            'id': terminal.id,
             'terminal_id': terminal.terminal_id,
             'terminal_name': terminal.terminal_name,
             'terminal_address': terminal.terminal_address,

@@ -119,28 +119,32 @@ def list_recommend_shops(request, pk):
         current_shop_number_of_tran = 'N/A'
 
     nearly_shops_by_latlong = []
-    if current_shop.wards != '' and current_shop.wards is not None and all_shop is not None:
-        for shop in all_shop.filter(wards=current_shop.wards).exclude(pk=pk):
-            code = shop.code if shop.code is not None else 'N/A'
-            address = shop.address if shop.address is not None else 'N/A'
-            merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
-            if shop.latitude and shop.longitude and current_shop.latitude and current_shop.longitude:
-                distance = findDistance(shop.latitude, shop.longitude, current_shop.latitude, current_shop.longitude)
-                nearly_shops_by_latlong.append({
-                    'id': shop.id,
-                    'shop_info': code + ' - ' + address + ' - ' + merchant_brand,
-                    'address': shop.address,
-                    'latitude': shop.latitude,
-                    'longitude': shop.longitude,
-                    'distance_value': distance.get('value') if distance is not None else None,
-                    'distance_text': distance.get('text') if distance is not None else None
-                })
-
-    nearly_shops_by_latlong_sorted = sorted(nearly_shops_by_latlong, key=lambda k: k['distance_value'])
+    if current_shop.wards != '' and current_shop.wards is not None:
+        try:
+            shop_list = all_shop.filter(wards=current_shop.wards, activated=1).exclude(pk=pk)
+            for shop in shop_list:
+                code = shop.code if shop.code is not None else 'N/A'
+                address = shop.address if shop.address is not None else 'N/A'
+                merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
+                if shop.latitude and shop.longitude and current_shop.latitude and current_shop.longitude:
+                    distance = findDistance(shop.latitude, shop.longitude, current_shop.latitude,
+                                            current_shop.longitude)
+                    nearly_shops_by_latlong.append({
+                        'id': shop.id,
+                        'shop_info': code + ' - ' + address + ' - ' + merchant_brand,
+                        'address': shop.address,
+                        'latitude': shop.latitude,
+                        'longitude': shop.longitude,
+                        'distance_value': distance.get('value') if distance is not None else None,
+                        'distance_text': distance.get('text') if distance is not None else None
+                    })
+            nearly_shops_by_latlong_sorted = sorted(nearly_shops_by_latlong, key=lambda k: k['distance_value'])
+        except Exception as e:
+            print(str(e))
 
     data = {
-        'address': current_shop.address if current_shop.address != '' and current_shop.address is not None else 'N/A',
-        'street': current_shop.street if current_shop.street != '' and current_shop.street is not None else 'N/A',
+        'address': current_shop.address if current_shop.address != '' and current_shop.address is not None else '',
+        'street': current_shop.street if current_shop.street != '' and current_shop.street is not None else '',
         'number_of_tran': current_shop_number_of_tran,
         'latitude': current_shop.latitude,
         'longitude': current_shop.longitude,
@@ -396,6 +400,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         staff = Staff.objects.filter(id=staff_id).first()
 
         code = Shop.objects.all().order_by("-id")[0].id + 1
+
         shop = Shop(
             merchant=merchant,
             name=conditional_escape(name),
@@ -415,9 +420,13 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         if int(assign_terminal_id) != 0:
             terminal = Terminal.objects.get(pk=assign_terminal_id)
+            if terminal is None:
+                return custom_response('404.006')
             if shop.merchant == terminal.merchant:
                 terminal.shop = shop
                 terminal.save()
+            else:
+                return custom_response('400', 'Merchant is invalid')
         return successful_response('created')
 
 
@@ -566,10 +575,9 @@ def get_queryset_shop_list(request):
     ward_id = request.query_params.get('ward_id', None)
     from_date = request.query_params.get('from_date', None)
     to_date = request.query_params.get('to_date', None)
-
     if code is not None and code != '':
         code = format_string(code)
-        queryset = queryset.filter(code__icontains=code)
+        queryset = queryset.filter(Q(code__icontains=code)|Q(name__icontains=code))
 
     if merchant_id is not None and merchant_id != '':
         queryset = queryset.filter(merchant_id=merchant_id)
@@ -673,7 +681,6 @@ def create_from_terminal(request):
 def assign_ter_to_shop(request):
     ter_id = request.POST.get('ter_id')
     shop_id = request.POST.get('shop_id')
-
     terminal = get_object_or_404(Terminal, pk=ter_id)
     shop = get_object_or_404(Shop, pk=shop_id)
 
@@ -682,4 +689,4 @@ def assign_ter_to_shop(request):
     else:
         terminal.shop = shop
         terminal.save()
-    return custom_response(Code.SUCCESS, "update method")
+    return successful_response({'id': shop.id})
