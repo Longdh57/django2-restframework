@@ -36,7 +36,7 @@ left join (select st.email, tm.code as team, stc.shop_id from staff st
             inner join staff_care stc on st.id = stc.staff_id and stc.type = 0) stt on stt.shop_id = t.shop_id
 '''
 
-shop_raw_query = '''select s.id, m.merchant_brand, stt.email as staff_email, stt.team as team_code,
+shop_raw_query = '''select s.id, m.merchant_code, m.merchant_brand, m.merchant_name,d.full_name as department,p.ctkm, stt.email as staff_email, stt.team as team_code,
 qr_pro.province_name, qr_dis.district_name, qr_war.wards_name, s.address,
 (select count(*) from terminal where shop_id = s.id) as count_ter,
 sc.number_of_tran_w_1_7 as k1, sc.number_of_tran_w_8_14 as k2, sc.number_of_tran_w_15_21 as k3, sc.number_of_tran_w_22_end as k4,
@@ -49,7 +49,10 @@ left join (select st.email, tm.code as team, stc.shop_id from staff st
 left join qr_province qr_pro on qr_pro.id = s.province_id
 left join qr_district qr_dis on qr_dis.id = s.district_id
 left join qr_wards qr_war on qr_war.id = s.wards_id
-left join shop_cube sc on sc.shop_id = s.id'''
+left join (select spf.shop_id, spt.code as ctkm from sale_promotion_form spf
+            inner join sale_promotion_title spt on spf.title_id = spt.id group by spf.shop_id, spt.code) p on s.id=p.shop_id			
+left join shop_cube sc on sc.shop_id = s.id
+left join qr_type_merchant d on m.department = d.id'''
 
 
 class ExportType:
