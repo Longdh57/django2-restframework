@@ -575,10 +575,9 @@ def get_queryset_shop_list(request):
     ward_id = request.query_params.get('ward_id', None)
     from_date = request.query_params.get('from_date', None)
     to_date = request.query_params.get('to_date', None)
-
     if code is not None and code != '':
         code = format_string(code)
-        queryset = queryset.filter(code__icontains=code)
+        queryset = queryset.filter(Q(code__icontains=code)|Q(name__icontains=code))
 
     if merchant_id is not None and merchant_id != '':
         queryset = queryset.filter(merchant_id=merchant_id)
@@ -682,7 +681,6 @@ def create_from_terminal(request):
 def assign_ter_to_shop(request):
     ter_id = request.POST.get('ter_id')
     shop_id = request.POST.get('shop_id')
-
     terminal = get_object_or_404(Terminal, pk=ter_id)
     shop = get_object_or_404(Shop, pk=shop_id)
 
@@ -691,4 +689,4 @@ def assign_ter_to_shop(request):
     else:
         terminal.shop = shop
         terminal.save()
-    return custom_response(Code.SUCCESS, "update method")
+    return successful_response({'id': shop.id})
