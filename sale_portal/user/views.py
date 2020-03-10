@@ -222,6 +222,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
             API get detail user
         """
+        print('call')
         user = User.objects.filter(pk=pk).first()
         if user is None:
             return custom_response(Code.USER_NOT_FOUND)
