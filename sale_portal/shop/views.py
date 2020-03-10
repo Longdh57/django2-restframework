@@ -396,6 +396,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         staff = Staff.objects.filter(id=staff_id).first()
 
         code = Shop.objects.all().order_by("-id")[0].id + 1
+
         shop = Shop(
             merchant=merchant,
             name=conditional_escape(name),
@@ -415,9 +416,13 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         if int(assign_terminal_id) != 0:
             terminal = Terminal.objects.get(pk=assign_terminal_id)
+            if terminal is None:
+                return custom_response('404.006')
             if shop.merchant == terminal.merchant:
                 terminal.shop = shop
                 terminal.save()
+            else:
+                return custom_response('400', 'Merchant is invalid')
         return successful_response('created')
 
 
