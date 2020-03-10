@@ -37,7 +37,8 @@ from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.field_formatter import format_string
 from sale_portal.utils.geo_utils import findDistance
 from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
+from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset, \
+    get_staffs_viewable_queryset
 
 
 @api_view(['GET'])
@@ -567,12 +568,24 @@ def get_queryset_shop_list(request):
 
     if request.user.is_superuser is False:
         if request.user.is_area_manager or request.user.is_sale_admin:
-            provinces = get_provinces_viewable_queryset(request.user)
-            queryset = queryset.filter(province__in=provinces)
+            provinces_viewable = get_provinces_viewable_queryset(request.user)
+            cross_assign_status = request.query_params.get('cross_assign_status', None)
+            if cross_assign_status is not None and cross_assign_status != '':
+                if cross_assign_status == '0':
+                    staff_viewable = get_staffs_viewable_queryset(request.user)
+                    shop_ids = StaffCare.objects.filter(staff__in=staff_viewable, type=StaffCareType.STAFF_SHOP).values(
+                        'shop_id')
+                    queryset = queryset.filter(pk__in=shop_ids).exclude(province__in=provinces_viewable)
+                if cross_assign_status == '1':
+                    staff_viewable = get_staffs_viewable_queryset(request.user)
+                    shop_ids = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP).exclude(
+                        staff__in=staff_viewable).values('shop_id')
+                    queryset = queryset.filter(pk__in=shop_ids, province__in=provinces_viewable)
+            else:
+                queryset = queryset.filter(province__in=provinces_viewable)
         else:
             shops = get_shops_viewable_queryset(request.user)
             queryset = queryset.filter(pk__in=shops)
-
     code = request.query_params.get('code', None)
     merchant_id = request.query_params.get('merchant_id', None)
     team_id = request.query_params.get('team_id', None)
@@ -585,7 +598,7 @@ def get_queryset_shop_list(request):
     to_date = request.query_params.get('to_date', None)
     if code is not None and code != '':
         code = format_string(code)
-        queryset = queryset.filter(Q(code__icontains=code)|Q(name__icontains=code))
+        queryset = queryset.filter(Q(code__icontains=code) | Q(name__icontains=code))
 
     if merchant_id is not None and merchant_id != '':
         queryset = queryset.filter(merchant_id=merchant_id)

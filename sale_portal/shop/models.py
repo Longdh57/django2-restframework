@@ -66,6 +66,7 @@ class Shop(models.Model):
             ('shop_export', 'Can export data shop'),
             ('dashboard_shop_count', 'Can get shop data for dashboard'),
             ('shop_assign', 'Can create shop from terminal or assign terminal to shop'),
+            ('filter_by_cross_assign_status', 'Can filter by cross_assign_status')
         )
 
     def __str__(self):
