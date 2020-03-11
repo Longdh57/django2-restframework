@@ -244,6 +244,14 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         first_terminal = shop.terminals.order_by('created_date').first()
 
+        if shop.shop_cube and shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]':
+            if '[' not in shop.shop_cube.voucher_code_list:
+                voucher_code_list = shop.shop_cube.voucher_code_list
+            else:
+                voucher_code_list = ast.literal_eval(shop.shop_cube.voucher_code_list)
+        else:
+            voucher_code_list = ''
+
         data = {
             'name': shop.name,
             'code': shop.code,
@@ -291,8 +299,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 'number_of_tran_w_8_14': shop.shop_cube.number_of_tran_w_8_14,
                 'number_of_tran_w_15_21': shop.shop_cube.number_of_tran_w_15_21,
                 'number_of_tran_w_22_end': shop.shop_cube.number_of_tran_w_22_end,
-                'voucher_code_list': ast.literal_eval(shop.shop_cube.voucher_code_list) if (
-                        shop.shop_cube.voucher_code_list is not None and shop.shop_cube.voucher_code_list != '[]') else '',
+                'voucher_code_list': voucher_code_list,
             } if shop.shop_cube else None,
             'province': {'id': shop.province.id,
                          'name': shop.province.province_name,
