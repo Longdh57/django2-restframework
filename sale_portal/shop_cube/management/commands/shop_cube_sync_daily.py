@@ -82,6 +82,8 @@ class Command(BaseCommand):
                     point_last_m_w_15_21=item['point_last_m_w_15_21'],
                     point_last_m_w_22_end=item['point_last_m_w_22_end'],
                     voucher_code_list=item['voucher_code_list'],
+                    rank=item['rank'],
+                    to_do=item['to_do'],
                     _created_date=item['_created_date'],
                     _updated_date=item['_updated_date'],
                 ) for item in data_cursor)

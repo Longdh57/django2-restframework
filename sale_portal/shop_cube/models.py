@@ -49,6 +49,8 @@ class ShopCube(models.Model):
     point_last_m_w_8_14 = models.IntegerField(default=0, help_text='Point ky 2 thang truoc')
     point_last_m_w_15_21 = models.IntegerField(default=0, help_text='Point ky 3 thang truoc')
     point_last_m_w_22_end = models.IntegerField(default=0, help_text='Point ky 4 thang truoc')
+    to_do = models.IntegerField(default=0, help_text='Shop co to_do = 1 la shop can cham soc')
+    rank = models.IntegerField(default=0, help_text='Thu tu cham soc cac shop')
     voucher_code_list = models.TextField(blank=True, null=True, help_text='Danh sach cac ma voucher dang ap dung')
     _created_date = models.DateTimeField(blank=True, null=True)
     _updated_date = models.DateTimeField(blank=True, null=True)
