@@ -52,7 +52,7 @@ left join qr_wards qr_war on qr_war.id = s.wards_id
 left join (select spf.shop_id, spt.code as ctkm from sale_promotion_form spf
             inner join sale_promotion_title spt on spf.title_id = spt.id group by spf.shop_id, spt.code) p on s.id=p.shop_id			
 left join shop_cube sc on sc.shop_id = s.id
-left join qr_type_merchant d on m.department = d.id'''
+left join qr_type_merchant d on m.merchant_type = d.id'''
 
 
 class ExportType:
