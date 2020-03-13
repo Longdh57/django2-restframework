@@ -185,7 +185,10 @@ class Terminal(models.Model):
     @property
     def qr_terminal_contact(self):
         try:
-            qr_terminal_contact = QrTerminalContact.objects.filter(terminal_id=self.terminal_id).first()
+            qr_terminal_contact = QrTerminalContact.objects.filter(
+                terminal_id=self.terminal_id,
+                merchant_code=self.merchant.merchant_code
+            ).first()
         except QrTerminalContact.DoesNotExist:
             qr_terminal_contact = None
         return qr_terminal_contact
