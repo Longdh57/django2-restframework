@@ -5,7 +5,6 @@ from rest_framework import serializers
 
 from sale_portal.shop.models import Shop
 from sale_portal.merchant.models import Merchant
-from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 
 
 class MerchantSerializer(serializers.ModelSerializer):
