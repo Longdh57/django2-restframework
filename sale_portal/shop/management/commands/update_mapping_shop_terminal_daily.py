@@ -134,6 +134,7 @@ class Command(BaseCommand):
                 for shop in list_shop_to_disable:
                     if shop is not None and shop.staff is not None:
                         shop.activated = ShopActivateType.DISABLE
+                        shop.inactivated_date = datedatetime.now()
                         shop.save()
                         shop.staff_delete()
             self.stdout.write('Success - Đã set activated = 0 với shop không có terminal !')
