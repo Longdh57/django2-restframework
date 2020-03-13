@@ -645,7 +645,7 @@ def get_queryset_shop_list(request):
 
 @api_view(['POST'])
 @login_required
-@permission_required('shop.shop_assign', raise_exception=True)
+@permission_required('shop.shop_create_from_ter', raise_exception=True)
 def create_from_terminal(request):
     if request.method == 'POST':
         terminal_id = request.POST.get('terminal_id', None)

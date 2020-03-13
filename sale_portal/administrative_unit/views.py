@@ -23,9 +23,9 @@ def list_provinces(request):
     """
     queryset = QrProvince.objects.values('id', 'province_code', 'province_name')
 
-    if request.user.is_superuser is False:
-        provinces = get_provinces_viewable_queryset(request.user)
-        queryset = queryset.filter(pk__in=provinces)
+    # if request.user.is_superuser is False:
+    #     provinces = get_provinces_viewable_queryset(request.user)
+    #     queryset = queryset.filter(pk__in=provinces)
 
     area_id = request.GET.get('area_id', None)
     code = request.GET.get('code', None)
