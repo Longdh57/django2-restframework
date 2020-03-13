@@ -4,7 +4,7 @@ import logging
 from django.db import connection
 from django.core.management.base import BaseCommand, CommandError
 
-from sale_portal.staff.models import Staff, StaffLog
+from sale_portal.staff.models import Staff, StaffLog, QrStaff
 from sale_portal.utils.cronjob_util import cron_create, cron_update
 
 
@@ -61,6 +61,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         cronjob = cron_create(name='staff_synchronize_change', type='staff')
+        desc = {}
 
         try:
             self.stdout.write(self.style.SUCCESS('Start staff synchronize change processing...'))
@@ -72,6 +73,10 @@ class Command(BaseCommand):
                     dict(zip(columns, row))
                     for row in cursor.fetchall()
                 ]
+
+            count_qr_staff = QrStaff.objects.count()
+            if count_qr_staff == 0:
+                raise Exception('ERROR: Table qr_staff is NULL')
 
             for data in data_cursor:
                 if data['status'] == 0:
@@ -93,9 +98,7 @@ class Command(BaseCommand):
                     created += 1
 
                 elif data['status'] == 1:
-                    staff = Staff.objects.filter(pk=data['s_staff_id']).first()
-                    self.create_staff_log(staff=staff, qr_staff=None, status=data['status'])
-                    staff.delete()
+                    desc[data['s_staff_id']] = 'Log: staff_id {} is deleted in qr_staff'.format(data['s_staff_id'])
                     deleted += 1
 
                 elif data['status'] == 2:
@@ -124,9 +127,9 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    'Successfully command. Created: {}. Updated: {}. Deleted: {}'.format(created, updated, deleted)))
+                    'Successfully command. Created: {}. Updated: {}. Data for Delete: {}'.format(created, updated, deleted)))
 
-            cron_update(cronjob, status=1)
+            cron_update(cronjob, status=1, description=str(desc))
 
         except Exception as e:
             logging.error('Job staff_synchronize_change exception: %s', e)
