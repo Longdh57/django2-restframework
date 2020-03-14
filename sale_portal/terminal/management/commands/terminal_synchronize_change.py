@@ -104,7 +104,7 @@ class Command(BaseCommand):
                 ]
 
             for data in data_cursor:
-                is_update_business_address = False
+                is_update_address = False
                 if data['status'] == 0:
                     self.create_new_terminal(terminal_id=data['terminal_id'], merchant_id=data['merchant_id'])
                     created += 1
@@ -117,8 +117,11 @@ class Command(BaseCommand):
                         terminal = Terminal.objects.filter(terminal_id=data['terminal_id'],
                                                            merchant_id=data['merchant_id']).first()
                         self.create_terminal_log(terminal=terminal, qr_terminal=qr_terminal, status=data['status'])
-                        if terminal.business_address != qr_terminal.business_address:
-                            is_update_business_address = True
+                        if terminal.business_address != qr_terminal.business_address or \
+                                terminal.province_code != qr_terminal.province_code or \
+                                terminal.district_code != qr_terminal.district_code or \
+                                terminal.wards_code != qr_terminal.wards_code:
+                            is_update_address = True
 
                         terminal.status = qr_terminal.status
                         terminal.terminal_address = qr_terminal.terminal_address
@@ -133,10 +136,14 @@ class Command(BaseCommand):
                         terminal.modify_date = qr_terminal.modify_date
                         terminal.save()
 
-                        if is_update_business_address:
+                        if is_update_address:
                             if Terminal.objects.filter(shop=terminal.shop).count() == 1:
                                 shop = terminal.shop
+                                shop.street = None
                                 shop.address = qr_terminal.business_address
+                                shop.province = terminal.get_province() or None
+                                shop.district = terminal.get_district() or None
+                                shop.wards = terminal.get_wards() or None
                                 shop.save()
                             else:
                                 request = HttpRequest()
