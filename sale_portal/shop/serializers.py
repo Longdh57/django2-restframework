@@ -85,5 +85,6 @@ class ShopSerializer(serializers.ModelSerializer):
             'activated',
             'created_date',
             'count_terminals',
-            'shop_cube'
+            'shop_cube',
+            'take_care_status'
         )

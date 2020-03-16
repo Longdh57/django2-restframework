@@ -32,7 +32,7 @@ class Shop(models.Model):
     code = models.CharField(max_length=100, null=True, unique=True)
     address = models.TextField(null=True)
     description = models.TextField(null=True)
-    take_care_status = models.IntegerField(choices=ShopTakeCareStatus.CHOICES, default=ShopTakeCareStatus.CREATED_TODAY)
+    take_care_status = models.IntegerField(choices=ShopTakeCareStatus.CHOICES, default=ShopTakeCareStatus.NOT_CARE)
     merchant = models.ForeignKey(Merchant, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
     province = models.ForeignKey(QrProvince, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
     district = models.ForeignKey(QrDistrict, on_delete=models.SET_NULL, related_name='shops', blank=True, null=True)
