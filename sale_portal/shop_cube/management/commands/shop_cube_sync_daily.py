@@ -1,10 +1,12 @@
 import logging
-
+from datetime import date
 from itertools import islice
-from django.conf import settings
-from django.db import connections, connection
-from django.core.management.base import BaseCommand
 
+from django.conf import settings
+from django.core.management.base import BaseCommand
+from django.db import connections, connection
+
+from sale_portal.shop.models import Shop
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.utils.cronjob_util import cron_create, cron_update
 
@@ -97,6 +99,14 @@ class Command(BaseCommand):
                 offset = offset + limit
 
             self.stdout.write(self.style.SUCCESS('Finish shop_cube sync daily processing!'))
+
+            current_day = date.today().day
+            if current_day in [1, 8, 15, 22]:
+                print('Start update shop take_care_status at the beginning of each period')
+                Shop.objects.all().update(take_care_status=0)
+                shop_need_update_id = ShopCube.objects.filter(to_do=1).values('shop_id')
+                Shop.objects.filter(pk__in=shop_need_update_id).update(take_care_status=1)
+                print('End update shop take_care_status')
 
             cron_update(cronjob, status=1)
 
