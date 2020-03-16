@@ -17,10 +17,13 @@ def get_provinces_viewable_queryset(user):
         if group is None or group.status is False:
             return QrProvince.objects.none()
         if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+            # Neu la SM (or SA) cua tripi, teko thi load all province
+            if user.is_manager_outside_vnpay:
+                return QrProvince.objects.all()
+            # Neu la SM (or SA) cua Vnpay thi load provinces theo area
             provinces = QrProvince.objects.none()
             for area in user.area_set.all():
                 provinces |= area.get_provinces()
-
             return provinces
 
         else:
@@ -29,30 +32,29 @@ def get_provinces_viewable_queryset(user):
     return QrProvince.objects.all()
 
 
-def get_shops_viewable_queryset(user):
+def get_staffs_viewable_queryset(user):
     if not user.is_superuser:
         group = user.get_group()
         if group is None or group.status is False:
-            return Shop.objects.none()
+            return Staff.objects.none()
         if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
-            provinces = QrProvince.objects.none()
-            for area in user.area_set.all():
-                provinces |= area.get_provinces()
-
-            return Shop.objects.filter(province__in=provinces)
+            # Neu la SM (or SA) cua tripi, teko thi load ds team => ds sale
+            if user.is_manager_outside_vnpay:
+                teams = user.team_set.all()
+                return Staff.objects.filter(team__in=teams)
+            # Neu la SM (or SA) cua Vnpay thi load ds area => ds team => ds sale
+            teams = Team.objects.filter(area__in=user.area_set.all())
+            return Staff.objects.filter(team__in=teams)
         else:
             staff = Staff.objects.filter(email=user.email).first()
             if staff and staff.team:
                 if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
-                    staffs = Staff.objects.filter(team_id=staff.team.id)
-                    shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
+                    return Staff.objects.filter(team_id=staff.team.id)
                 else:
-                    shops = StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP).values('shop')
-                return Shop.objects.filter(pk__in=shops)
+                    return Staff.objects.filter(email=user.email)
             else:
-                return Shop.objects.none()
-
-    return Shop.objects.all()
+                return Staff.objects.none()
+    return Staff.objects.all()
 
 
 def get_teams_viewable_queryset(user):
@@ -61,6 +63,10 @@ def get_teams_viewable_queryset(user):
         if group is None or group.status is False:
             return Team.objects.none()
         if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+            # Neu la SM (or SA) cua tripi, teko thi load luon ds team
+            if user.is_manager_outside_vnpay:
+                return user.team_set.all()
+            # Neu la SM (or SA) cua Vnpay thi load ds area => ds team
             return Team.objects.filter(area__in=user.area_set.all())
         else:
             staff = Staff.objects.filter(email=user.email).first()
@@ -75,24 +81,35 @@ def get_teams_viewable_queryset(user):
     return Team.objects.all()
 
 
-def get_staffs_viewable_queryset(user):
+def get_shops_viewable_queryset(user):
     if not user.is_superuser:
         group = user.get_group()
         if group is None or group.status is False:
-            return Staff.objects.none()
+            return Shop.objects.none()
         if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
-            teams = Team.objects.filter(area__in=user.area_set.all())
-            return Staff.objects.filter(team__in=teams)
+            # Neu la SM (or SA) cua tripi, teko thi load ds team => ds sale => ds shop
+            if user.is_manager_outside_vnpay:
+                staffs = get_staffs_viewable_queryset(user)
+                shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
+                return Shop.objects.filter(pk__in=shops)
+            # Neu la SM (or SA) cua Vnpay thi load Shop theo provinces lay ra tu area
+            provinces = QrProvince.objects.none()
+            for area in user.area_set.all():
+                provinces |= area.get_provinces()
+            return Shop.objects.filter(province__in=provinces)
         else:
             staff = Staff.objects.filter(email=user.email).first()
             if staff and staff.team:
                 if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
-                    return Staff.objects.filter(team_id=staff.team.id)
+                    staffs = Staff.objects.filter(team_id=staff.team.id)
+                    shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
                 else:
-                    return Staff.objects.filter(email=user.email)
+                    shops = StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP).values('shop')
+                return Shop.objects.filter(pk__in=shops)
             else:
-                return Staff.objects.none()
-    return Staff.objects.all()
+                return Shop.objects.none()
+
+    return Shop.objects.all()
 
 
 def get_users_viewable_queryset(user):

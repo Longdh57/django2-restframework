@@ -3,35 +3,36 @@ import logging
 import collections
 
 from datetime import datetime
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import Group, Permission
+from django.db.models import Q
+from django.utils import formats
+from django.conf import settings
+from rest_framework import status
+from social_core.utils import parse_qs
+from rest_framework.views import APIView
+from requests.exceptions import HTTPError
+from rest_framework import viewsets, mixins
+from django.middleware.csrf import get_token
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from django.conf import settings
-from django.db.models import Q
+from django.http import HttpResponse, JsonResponse
 from rest_framework_jwt.settings import api_settings
-from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.views import JSONWebTokenAPIView
+from django.contrib.auth.models import Group, Permission
 from social_core.exceptions import AuthException, AuthForbidden
-
-from sale_portal.area.models import Area
-from sale_portal.utils.permission import PermissionIsAdmin, check_user_admin
-from ..user.models import CustomGroup, User
-from ..user import model_names, ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ADMIN, ROLE_OTHER, ROLE_SALE_LEADER, ROLE_SALE
-from django.http import JsonResponse
-from rest_framework import status
-from rest_framework import viewsets, mixins
-from rest_framework.views import APIView
+from rest_framework_jwt.serializers import JSONWebTokenSerializer
+from django.contrib.auth.decorators import login_required, user_passes_test
 from rest_social_auth.views import JWTAuthMixin, BaseSocialAuthView, decorate_request
-from .serializers import UserSerializer, GroupSerializer, PermissionSerializer, AccountSerializer, UserJWTSerializer
-from ..staff.models import Staff
-from ..common.standard_response import successful_response, custom_response, Code
-from django.middleware.csrf import get_token
-from django.utils import formats
 
-from requests.exceptions import HTTPError
-from django.http import HttpResponse
-from social_core.utils import parse_qs
+from sale_portal.team.models import Team
+from sale_portal.area.models import Area
+from sale_portal.staff.models import Staff
+from sale_portal.user.models import CustomGroup, User
+from sale_portal.utils.permission import PermissionIsAdmin, check_user_admin
+from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.user import model_names, ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ADMIN, ROLE_OTHER, ROLE_SALE_LEADER, \
+    ROLE_SALE
+from sale_portal.user.serializers import UserSerializer, GroupSerializer, PermissionSerializer, AccountSerializer, \
+    UserJWTSerializer
 
 
 class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
@@ -59,7 +60,7 @@ class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
         except (AuthException, HTTPError) as e:
             if isinstance(e, AuthForbidden):
                 return Response({
-                    'message': 'Tài khoản đăng nhập không phải VNPAY.'
+                    'message': 'Tài khoản đăng nhập không phải VNPAY, TRIPI or TEKO.'
                 }, status=status.HTTP_400_BAD_REQUEST)
             return Response({
                 'message': 'Đăng nhập thất bại!'
@@ -87,8 +88,8 @@ class SocialJWTUserAuthView(JWTAuthMixin, BaseSocialAuthView):
                     status=status.HTTP_400_BAD_REQUEST)
             elif not group.status:
                 return Response({
-                                    'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                    'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
+                    status=status.HTTP_400_BAD_REQUEST)
         return Response(resp_data.data)
 
 
@@ -111,11 +112,13 @@ class AccountJWTUserAuthView(JSONWebTokenAPIView):
             else:
                 group = user.get_group()
                 if group is None:
-                    return Response({'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
-                                    status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {'message': 'Có lỗi xảy ra với nhóm quyền của bạn. Vui lòng liên hệ Admin để được hỗ trợ'},
+                        status=status.HTTP_400_BAD_REQUEST)
                 elif not group.status:
-                    return Response({'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                    return Response({
+                                        'message': 'Nhóm quyền gắn với tài khoản của bạn đang tạm khóa. Vui lòng liên hệ Admin để được hỗ trợ'},
+                                    status=status.HTTP_400_BAD_REQUEST)
             response_data = jwt_response_payload_handler(token, user, request)
             response = Response(response_data)
             if api_settings.JWT_AUTH_COOKIE:
@@ -147,7 +150,7 @@ class CSRFGeneratorView(APIView):
     def get(self, request):
         csrf_token = get_token(request)
         return JsonResponse({
-            'csrf_token':csrf_token
+            'csrf_token': csrf_token
         }, status=200)
 
 
@@ -229,7 +232,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         user_permissions = user.user_permissions.all()
         group_permissions = Permission.objects.filter(group__user=user).all()
 
-        areas = []
+        areas, teams = [], []
 
         for item in user.area_set.all():
             area = {
@@ -239,9 +242,18 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             }
             areas.append(area)
 
+        for item in user.team_set.all():
+            team = {
+                'id': item.id,
+                'name': item.name,
+                'code': item.code
+            }
+            teams.append(team)
+
         data = {
             'user': AccountSerializer(user).data,
             'areas': areas,
+            'teams': teams,
             'user_permissions': PermissionSerializer(user_permissions, many=True).data,
             'group_permissions': PermissionSerializer(group_permissions, many=True).data,
         }
@@ -267,15 +279,20 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             body = json.loads(request.body)
 
             is_active = body.get('is_active')
+            is_manager_outside_vnpay = body.get('is_manager_outside_vnpay')
             role_name = body.get('role_name')
             area_ids = body.get('area_ids')
+            team_ids = body.get('team_ids')
             user_permissions = body.get('user_permissions')
 
             if is_active is None or is_active not in ['true', 'false']:
-                return custom_response(Code.INVALID_BODY, 'status user not valid')
+                return custom_response(Code.INVALID_BODY, 'Field is_active not valid')
+
+            if is_manager_outside_vnpay is None or is_manager_outside_vnpay not in ['true', 'false']:
+                return custom_response(Code.INVALID_BODY, 'Field is_manager_outside_vnpay not valid')
 
             if role_name is None or role_name == '' or not isinstance(role_name, str):
-                return custom_response(Code.INVALID_BODY, 'role_name not valid')
+                return custom_response(Code.INVALID_BODY, 'Field role_name not valid')
 
             role_name = role_name.upper()
 
@@ -302,14 +319,22 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 return custom_response(Code.GROUP_NOT_FOUND)
 
             if role_name == ROLE_SALE_MANAGER or role_name == ROLE_SALE_ADMIN:
-                # Kiểm tra định dạng area_ids nếu role là ROLE_SALE_MANAGER or ROLE_SALE_ADMIN
-                if not area_ids or not isinstance(area_ids, list):
-                    return custom_response(Code.INVALID_BODY, 'List Area not valid')
-                if Area.objects.filter(pk__in=area_ids).count() != len(area_ids):
-                    return custom_response(Code.AREA_NOT_FOUND)
+                if user.is_manager_outside_vnpay or (is_manager_outside_vnpay == 'true'):
+                    # Check định dạng team_ids nếu role là ROLE_SALE_MANAGER / ROLE_SALE_ADMIN và là người Tripi, Teko
+                    if not isinstance(team_ids, list):
+                        return custom_response(Code.INVALID_BODY, 'List Team not valid')
+                    if Team.objects.filter(pk__in=team_ids).count() != len(team_ids):
+                        return custom_response(Code.TEAM_NOT_FOUND)
+                    user.team_set.set(team_ids)
+                else:
+                    # Check định dạng area_ids nếu role là ROLE_SALE_MANAGER / ROLE_SALE_ADMIN và là người VNpay
+                    if not isinstance(area_ids, list):
+                        return custom_response(Code.INVALID_BODY, 'List Area not valid')
+                    if Area.objects.filter(pk__in=area_ids).count() != len(area_ids):
+                        return custom_response(Code.AREA_NOT_FOUND)
+                    user.area_set.set(area_ids)
 
                 user.groups.set(group)
-                user.area_set.set(area_ids)
                 user.is_superuser = False
                 user.is_area_manager = True if role_name == ROLE_SALE_MANAGER else False
                 user.is_sale_admin = True if role_name == ROLE_SALE_ADMIN else False
@@ -321,6 +346,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 user.is_area_manager = False
                 user.is_sale_admin = False
 
+            user.is_manager_outside_vnpay = (is_manager_outside_vnpay == 'true')
             user.is_active = (is_active == 'true')
             user.save()
             user.user_permissions.set(user_permissions)
@@ -436,9 +462,11 @@ class GroupViewSet(mixins.ListModelMixin,
             'id': custom_group.id,
             'name': custom_group.name,
             'status': custom_group.status,
-            'created_date': formats.date_format(custom_group.created_date, "SHORT_DATETIME_FORMAT") if custom_group.created_date else '',
+            'created_date': formats.date_format(custom_group.created_date,
+                                                "SHORT_DATETIME_FORMAT") if custom_group.created_date else '',
             'created_by': custom_group.created_by.username if custom_group.created_by else '',
-            'updated_date': formats.date_format(custom_group.updated_date, "SHORT_DATETIME_FORMAT") if custom_group.updated_date else '',
+            'updated_date': formats.date_format(custom_group.updated_date,
+                                                "SHORT_DATETIME_FORMAT") if custom_group.updated_date else '',
             'updated_by': custom_group.updated_by.username if custom_group.updated_by else '',
             'permissions': permissions
         }

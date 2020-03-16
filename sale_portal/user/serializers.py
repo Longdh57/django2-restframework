@@ -55,7 +55,7 @@ class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_active', 'date_joined', 'last_login',
-                  'role')
+                  'role', 'is_manager_outside_vnpay')
 
 
 class GroupSerializer(serializers.ModelSerializer):
