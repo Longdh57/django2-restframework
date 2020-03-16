@@ -433,6 +433,9 @@ class SaleReportViewSet(mixins.ListModelMixin,
         sale_report.created_by = request.user
         sale_report.updated_by = request.user
         sale_report.is_draft = is_draft
+        if not is_draft and str(purpose) == '2':
+            shop.take_care_status = 2
+            shop.save()
 
         try:
             sale_report.save()

@@ -1,12 +1,12 @@
 class ShopTakeCareStatus:
     NOT_CARE = 0
     CARE = 1
-    CREATED_TODAY = 2
+    CARE_OK = 2
 
     CHOICES = (
         (NOT_CARE, 'NOT TAKE CARE'),
         (CARE, 'TAKE CARE'),
-        (CREATED_TODAY, 'OTHER - SHOP CREATED IN TODAY'),
+        (CARE_OK, 'CARE_OK')
     )
 
 
