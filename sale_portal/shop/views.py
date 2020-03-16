@@ -580,14 +580,24 @@ def get_queryset_shop_list(request):
             if cross_assign_status is not None and cross_assign_status != '':
                 if cross_assign_status == '0':
                     staff_viewable = get_staffs_viewable_queryset(request.user)
-                    shop_ids = StaffCare.objects.filter(staff__in=staff_viewable, type=StaffCareType.STAFF_SHOP).values(
-                        'shop_id')
+                    shop_ids = StaffCare.objects.filter(staff__in=staff_viewable, type=StaffCareType.STAFF_SHOP) \
+                        .values('shop_id')
                     queryset = queryset.filter(pk__in=shop_ids).exclude(province__in=provinces_viewable)
                 if cross_assign_status == '1':
                     staff_viewable = get_staffs_viewable_queryset(request.user)
-                    shop_ids = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP).exclude(
-                        staff__in=staff_viewable).values('shop_id')
+                    shop_ids = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP) \
+                        .exclude(staff__in=staff_viewable).values('shop_id')
                     queryset = queryset.filter(pk__in=shop_ids, province__in=provinces_viewable)
+                if cross_assign_status == '2':
+                    staff_viewable = get_staffs_viewable_queryset(request.user)
+                    shop_id_can_view = StaffCare.objects.filter(staff__in=staff_viewable, type=StaffCareType.STAFF_SHOP) \
+                        .values('shop_id')
+                    shop_id_can_not_view = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP) \
+                        .exclude(staff__in=staff_viewable).values('shop_id')
+                    queryset = queryset.filter(
+                        (Q(pk__in=shop_id_can_not_view) & Q(province__in=provinces_viewable)) |
+                        (Q(pk__in=shop_id_can_view) & ~Q(province__in=provinces_viewable))
+                    )
             else:
                 queryset = queryset.filter(province__in=provinces_viewable)
         else:

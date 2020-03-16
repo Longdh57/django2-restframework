@@ -35,10 +35,6 @@ class Command(BaseCommand):
         try:
 
             self.stdout.write(self.style.WARNING('Start shop_cube sync daily processing...'))
-            current_day = date.today().day
-            if current_day in [1, 8, 15, 22]:
-                print('Update shop take_care_status to 0 at the beginning of each period')
-                Shop.objects.all().update(take_care_status=0)
 
             limit, offset = 1500, 0
 
@@ -48,7 +44,7 @@ class Command(BaseCommand):
                 raise Exception("number of shop cube is 0")
             print(f'Count DWH shop_cube row: {count_shop_cube}')
 
-            #Truncate table qr_terminal before synchronize all data from MMS
+            # Truncate table qr_terminal before synchronize all data from MMS
             cursor = connection.cursor()
             cursor.execute('TRUNCATE TABLE "{0}"'.format(ShopCube._meta.db_table))
 
@@ -104,10 +100,14 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Finish shop_cube sync daily processing!'))
 
-            print('Update shop take_care_status to 1 for shop has take_care_status = 0 but to_do = 1')
-            shop_need_update_id = ShopCube.objects.filter(to_do=1, shop_id__in=Shop.objects.filter(take_care_status=0))\
-                .values('shop_id')
-            Shop.objects.filter(pk__in=shop_need_update_id).update(take_care_status=1)
+            current_day = date.today().day
+            if current_day in [1, 8, 15, 22]:
+                print('Start update shop take_care_status at the beginning of each period')
+                Shop.objects.all().update(take_care_status=0)
+                shop_need_update_id = ShopCube.objects.filter(to_do=1).values('shop_id')
+                Shop.objects.filter(pk__in=shop_need_update_id).update(take_care_status=1)
+                print('End update shop take_care_status')
+
             cron_update(cronjob, status=1)
 
         except Exception as e:
