@@ -12,8 +12,9 @@ class CustomUserManager(UserManager):
 
 
 class User(AbstractUser):
-    is_area_manager = models.BooleanField(default=False)
-    is_sale_admin = models.BooleanField(default=False)
+    is_area_manager = models.BooleanField(default=False, help_text='Is sale manager')
+    is_sale_admin = models.BooleanField(default=False, help_text='Is sale admin')
+    is_manager_outside_vnpay = models.BooleanField(default=False, help_text='Sale from tripi, teko')
     send_disable_shop_email = models.BooleanField(default=False)
 
     objects = CustomUserManager()

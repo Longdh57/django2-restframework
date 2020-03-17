@@ -469,8 +469,14 @@ def get_queryset_terminal_list(request):
 
     if request.user.is_superuser is False:
         if request.user.is_area_manager or request.user.is_sale_admin:
-            provinces = get_provinces_viewable_queryset(request.user)
-            queryset = queryset.filter(province_code__in=provinces.values('province_code'))
+            # Neu la SM (or SA) cua tripi, teko thi load ds shop => ds ter
+            if request.user.is_manager_outside_vnpay:
+                shops = get_shops_viewable_queryset(request.user)
+                queryset = queryset.filter(shop__in=shops)
+            # Neu la SM (or SA) cua Vnpay thi load ds provinces => ds ter
+            else:
+                provinces = get_provinces_viewable_queryset(request.user)
+                queryset = queryset.filter(province_code__in=provinces.values('province_code'))
         else:
             shops = get_shops_viewable_queryset(request.user)
             queryset = queryset.filter(shop__in=shops)

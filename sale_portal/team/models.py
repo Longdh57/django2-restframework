@@ -15,6 +15,7 @@ class Team(models.Model):
     type = models.IntegerField(choices=TeamType.CHOICES, default=0)
     description = models.TextField(null=True)
     area = models.ForeignKey(Area, on_delete=models.SET_NULL, related_name='teams', null=True)
+    user = models.ManyToManyField(User)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='team_created_by', null=True)

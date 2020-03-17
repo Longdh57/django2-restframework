@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.utils import formats
 
 from sale_portal.staff.models import Staff
-from sale_portal.staff import StaffTeamRoleType
+from sale_portal.shop import ShopActivateType
 from sale_portal.staff_care import StaffCareType
 
 
@@ -22,7 +22,10 @@ class StaffSerializer(serializers.ModelSerializer):
         return staff.get_role_name()
 
     def get_count_shop(self, staff):
-        return staff.staff_cares.filter(type=StaffCareType.STAFF_SHOP).count()
+        return staff.staff_cares.filter(
+            type=StaffCareType.STAFF_SHOP,
+            shop__activated = ShopActivateType.ACTIVATE
+        ).count()
 
     class Meta:
         model = Staff

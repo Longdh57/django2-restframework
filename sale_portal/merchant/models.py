@@ -157,6 +157,13 @@ class Merchant(models.Model):
             return None
 
     @property
+    def merchant_info(self):
+        merchant_info = QrMerchantInfo.objects.filter(merchant_code=self.merchant_code).first()
+        if merchant_info is not None:
+            return merchant_info
+        return None
+
+    @property
     def province(self):
         province = QrProvince.objects.filter(province_code=self.province_code).first()
         if province is not None:
