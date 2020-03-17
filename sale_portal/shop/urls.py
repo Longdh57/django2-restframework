@@ -2,9 +2,10 @@ from django.conf.urls import url, include
 from rest_framework import routers
 
 from .views import list_shop_for_search, list_recommend_shops, ShopViewSet, get_count_shop_30_days_before, export, \
-    create_from_terminal, assign_ter_to_shop
+    create_from_terminal, assign_ter_to_shop, ShopLogViewSet
 
 router = routers.DefaultRouter()
+router.register(r'^shop-log', ShopLogViewSet, 'ShopLog')
 router.register(r'', ShopViewSet, 'Shop')
 
 urlpatterns = [

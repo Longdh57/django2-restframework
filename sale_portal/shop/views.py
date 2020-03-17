@@ -1,42 +1,42 @@
-import ast
-import itertools
-import json
-import logging
 import os
+import ast
+import json
 import time
-from datetime import datetime, date
-
+import logging
+import itertools
 import xlsxwriter
+
+from unidecode import unidecode
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.utils import formats
 from django.db import connection
 from django.db.models import F, Q
-from django.shortcuts import get_object_or_404
-from django.utils import formats
-from django.utils.html import conditional_escape
+from datetime import datetime, date
 from rest_framework import viewsets, mixins
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
+from django.utils.html import conditional_escape
 from rest_framework.exceptions import APIException
-from unidecode import unidecode
+from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.contrib.auth.decorators import login_required, permission_required
 
-from sale_portal.administrative_unit.models import QrWards, QrProvince, QrDistrict
-from sale_portal.area.models import Area
-from sale_portal.common.standard_response import successful_response, custom_response, Code
-from sale_portal.merchant.models import Merchant
-from sale_portal.shop.models import Shop
-from sale_portal.shop.serializers import ShopSerializer
-from sale_portal.shop_cube.models import ShopCube
-from sale_portal.staff.models import Staff
-from sale_portal.staff_care import StaffCareType
-from sale_portal.staff_care.models import StaffCare
 from sale_portal.team import TeamType
+from sale_portal.area.models import Area
+from sale_portal.staff.models import Staff
+from sale_portal.merchant.models import Merchant
 from sale_portal.terminal.models import Terminal
-from sale_portal.utils.data_export import get_data_export, ExportType
-from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.utils.field_formatter import format_string
+from sale_portal.staff_care import StaffCareType
+from sale_portal.shop.models import Shop, ShopLog
+from sale_portal.shop_cube.models import ShopCube
+from sale_portal.staff_care.models import StaffCare
 from sale_portal.utils.geo_utils import findDistance
+from sale_portal.utils.field_formatter import format_string
 from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.utils.data_export import get_data_export, ExportType
+from sale_portal.shop.serializers import ShopSerializer, ShopLogSerializer
+from sale_portal.administrative_unit.models import QrWards, QrProvince, QrDistrict
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset, \
     get_staffs_viewable_queryset
 
@@ -735,3 +735,21 @@ def assign_ter_to_shop(request):
         terminal.shop = shop
         terminal.save()
     return successful_response({'id': shop.id})
+
+
+class ShopLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = ShopLogSerializer
+
+    def get_queryset(self):
+        return get_queryset_shop_log_list(self.request)
+
+
+def get_queryset_shop_log_list(request):
+    queryset = ShopLog.objects.order_by('-id').all()
+
+    shop_id = request.query_params.get('shop_id', None)
+
+    if shop_id is not None and shop_id != '':
+        queryset = queryset.filter(shop_id=shop_id)
+
+    return queryset

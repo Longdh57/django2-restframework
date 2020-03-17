@@ -3,8 +3,9 @@ import ast
 from django.utils import formats
 from rest_framework import serializers
 
-from sale_portal.shop.models import Shop
+from sale_portal.shop import ShopLogType
 from sale_portal.merchant.models import Merchant
+from sale_portal.shop.models import Shop, ShopLog
 
 
 class MerchantSerializer(serializers.ModelSerializer):
@@ -87,4 +88,39 @@ class ShopSerializer(serializers.ModelSerializer):
             'count_terminals',
             'shop_cube',
             'take_care_status'
+        )
+
+
+class ShopLogSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    new_data = serializers.SerializerMethodField()
+    created_date = serializers.SerializerMethodField()
+
+    def get_type(self, shop_log):
+        types = dict((x, y) for x, y in ShopLogType.CHOICES)
+        return types[shop_log.type]
+
+    def get_new_data(self, shop_log):
+        return {
+            'Tên shop': shop_log.new_data['name'] or None,
+            'Đường phố': shop_log.new_data['street'] or None,
+            'Địa chỉ': shop_log.new_data['address'] or None,
+            'MC_id': shop_log.new_data['merchant_id'] or None,
+            'Chăm sóc': shop_log.new_data['take_care_status'] or None,
+            'Hoạt động': shop_log.new_data['activated'] or None,
+            'Tỉnh/Huyện/Đường phố': str(shop_log.new_data['province_id']) + '/' + str(
+                shop_log.new_data['district_id']) + '/' + str(shop_log.new_data['wards_id'])
+        }
+
+    def get_created_date(self, shop_log):
+        return formats.date_format(shop_log.created_date, "SHORT_DATETIME_FORMAT") if shop_log.created_date else ''
+
+    class Meta:
+        model = ShopLog
+        fields = (
+            'id',
+            'shop_id',
+            'new_data',
+            'type',
+            'created_date'
         )
