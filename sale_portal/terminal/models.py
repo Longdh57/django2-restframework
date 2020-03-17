@@ -101,7 +101,7 @@ class TerminalQueryset(models.QuerySet):
         return self.filter(register_vnpayment=1)
 
     def terminal_un_register_vnpayment(self):
-        """Trả về danh sách terminal ko phải cổng."""
+        """Trả về danh sách terminal ko phải cổng. MẶC ĐỊNH SHOW DS NÀY TRÊN SALE PORTAL"""
         return self.exclude(register_vnpayment=1)
 
 

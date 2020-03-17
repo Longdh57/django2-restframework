@@ -98,6 +98,7 @@ def detail(request, pk):
         if merchant is None:
             return custom_response(Code.MERCHANT_NOT_FOUND)
         staff = merchant.get_staff()
+        merchant_info = merchant.merchant_info
         data = {
             'merchant_id': merchant.id,
             'merchant_code': merchant.merchant_code,
@@ -105,6 +106,11 @@ def detail(request, pk):
             'merchant_name': merchant.merchant_name,
             'address': merchant.address,
             'type': merchant.get_type().full_name if merchant.get_type() else '',
+            'total_shop': merchant.shops.count(),
+            'total_terminal': merchant.terminals.count(),
+            'merchant_info': {
+                'contact_name': merchant_info.contact_name if merchant_info else 'N/A'
+            },
             'staff': {
                 'full_name': staff.full_name if staff is not None else '',
                 'email': staff.email if staff is not None else ''
