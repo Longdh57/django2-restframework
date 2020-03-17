@@ -66,7 +66,8 @@ def test_data(db):
         username='user_sale_manager',
         is_staff=True,
         is_superuser=False,
-        is_area_manager=True
+        is_area_manager=True,
+        is_manager_outside_vnpay=False
     )
     group_sale_manager = Group.objects.filter(name=ROLE_SALE_MANAGER)
     sale_manager.groups.set(group_sale_manager)
@@ -77,7 +78,8 @@ def test_data(db):
         username='user_sale_admin',
         is_staff=True,
         is_superuser=False,
-        is_sale_admin=True
+        is_sale_admin=True,
+        is_manager_outside_vnpay=False
     )
     group_sale_admin = Group.objects.filter(name=ROLE_SALE_ADMIN)
     sale_admin.groups.set(group_sale_admin)
@@ -88,6 +90,7 @@ def test_data(db):
         username='user_sale_leader',
         is_staff=True,
         is_superuser=False,
+        is_manager_outside_vnpay=False,
         email='leader@vnpay.vn',
     )
     group_sale_leader = Group.objects.filter(name=ROLE_SALE_LEADER)
@@ -98,6 +101,7 @@ def test_data(db):
         username='user_sale',
         is_staff=True,
         is_superuser=False,
+        is_manager_outside_vnpay=False,
         email='staff@vnpay.vn',
     )
     group_sale = Group.objects.filter(name=ROLE_SALE)
@@ -118,11 +122,13 @@ def factory():
 def data(request):
     is_active = request.param.get('is_active')
     role_name = request.param.get('role_name')
+    is_manager_outside_vnpay = request.param.get('is_manager_outside_vnpay')
     area_ids = request.param.get('area_ids')
     user_permissions = request.param.get('user_permissions')
     return {
         'is_active': is_active if is_active is not None else 'false',
         'role_name': role_name if role_name is not None else 'SALE',
+        'is_manager_outside_vnpay': is_manager_outside_vnpay if is_manager_outside_vnpay is not None else 'false',
         'area_ids': area_ids if area_ids is not None else [],
         'user_permissions': user_permissions if user_permissions is not None else []
     }
@@ -156,12 +162,16 @@ def test_user_not_found(test_data, factory, data, status_code, response_message)
 @pytest.mark.django_db
 @pytest.mark.parametrize(('data', 'status_code', 'response_message'),
                          [
-                             ({'is_active': ''}, 400, 'status user not valid'),
-                             ({'is_active': True}, 400, 'status user not valid'),
-                             ({'is_active': 'True'}, 400, 'status user not valid'),
-                             ({'is_active': 1}, 400, 'status user not valid'),
-                             ({'role_name': ''}, 400, 'role_name not valid'),
-                             ({'role_name': 1}, 400, 'role_name not valid'),
+                             ({'is_active': ''}, 400, 'Field is_active not valid'),
+                             ({'is_active': True}, 400, 'Field is_active not valid'),
+                             ({'is_active': 'True'}, 400, 'Field is_active not valid'),
+                             ({'is_active': 1}, 400, 'Field is_active not valid'),
+                             ({'is_manager_outside_vnpay': ''}, 400, 'Field is_manager_outside_vnpay not valid'),
+                             ({'is_manager_outside_vnpay': True}, 400, 'Field is_manager_outside_vnpay not valid'),
+                             ({'is_manager_outside_vnpay': 'True'}, 400, 'Field is_manager_outside_vnpay not valid'),
+                             ({'is_manager_outside_vnpay': 1}, 400, 'Field is_manager_outside_vnpay not valid'),
+                             ({'role_name': ''}, 400, 'Field role_name not valid'),
+                             ({'role_name': 1}, 400, 'Field role_name not valid'),
                              ({'role_name': 'role_user'}, 404, 'GROUP NOT FOUND'),
                              ({'user_permissions': ''}, 400, 'List user-permission not valid'),
                              ({'user_permissions': 'test'}, 400, 'List user-permission not valid'),
@@ -169,15 +179,35 @@ def test_user_not_found(test_data, factory, data, status_code, response_message)
                              ({'user_permissions': [0, 1, 2, 3]}, 404, 'PERMISSION NOT FOUND'),
                              ({'user_permissions': [0, 1, 2, 3, 'a']}, 500, 'INTERNAL SERVER ERROR'),
                              ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'false',
                                'area_ids': ''}, 400, 'List Area not valid'),
                              ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'false',
                                'area_ids': 'test'}, 400, 'List Area not valid'),
                              ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'false',
                                'area_ids': 1}, 400, 'List Area not valid'),
                              ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'false',
                                'area_ids': [0, 1, 2, 3]}, 404, 'AREA NOT FOUND'),
                              ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'false',
                                'area_ids': [0, 1, 2, 3, 'a']}, 500, 'INTERNAL SERVER ERROR'),
+                             ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'true',
+                               'team_ids': ''}, 400, 'List Team not valid'),
+                             ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'true',
+                               'team_ids': 'test'}, 400, 'List Team not valid'),
+                             ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'true',
+                               'team_ids': 1}, 400, 'List Team not valid'),
+                             ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'true',
+                               'team_ids': [10, 20]}, 400, 'List Team not valid'),
+                             ({'role_name': ROLE_SALE_MANAGER,
+                               'is_manager_outside_vnpay': 'true',
+                               'team_ids': [30, 32, 'aa']}, 400, 'List Team not valid'),
                          ], indirect=True)
 def test_update_data_invalid(test_data, factory, data, status_code, response_message):
     request = factory
