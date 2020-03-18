@@ -7,6 +7,7 @@ from sale_portal.user.models import User
 from sale_portal.terminal.models import Terminal
 from sale_portal.terminal.views import shop_store
 from sale_portal.utils.cronjob_util import cron_create, cron_update
+from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
 
 class Command(BaseCommand):
@@ -62,6 +63,8 @@ class Command(BaseCommand):
                     print('Created total: ' + str(total_row) + 'shops')
 
             self.stdout.write(self.style.SUCCESS('Finish Auto create new shop from terminal daily processing!'))
+
+            refresh_shop_full_data()
 
             desc.update(total_shop_created=total_row)
             cron_update(cronjob, description=desc)

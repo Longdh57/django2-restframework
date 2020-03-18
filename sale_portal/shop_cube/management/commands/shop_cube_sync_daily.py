@@ -9,6 +9,7 @@ from django.db import connections, connection
 from sale_portal.shop.models import Shop
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.utils.cronjob_util import cron_create, cron_update
+from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
 
 class Command(BaseCommand):
@@ -99,6 +100,8 @@ class Command(BaseCommand):
                 offset = offset + limit
 
             self.stdout.write(self.style.SUCCESS('Finish shop_cube sync daily processing!'))
+
+            refresh_shop_full_data()
 
             current_day = date.today().day
             if current_day in [1, 8, 15, 22]:

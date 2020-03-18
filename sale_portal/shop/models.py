@@ -277,3 +277,49 @@ class ShopLog(models.Model):
 
 class vn_unaccent(Func):
     function = 'vn_unaccent'
+
+
+class ShopFullDataQuerySet(models.QuerySet):
+    def shop_active(self):
+        return self.filter(activated=ShopActivateType.ACTIVATE)
+
+    def shop_disable(self):
+        return self.filter(Q(count_terminals=0) | Q(activated=ShopActivateType.DISABLE))
+
+
+class ShopFullData(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=100, null=True)
+    code = models.CharField(max_length=100, null=True, unique=True)
+    street = models.TextField(null=True)
+    address = models.TextField(null=True)
+    activated = models.IntegerField(null=True)
+    take_care_status = models.IntegerField(null=True)
+    created_date = models.DateTimeField(null=True, blank=True, help_text='Ngay tao shop')
+    merchant_id = models.IntegerField(null=True)
+    merchant_brand = models.TextField(null=True)
+    merchant_code = models.TextField(null=True)
+    province_id = models.IntegerField(null=True)
+    province_name = models.TextField(null=True)
+    district_id = models.IntegerField(null=True)
+    district_name = models.TextField(null=True)
+    wards_id = models.IntegerField(null=True)
+    wards_name = models.TextField(null=True)
+    staff_id = models.IntegerField(null=True)
+    staff_email = models.TextField(null=True)
+    team_name = models.TextField(null=True)
+    team_id = models.IntegerField(null=True)
+    count_terminals = models.IntegerField(null=True)
+    report_date = models.DateField(null=True, blank=True, help_text='Ngay bao cao')
+    number_of_tran = models.IntegerField(null=True)
+    number_of_tran_w_1_7 = models.IntegerField(null=True)
+    number_of_tran_w_8_14 = models.IntegerField(null=True)
+    number_of_tran_w_15_21 = models.IntegerField(null=True)
+    number_of_tran_w_22_end = models.IntegerField(null=True)
+    voucher_code_list = models.TextField(null=True)
+
+    objects = ShopFullDataQuerySet.as_manager()
+
+    class Meta:
+        managed = False
+        db_table = 'shop_full_data'
