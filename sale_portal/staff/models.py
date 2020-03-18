@@ -44,6 +44,8 @@ class Staff(models.Model):
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
     role = models.IntegerField(choices=StaffTeamRoleType.CHOICES, default=StaffTeamRoleType.FREELANCE_STAFF,
                                null=False, blank=False)
+    target_kpi_s73 = models.IntegerField(null=True)
+    target_kpi_pos365 = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'staff'

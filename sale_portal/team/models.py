@@ -16,6 +16,8 @@ class Team(models.Model):
     description = models.TextField(null=True)
     area = models.ForeignKey(Area, on_delete=models.SET_NULL, related_name='teams', null=True)
     user = models.ManyToManyField(User)
+    target_kpi_s73 = models.IntegerField(null=True)
+    target_kpi_pos365 = models.IntegerField(null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='team_created_by', null=True)
