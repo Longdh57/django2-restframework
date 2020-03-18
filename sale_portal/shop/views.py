@@ -26,15 +26,15 @@ from sale_portal.staff.models import Staff
 from sale_portal.merchant.models import Merchant
 from sale_portal.terminal.models import Terminal
 from sale_portal.staff_care import StaffCareType
-from sale_portal.shop.models import Shop, ShopLog
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.staff_care.models import StaffCare
 from sale_portal.utils.geo_utils import findDistance
 from sale_portal.utils.field_formatter import format_string
+from sale_portal.shop.models import Shop, ShopFullData, ShopLog
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.utils.data_export import get_data_export, ExportType
-from sale_portal.shop.serializers import ShopSerializer, ShopLogSerializer
+from sale_portal.shop.serializers import ShopFullDataSerializer, ShopLogSerializer
 from sale_portal.administrative_unit.models import QrWards, QrProvince, QrDistrict
 from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset, \
@@ -208,7 +208,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         - from_date -- dd/mm/yyyy
         - to_date -- dd/mm/yyyy
     """
-    serializer_class = ShopSerializer
+    serializer_class = ShopFullDataSerializer
 
     def get_permissions(self):
         permission_classes = []
@@ -539,7 +539,7 @@ def render_excel(request=None, return_url=True):
 
 
 def get_shop_exports(request):
-    queryset = get_queryset_shop_list(request)
+    queryset = get_queryset_shop_list(request, export_data=True)
 
     if len(queryset) > 15000 and request.user.is_superuser is False:
         raise APIException(detail='Số lượng bản ghi quá lớn (>15.000), không thể xuất dữ liệu.', code=400)
@@ -550,16 +550,21 @@ def get_shop_exports(request):
     return get_data_export(queryset, ExportType.SHOP)
 
 
-def get_queryset_shop_list(request):
+def get_queryset_shop_list(request, export_data=False):
     status = request.query_params.get('status', None)
+
+    shop_obj = Shop
+    if not export_data:
+        shop_obj = ShopFullData
+
     if status is not None and status != '':
         if status == '0':
-            queryset = Shop.objects.shop_active().filter(Q(street__isnull=True) | Q(street=''))
+            queryset = shop_obj.objects.shop_active().filter(Q(street__isnull=True) | Q(street=''))
         elif status == '1':
-            queryset = Shop.objects.shop_disable()
+            queryset = shop_obj.objects.shop_disable()
         elif status == '2':
             shop_caring_lists = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP).values('shop')
-            queryset = Shop.objects.shop_active().filter(~Q(pk__in=shop_caring_lists))
+            queryset = shop_obj.objects.shop_active().filter(~Q(pk__in=shop_caring_lists))
         else:
             if status == '3':
                 shop_lists = ShopCube.objects.number_of_tran_this_week(value=1).values('shop_id')
@@ -569,9 +574,9 @@ def get_queryset_shop_list(request):
                 shop_lists = ShopCube.objects.number_of_tran_this_week(value=3).values('shop_id')
             else:
                 shop_lists = ShopCube.objects.number_of_tran_this_week(value=0).values('shop_id')
-            queryset = Shop.objects.shop_active().filter(pk__in=shop_lists)
+            queryset = shop_obj.objects.shop_active().filter(pk__in=shop_lists)
     else:
-        queryset = Shop.objects.shop_active()
+        queryset = shop_obj.objects.shop_active()
 
     if request.user.is_superuser is False:
         if request.user.is_area_manager or request.user.is_sale_admin:
@@ -639,16 +644,16 @@ def get_queryset_shop_list(request):
         if area_id.isdigit():
             area = Area.objects.get(pk=int(area_id))
             provinces = area.get_provinces()
-            queryset = queryset.filter(province__in=provinces)
+            queryset = queryset.filter(province_id__in=provinces)
 
     if province_id is not None and province_id != '':
-        queryset = queryset.filter(province=province_id)
+        queryset = queryset.filter(province_id=province_id)
 
     if district_id is not None and district_id != '':
-        queryset = queryset.filter(district=district_id)
+        queryset = queryset.filter(district_id=district_id)
 
     if ward_id is not None and ward_id != '':
-        queryset = queryset.filter(wards=ward_id)
+        queryset = queryset.filter(wards_id=ward_id)
 
     if from_date is not None and from_date != '':
         queryset = queryset.filter(

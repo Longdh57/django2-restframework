@@ -18,6 +18,7 @@ from sale_portal.shop import ShopActivateType
 from sale_portal.terminal.models import Terminal
 from sale_portal.cronjob.models import CronjobLog
 from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
 
 class Command(BaseCommand):
@@ -161,8 +162,9 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('FINISH PROCESSING!'))
 
-            cron_log.status = 1
+            refresh_shop_full_data()
 
+            cron_log.status = 1
             cron_log.save()
 
         except Exception as e:
