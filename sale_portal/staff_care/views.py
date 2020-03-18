@@ -1,21 +1,20 @@
-import time
 import json
-
+import time
 from datetime import datetime
-from django.contrib.auth.decorators import login_required
 
-from tablib import Dataset
+from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
+from tablib import Dataset
 
 from sale_portal import settings
+from sale_portal.common.standard_response import Code, successful_response, custom_response
+from sale_portal.merchant.models import Merchant
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff, QrStaff
-from sale_portal.merchant.models import Merchant
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCareImportLog
 from sale_portal.staff_care.serializers import StaffCareImportLogSerializer
-from sale_portal.common.standard_response import Code, successful_response, custom_response
 from sale_portal.utils.excel_util import check_or_create_excel_folder, create_simple_excel_file
 
 
@@ -132,9 +131,9 @@ def update_sale_shop(request, data, is_submit=False):
     if staff.team is None:
         return 'Sale không thuộc bất kì Team nào - Lỗi dữ liệu'
 
-    if shop.staff == staff and data['street'] == '':
+    if shop.staff == staff and (data['street'] == '' or data['street'] is None):
         return 'No change'
-    elif shop.staff == staff and data['street'] != '':
+    elif shop.staff == staff and (data['street'] != '' and data['street'] is not None):
         if is_submit:
             shop.street = data['street']
             shop.save()
