@@ -608,7 +608,7 @@ def get_queryset_shop_list(request, export_data=False):
                             (Q(pk__in=shop_id_can_view) & ~Q(province__in=provinces_viewable))
                         )
                 else:
-                    queryset = queryset.filter(province__in=provinces_viewable)
+                    queryset = queryset.filter(province_id__in=provinces_viewable)
         else:
             shops = get_shops_viewable_queryset(request.user)
             queryset = queryset.filter(pk__in=shops)
@@ -662,7 +662,7 @@ def get_queryset_shop_list(request, export_data=False):
     if to_date is not None and to_date != '':
         queryset = queryset.filter(
             created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
-    return queryset
+    return queryset.order_by('-id')
 
 
 @api_view(['POST'])
