@@ -1,34 +1,36 @@
+import os
 import ast
+import json
 import base64
 import datetime
-import json
-import os
-import time as time_t
-from datetime import date, time
-from datetime import datetime as dt_datetime
-from time import time as time_f
-
 import xlsxwriter
-from django.contrib.auth.decorators import login_required, permission_required
+import time as time_t
+
 from django.db.models import Q
+from time import time as time_f
+from django.db import connection
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from datetime import date, time, timedelta
 from rest_framework import viewsets, mixins
+from datetime import datetime as dt_datetime
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
+from django.contrib.auth.decorators import login_required, permission_required
 
 from sale_portal import settings
-from sale_portal.sale_report_form import SaleReportFormPurposeTypes
-from sale_portal.sale_report_form.models import SaleReport
-from sale_portal.sale_report_form.serializers import SaleReportSerializer
-from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
+from sale_portal.user.models import User
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
-from sale_portal.user.models import User
 from sale_portal.utils import field_validator
-from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.sale_report_form.models import SaleReport
 from sale_portal.utils.field_formatter import format_string
-from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_users_viewable_queryset
+from sale_portal.sale_report_form import SaleReportFormPurposeTypes
+from sale_portal.common.standard_response import successful_response
+from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.sale_report_form.serializers import SaleReportSerializer
+from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -962,3 +964,44 @@ def get_statistic_data(request):
         return []
     else:
         return SaleReport.objects.raw(raw_query)
+
+
+@api_view(['GET'])
+@login_required
+@permission_required('sale_report_form.dashboard_sale_report_form_count', raise_exception=True)
+def count_sale_report_form_14_days_before_heatmap(request):
+    today = date.today()
+    date_list = []
+    hour_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    for i in range(0, 14):
+        date_list.append((today - timedelta(days=14) + timedelta(days=i)).strftime("%d/%m/%Y"))
+
+    with connection.cursor() as cursor:
+        cursor.execute('''
+            select count(*),
+                   date(created_date)              as sale_report_form_date,
+                   extract(hour from created_date) as sale_report_form_hour
+            from sale_report_form
+            where created_date > current_date - interval '14 days'
+              and created_date < current_date
+            group by sale_report_form_date, sale_report_form_hour
+            order by sale_report_form_date asc
+        ''')
+        columns = [col[0] for col in cursor.description]
+        data_cursor = [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    data = []
+    for item in data_cursor:
+        data.append([
+            date_list.index(str(item['sale_report_form_date'].strftime("%d/%m/%Y"))),
+            hour_list.index(item['sale_report_form_hour']),
+            item['count']
+        ])
+
+    return successful_response({
+        'data': data,
+        'date_list': date_list,
+        'hour_list': hour_list
+    })

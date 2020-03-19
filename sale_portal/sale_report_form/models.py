@@ -127,6 +127,7 @@ class SaleReport(models.Model):
             ('get_list_draft_report', 'Can get list draft report'),
             ('report_statistic_list_data', 'Can get list sale report statistic'),
             ('report_statistic__export_data', 'Can export list sale report statistic'),
+            ('dashboard_sale_report_form_count', 'Can get sale report statistic in dashboard'),
         )
 
     def get_shop(self):

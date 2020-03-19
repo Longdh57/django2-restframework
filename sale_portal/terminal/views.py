@@ -1,33 +1,33 @@
-import logging
 import os
 import time
-from datetime import datetime, date, timedelta
-
+import logging
 import xlsxwriter
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from django.db import connection
+
 from django.db.models import Q
 from django.utils import formats
-from django.utils.html import conditional_escape
+from django.conf import settings
+from django.db import connection
 from rest_framework import viewsets, mixins
+from datetime import datetime, date, timedelta
 from rest_framework.decorators import api_view
+from django.utils.html import conditional_escape
 from rest_framework.exceptions import APIException
+from django.contrib.auth.decorators import login_required, permission_required
 
+from sale_portal.team import TeamType
 from sale_portal.area.models import Area
-from sale_portal.common.standard_response import successful_response, custom_response, Code
-from sale_portal.qr_status.views import get_terminal_status_list
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
+from sale_portal.terminal.models import Terminal
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
-from sale_portal.team import TeamType
-from sale_portal.terminal.models import Terminal
+from sale_portal.utils.field_formatter import format_string
 from sale_portal.terminal.serializers import TerminalSerializer
+from sale_portal.qr_status.views import get_terminal_status_list
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.data_export import ExportType, get_data_export
 from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.utils.field_formatter import format_string
-from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
 
 
