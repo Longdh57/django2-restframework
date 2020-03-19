@@ -87,7 +87,7 @@ def list_terminals(request):
         - merchant_id -- number
     """
 
-    queryset = Terminal.objects.terminal_un_register_vnpayment.values('id', 'terminal_id', 'terminal_name')
+    queryset = Terminal.objects.terminal_un_register_vnpayment()
 
     if request.user.is_superuser is False:
         if request.user.is_area_manager or request.user.is_sale_admin:
@@ -107,7 +107,7 @@ def list_terminals(request):
 
     queryset = queryset.order_by('terminal_name')[0:settings.PAGINATE_BY]
 
-    data = [{'id': terminal['id'], 'name': terminal['terminal_id'] + ' - ' + terminal['terminal_name']} for
+    data = [{'id': terminal.id, 'name': terminal.terminal_id + ' - ' + terminal.terminal_name} for
             terminal in queryset]
 
     return successful_response(data)
