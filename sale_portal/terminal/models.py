@@ -3,12 +3,13 @@ import logging
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
+from django.db.models import Q
+from sale_portal.user.models import User
 from sale_portal.shop.models import Shop
 from sale_portal.merchant.models import Merchant
 from sale_portal.terminal import TerminalLogType
-from ..qr_status.models import QrStatus
-from ..administrative_unit.models import QrProvince, QrDistrict, QrWards
-from ..user.models import User
+from sale_portal.qr_status.models import QrStatus
+from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 
 
 class QrTerminal(models.Model):
@@ -102,7 +103,7 @@ class TerminalQueryset(models.QuerySet):
 
     def terminal_un_register_vnpayment(self):
         """Trả về danh sách terminal ko phải cổng. MẶC ĐỊNH SHOW DS NÀY TRÊN SALE PORTAL"""
-        return self.exclude(register_vnpayment=1)
+        return self.filter(~Q(register_vnpayment=1))
 
 
 class Terminal(models.Model):
