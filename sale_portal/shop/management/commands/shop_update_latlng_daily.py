@@ -43,20 +43,23 @@ class Command(BaseCommand):
                         location = results[0]['geometry']['location']
                         s.latitude = location['lat']
                         s.longitude = location['lng']
-                        s.geo_check = checkInside(s.wards.wards_code, s.latitude, s.longitude)
+                        if s.wards:
+                            s.geo_check = checkInside(s.wards.wards_code, s.latitude, s.longitude)
+                        else:
+                            s.geo_check = -1
                         s.geo_generate = 1
                         s.save()
                         count_success = count_success + 1
                         desc.update(count_success=count_success)
-                        print('Update success shop: ' + str(s.id))
+                        print('Update success shop: ' + str(s.code))
                     except Exception as inst:
                         s.geo_generate = -1
                         s.save()
                         count_failed = count_failed + 1
-                        list_failed.append(s.id)
+                        list_failed.append(s.code)
                         desc.update(count_failed=count_failed)
                         desc.update(list_failed=list_failed)
-                        print('Update ' + str(s.id) + ' failed: ' + str(inst))
+                        print('Update ' + str(s.code) + ' failed: ' + str(inst))
             cron_update(cronjob, description=desc)
             self.stdout.write(self.style.SUCCESS('Successfully command'))
 
