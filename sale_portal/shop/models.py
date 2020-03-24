@@ -14,7 +14,7 @@ from sale_portal.staff.models import Staff
 from sale_portal.staff_care import StaffCareType
 from sale_portal.merchant.models import Merchant
 from sale_portal.shop_cube.models import ShopCube
-from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType
+from sale_portal.shop import ShopTakeCareStatus, ShopActivateType, ShopLogType, GeoCheckType, GeoGenerateType
 from sale_portal.administrative_unit.models import QrProvince, QrDistrict, QrWards
 
 
@@ -47,6 +47,8 @@ class Shop(models.Model):
     document = SearchVectorField(null=True)
     longitude = models.FloatField(null=True)
     latitude = models.FloatField(null=True)
+    geo_check = models.IntegerField(choices=GeoCheckType.CHOICES, default=GeoCheckType.UNCHECK)
+    geo_generate = models.IntegerField(choices=GeoGenerateType.CHOICES, default=GeoGenerateType.OTHER)
 
     objects = ShopQuerySet.as_manager()
 

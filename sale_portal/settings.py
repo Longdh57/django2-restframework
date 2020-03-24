@@ -152,7 +152,8 @@ INSTALLED_APPS = [
     'sale_portal.team',
     'sale_portal.terminal',
     'sale_portal.user',
-    'sale_portal.common'
+    'sale_portal.common',
+    'sale_portal.geodata'
 ]
 
 MIDDLEWARE = [
@@ -196,30 +197,30 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     },
-    'mms': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('MMS_DB_NAME', ''),
-        'USER': os.environ.get('MMS_DB_USER', ''),
-        'PASSWORD': os.environ.get('MMS_DB_PASSWORD', ''),
-        'HOST': os.environ.get('MMS_DB_HOST', ''),
-        'PORT': os.environ.get('MMS_DB_PORT', ''),
-    },
-    'data_warehouse': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DWH_DB_NAME', ''),
-        'USER': os.environ.get('DWH_DB_USER', ''),
-        'PASSWORD': os.environ.get('DWH_DB_PASSWORD', ''),
-        'HOST': os.environ.get('DWH_DB_HOST', ''),
-        'PORT': os.environ.get('DWH_DB_PORT', ''),
-    },
-    'sale_portal_ingestion': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('BI_INGESTION_DB_NAME', ''),
-        'USER': os.environ.get('BI_INGESTION_DB_USER', ''),
-        'PASSWORD': os.environ.get('BI_INGESTION_DB_PASSWORD', ''),
-        'HOST': os.environ.get('BI_INGESTION_DB_HOST', ''),
-        'PORT': os.environ.get('BI_INGESTION_DB_PORT', ''),
-    }
+    # 'mms': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': os.environ.get('MMS_DB_NAME', ''),
+    #     'USER': os.environ.get('MMS_DB_USER', ''),
+    #     'PASSWORD': os.environ.get('MMS_DB_PASSWORD', ''),
+    #     'HOST': os.environ.get('MMS_DB_HOST', ''),
+    #     'PORT': os.environ.get('MMS_DB_PORT', ''),
+    # },
+    # 'data_warehouse': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': os.environ.get('DWH_DB_NAME', ''),
+    #     'USER': os.environ.get('DWH_DB_USER', ''),
+    #     'PASSWORD': os.environ.get('DWH_DB_PASSWORD', ''),
+    #     'HOST': os.environ.get('DWH_DB_HOST', ''),
+    #     'PORT': os.environ.get('DWH_DB_PORT', ''),
+    # },
+    # 'sale_portal_ingestion': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': os.environ.get('BI_INGESTION_DB_NAME', ''),
+    #     'USER': os.environ.get('BI_INGESTION_DB_USER', ''),
+    #     'PASSWORD': os.environ.get('BI_INGESTION_DB_PASSWORD', ''),
+    #     'HOST': os.environ.get('BI_INGESTION_DB_HOST', ''),
+    #     'PORT': os.environ.get('BI_INGESTION_DB_PORT', ''),
+    # }
 }
 
 DATABASE_ROUTERS = ['sale_portal.sale_portal_ingestion.dbrouters.DBRouter']
@@ -251,6 +252,11 @@ AUTHENTICATION_BACKENDS = (
     # 'django.contrib.auth.backends.ModelBackend',
     'django.contrib.auth.backends.AllowAllUsersModelBackend',
 )
+
+# Get GEODATA_GOOGLE_ACCOUNT_TOKEN
+GEODATA_GOOGLE_ACCOUNT_TOKEN = os.environ.get('GEODATA_GOOGLE_ACCOUNT_TOKEN', '')
+LIST_GEODATA_GOOGLE_ACCOUNT_TOKEN = os.environ.get('LIST_GEODATA_GOOGLE_ACCOUNT_TOKEN', '').split()
+LIMIT_QUERY_PER_GOOGLE_ACCOUNT_TOKEN = int(os.environ.get('LIMIT_QUERY_PER_GOOGLE_ACCOUNT_TOKEN', '0'))
 
 # Config send email
 EMAIL_USE_TLS = True
