@@ -14,6 +14,6 @@ def findDistance(lat1, lon1, lat2, lon2):
     distance = R * c * 1000
     distance = round(distance)
     if distance < 1000:
-        return {'text': str(distance) + ' m', 'value': distance}
+        return {'text': str(distance) + 'm', 'value': distance}
     else:
-        return {'text': str(distance / 1000) + ' km', 'value': distance}
+        return {'text': str(distance / 1000) + 'km', 'value': distance}

@@ -1,42 +1,42 @@
-import os
 import ast
-import json
-import time
-import logging
 import itertools
-import xlsxwriter
+import json
+import logging
+import os
+import time
+from datetime import datetime, date
 
-from unidecode import unidecode
+import xlsxwriter
 from django.conf import settings
-from django.utils import formats
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db import connection
 from django.db.models import F, Q
-from datetime import datetime, date
-from rest_framework import viewsets, mixins
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from django.utils import formats
 from django.utils.html import conditional_escape
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
-from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.contrib.auth.decorators import login_required, permission_required
+from unidecode import unidecode
 
-from sale_portal.team import TeamType
-from sale_portal.area.models import Area
-from sale_portal.staff.models import Staff
-from sale_portal.merchant.models import Merchant
-from sale_portal.terminal.models import Terminal
-from sale_portal.staff_care import StaffCareType
-from sale_portal.shop_cube.models import ShopCube
-from sale_portal.staff_care.models import StaffCare
-from sale_portal.utils.geo_utils import findDistance
-from sale_portal.utils.field_formatter import format_string
-from sale_portal.shop.models import Shop, ShopFullData, ShopLog
-from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.utils.excel_util import check_or_create_excel_folder
-from sale_portal.utils.data_export import get_data_export, ExportType
-from sale_portal.shop.serializers import ShopFullDataSerializer, ShopLogSerializer
 from sale_portal.administrative_unit.models import QrWards, QrProvince, QrDistrict
+from sale_portal.area.models import Area
 from sale_portal.common.standard_response import successful_response, custom_response, Code
+from sale_portal.merchant.models import Merchant
+from sale_portal.shop.models import Shop, ShopFullData, ShopLog
+from sale_portal.shop.serializers import ShopFullDataSerializer, ShopLogSerializer
+from sale_portal.shop_cube.models import ShopCube
+from sale_portal.staff.models import Staff
+from sale_portal.staff_care import StaffCareType
+from sale_portal.staff_care.models import StaffCare
+from sale_portal.team import TeamType
+from sale_portal.terminal.models import Terminal
+from sale_portal.utils.data_export import get_data_export, ExportType
+from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.geo_utils import findDistance
+from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset, \
     get_staffs_viewable_queryset
 
@@ -91,7 +91,6 @@ def list_recommend_shops(request, pk):
     API for get shop number_transaction and nearly shops \n
     :param shop_id
     '''
-    all_shop = get_shops_viewable_queryset(request.user)
     current_shop = get_object_or_404(Shop, pk=pk)
     current_shop_shop_cube = ShopCube.objects.filter(shop_id=pk).first()
     day = date.today().day
@@ -100,44 +99,45 @@ def list_recommend_shops(request, pk):
             current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_1_7 \
                 if current_shop_shop_cube.number_of_tran_w_1_7 is not None \
                    and current_shop_shop_cube.number_of_tran_w_1_7 != '' \
-                else 'N/A'
+                else ''
         if 8 <= day <= 14:
             current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_8_14 \
                 if current_shop_shop_cube.number_of_tran_w_8_14 is not None \
                    and current_shop_shop_cube.number_of_tran_w_8_14 != '' \
-                else 'N/A'
+                else ''
         if 15 <= day <= 21:
             current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_15_21 \
                 if current_shop_shop_cube.number_of_tran_w_15_21 is not None \
                    and current_shop_shop_cube.number_of_tran_w_15_21 != '' \
-                else 'N/A'
+                else ''
         if 22 <= day:
             current_shop_number_of_tran = current_shop_shop_cube.number_of_tran_w_22_end \
                 if current_shop_shop_cube.number_of_tran_w_22_end is not None \
                    and current_shop_shop_cube.number_of_tran_w_22_end != '' \
-                else 'N/A'
+                else ''
     else:
-        current_shop_number_of_tran = 'N/A'
+        current_shop_number_of_tran = ''
 
     nearly_shops_by_latlong = []
     if current_shop.wards != '' and current_shop.wards is not None:
         try:
-            shop_list = all_shop.filter(wards=current_shop.wards, activated=1).exclude(pk=pk)
+            shop_list = get_shops_viewable_queryset(request.user) \
+                .filter(wards=current_shop.wards, activated=1).exclude(pk=pk)
             for shop in shop_list:
-                code = shop.code if shop.code is not None else 'N/A'
-                address = shop.address if shop.address is not None else 'N/A'
-                merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
-                if shop.latitude and shop.longitude and current_shop.latitude and current_shop.longitude:
+                code = shop.code if shop.code is not None else ''
+                address = shop.address if shop.address is not None else ''
+                if shop.latitude and current_shop.latitude:
                     distance = findDistance(shop.latitude, shop.longitude, current_shop.latitude,
                                             current_shop.longitude)
                     nearly_shops_by_latlong.append({
                         'id': shop.id,
-                        'shop_info': code + ' - ' + address + ' - ' + merchant_brand,
+                        'shop_info_html': '<strong>'+code + ' - ' + shop.name + '</strong> - ' + address,
+                        'shop_info': code + ' - ' + shop.name + ' - ' + address,
                         'address': shop.address,
                         'latitude': shop.latitude,
                         'longitude': shop.longitude,
-                        'distance_value': distance.get('value') if distance is not None else None,
-                        'distance_text': distance.get('text') if distance is not None else None
+                        'distance_value': distance.get('value'),
+                        'distance_text': distance.get('text')
                     })
             nearly_shops_by_latlong_sorted = sorted(nearly_shops_by_latlong, key=lambda k: k['distance_value'])
         except Exception as e:
@@ -599,7 +599,8 @@ def get_queryset_shop_list(request, export_data=False):
                         queryset = queryset.filter(pk__in=shop_ids, province__in=provinces_viewable)
                     if cross_assign_status == '2':
                         staff_viewable = get_staffs_viewable_queryset(request.user)
-                        shop_id_can_view = StaffCare.objects.filter(staff__in=staff_viewable, type=StaffCareType.STAFF_SHOP) \
+                        shop_id_can_view = StaffCare.objects.filter(staff__in=staff_viewable,
+                                                                    type=StaffCareType.STAFF_SHOP) \
                             .values('shop_id')
                         shop_id_can_not_view = StaffCare.objects.filter(type=StaffCareType.STAFF_SHOP) \
                             .exclude(staff__in=staff_viewable).values('shop_id')
