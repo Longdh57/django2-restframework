@@ -52,6 +52,6 @@ update shop
 
 ### Run sql file to insert data into geodata table. This data was used for map visualize ,check latlng,... funtion.
 file location
-'''
+```
 sale_portal/geodata/management/sql_query/geojson_for_map.sql
-'''
+```
