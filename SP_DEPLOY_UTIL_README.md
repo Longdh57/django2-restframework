@@ -39,7 +39,7 @@ SELECT lower(translate($1,
 $func$ LANGUAGE sql IMMUTABLE;
 ```
 
-### Update documents column of shop table after shop table has data or you restore database (because documents is json field,may be it wasn't backed up)
+### Update document column of shop table after shop table has data or you restore database (because documents is json field,may be it wasn't backed up)
 
 ```
 update shop
