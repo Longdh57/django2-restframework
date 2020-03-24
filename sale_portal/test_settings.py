@@ -151,7 +151,8 @@ INSTALLED_APPS = [
     'sale_portal.team',
     'sale_portal.terminal',
     'sale_portal.user',
-    'sale_portal.common'
+    'sale_portal.common',
+    'sale_portal.geodata'
 ]
 
 MIDDLEWARE = [
@@ -215,6 +216,14 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = [
     FRONTEND_URL
 ]
+
+# Google Social OAuth2
+SOCIAL_AUTH_RAISE_EXCEPTIONS = True
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = ['vnpay.vn', 'teko.vn', 'tripi.vn']
+
 
 # Config send email
 EMAIL_USE_TLS = True

@@ -1,7 +1,7 @@
 ## Guide to use pytest to test Sale Portal Backend V2
 
 ### Setup
-Setting path to connect DB in .env  
+Setting path to connect DB in .env
 - TEST_DB_NAME = sp_pytest
 - TEST_DB_USER = sp_user
 - TEST_DB_PASSWORD = secret123
@@ -9,16 +9,16 @@ Setting path to connect DB in .env
 - TEST_DB_PORT = 5432
 
 ### Folder Setting
-Put file pytest.ini in root folder  
-Put file settings for pytest in **sale_portal/test_settings.py**  
-In each django app, delete file **tests.py**, create new folder by follow this structure    
-```tests```  
-&nbsp;&nbsp;&nbsp;```|- __init__.py```  
-&nbsp;&nbsp;&nbsp;```|- conftest.py```  
+Put file pytest.ini in root folder
+Put file settings for pytest in **sale_portal/test_settings.py**
+In each django app, delete file **tests.py**, create new folder by follow this structure
+```tests```
+&nbsp;&nbsp;&nbsp;```|- __init__.py```
+&nbsp;&nbsp;&nbsp;```|- conftest.py```
 &nbsp;&nbsp;&nbsp;```|- tests.py```
 
 ### Testing with an exists DB
-Add ```@pytest.mark.django_db``` before start a **class**  
+Add ```@pytest.mark.django_db``` before start a **class**
 ```
 import pytest
 from mixer.backend.django import mixer

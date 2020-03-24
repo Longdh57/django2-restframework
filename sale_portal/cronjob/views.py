@@ -17,6 +17,7 @@ from sale_portal.merchant.management.commands import qr_merchant_sync_daily
 from sale_portal.merchant.management.commands import qr_type_merchant_sync
 from sale_portal.qr_status.management.commands import qr_status_sync
 from sale_portal.shop.management.commands import auto_create_shop_daily
+from sale_portal.shop.management.commands import shop_update_latlng_daily
 from sale_portal.shop_cube.management.commands import shop_cube_sync_daily
 from sale_portal.staff.management.commands import qr_staff_sync_daily
 from sale_portal.staff.management.commands import staff_synchronize_change
@@ -26,7 +27,7 @@ from sale_portal.terminal.management.commands import terminal_synchronize_change
 from sale_portal.utils.permission import get_user_permission_classes
 
 jobName = [
-    'repair_id_seq', 'administrative_unit_sync',
+    'shop_update_latlng_daily','repair_id_seq', 'administrative_unit_sync',
     'merchant_synchronize_change', 'qr_merchant_info_sync',
     'qr_merchant_sync_daily', 'qr_type_merchant_sync',
     'qr_status_sync', 'auto_create_shop_daily',

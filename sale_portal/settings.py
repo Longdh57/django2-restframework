@@ -152,7 +152,8 @@ INSTALLED_APPS = [
     'sale_portal.team',
     'sale_portal.terminal',
     'sale_portal.user',
-    'sale_portal.common'
+    'sale_portal.common',
+    'sale_portal.geodata'
 ]
 
 MIDDLEWARE = [
@@ -251,6 +252,11 @@ AUTHENTICATION_BACKENDS = (
     # 'django.contrib.auth.backends.ModelBackend',
     'django.contrib.auth.backends.AllowAllUsersModelBackend',
 )
+
+# Get GEODATA_GOOGLE_ACCOUNT_TOKEN
+GEODATA_GOOGLE_ACCOUNT_TOKEN = os.environ.get('GEODATA_GOOGLE_ACCOUNT_TOKEN', '')
+LIST_GEODATA_GOOGLE_ACCOUNT_TOKEN = os.environ.get('LIST_GEODATA_GOOGLE_ACCOUNT_TOKEN', '').split()
+LIMIT_QUERY_PER_GOOGLE_ACCOUNT_TOKEN = int(os.environ.get('LIMIT_QUERY_PER_GOOGLE_ACCOUNT_TOKEN', '0'))
 
 # Config send email
 EMAIL_USE_TLS = True
