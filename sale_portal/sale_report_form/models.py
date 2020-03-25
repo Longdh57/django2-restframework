@@ -128,7 +128,17 @@ class SaleReport(models.Model):
             ('report_statistic_list_data', 'Can get list sale report statistic'),
             ('report_statistic__export_data', 'Can export list sale report statistic'),
             ('dashboard_sale_report_form_count', 'Can get sale report statistic in dashboard'),
+            ('report_list_export_data', 'Can export report list data'),
         )
+
+    def get_purpose_text(self):
+        purpose = self.purpose
+        switcher = {
+            0: 'Mở mới',
+            1: 'Triến khai',
+            2: 'Chăm sóc',
+        }
+        return switcher.get(purpose, "Other")
 
     def get_shop(self):
         try:
@@ -138,14 +148,5 @@ class SaleReport(models.Model):
         return shop
 
     def get_team(self):
-        teams = []
-        if self.created_by is not None:
-            try:
-                staff = Staff.objects.filter(email=self.created_by.email).order_by('-staff').first()
-                if staff is not None:
-                    for team in staff.team.all():
-                        teams.append(team.code)
-                    return teams
-                return None
-            except Staff.DoesNotExist:
-                return None
+        staff = Staff.objects.filter(email=self.created_by).first()
+        return staff.team if staff else None

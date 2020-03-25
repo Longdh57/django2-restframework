@@ -1,36 +1,37 @@
-import os
 import ast
-import json
 import base64
 import datetime
-import xlsxwriter
+import json
+import os
 import time as time_t
-
-from django.db.models import Q
-from time import time as time_f
-from django.db import connection
-from django.http import JsonResponse
 from datetime import date, time, timedelta
-from rest_framework import viewsets, mixins
 from datetime import datetime as dt_datetime
-from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from time import time as time_f
+
+import xlsxwriter
 from django.contrib.auth.decorators import login_required, permission_required
+from django.db import connection
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.utils import formats
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 
 from sale_portal import settings
-from sale_portal.user.models import User
-from sale_portal.shop.models import Shop
-from sale_portal.staff.models import Staff
-from sale_portal.utils import field_validator
-from sale_portal.sale_report_form.models import SaleReport
-from sale_portal.utils.field_formatter import format_string
-from sale_portal.utils.queryset import get_users_viewable_queryset
-from sale_portal.sale_report_form import SaleReportFormPurposeTypes
 from sale_portal.common.standard_response import successful_response
-from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.sale_report_form import SaleReportFormPurposeTypes
+from sale_portal.sale_report_form.models import SaleReport
 from sale_portal.sale_report_form.serializers import SaleReportSerializer
 from sale_portal.sale_report_form.serializers import SaleReportStatisticSerializer
+from sale_portal.shop.models import Shop
+from sale_portal.staff.models import Staff
+from sale_portal.user.models import User
+from sale_portal.utils import field_validator
+from sale_portal.utils.excel_util import check_or_create_excel_folder
+from sale_portal.utils.field_formatter import format_string
+from sale_portal.utils.permission import get_user_permission_classes
+from sale_portal.utils.queryset import get_users_viewable_queryset
 
 
 class SaleReportViewSet(mixins.ListModelMixin,
@@ -52,43 +53,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             filter theo các param purpose,shop_id ,user,team_id,from_date,to_date \n
             Có thể bỏ trống
         """
-        purpose = self.request.query_params.get('purpose', None)
-        shop_id = self.request.query_params.get('shop_id', None)
-        staff_id = self.request.query_params.get('staff_id', None)
-        team_id = self.request.query_params.get('team_id', None)
-        from_date = self.request.query_params.get('from_date', None)
-        to_date = self.request.query_params.get('to_date', None)
-
-        queryset = SaleReport.objects.filter(is_draft=False) \
-            .filter(created_by__in=get_users_viewable_queryset(self.request.user))
-
-        if purpose is not None and purpose != '':
-            queryset = queryset.filter(purpose=purpose)
-
-        if shop_id is not None and shop_id != '':
-            shop_id = format_string(shop_id)
-            queryset = queryset.filter(shop_code=shop_id)
-
-        if staff_id is not None and staff_id != '':
-            staff = Staff.objects.filter(pk=staff_id).first()
-            users = User.objects.filter(email=staff.email)
-            queryset = queryset.filter(created_by__in=users)
-
-        if team_id is not None and team_id != '':
-            staffs = Staff.objects.all().filter(team_id=team_id)
-            staff_emails = [x.email for x in staffs]
-            users = User.objects.filter(email__in=staff_emails)
-            queryset = queryset.filter(created_by__in=users)
-
-        if from_date is not None and from_date != '':
-            queryset = queryset.filter(
-                created_date__gte=dt_datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
-
-        if to_date is not None and to_date != '':
-            queryset = queryset.filter(
-                created_date__lte=(dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
-
-        return queryset
+        return get_list_queryset(self.request)
 
     def create(self, request):
         """
@@ -564,6 +529,45 @@ class SaleReportStatisticViewSet(mixins.ListModelMixin,
         return queryset
 
 
+def get_list_queryset(request):
+    purpose = request.query_params.get('purpose', None)
+    shop_id = request.query_params.get('shop_id', None)
+    staff_id = request.query_params.get('staff_id', None)
+    team_id = request.query_params.get('team_id', None)
+    from_date = request.query_params.get('from_date', None)
+    to_date = request.query_params.get('to_date', None)
+
+    queryset = SaleReport.objects.filter(is_draft=False) \
+        .filter(created_by__in=get_users_viewable_queryset(request.user))
+
+    if purpose is not None and purpose != '':
+        queryset = queryset.filter(purpose=purpose)
+
+    if shop_id is not None and shop_id != '':
+        shop_id = format_string(shop_id)
+        queryset = queryset.filter(shop_code=shop_id)
+
+    if staff_id is not None and staff_id != '':
+        staff = Staff.objects.filter(pk=staff_id).first()
+        users = User.objects.filter(email=staff.email)
+        queryset = queryset.filter(created_by__in=users)
+
+    if team_id is not None and team_id != '':
+        staffs = Staff.objects.all().filter(team_id=team_id)
+        staff_emails = [x.email for x in staffs]
+        users = User.objects.filter(email__in=staff_emails)
+        queryset = queryset.filter(created_by__in=users)
+
+    if from_date is not None and from_date != '':
+        queryset = queryset.filter(
+            created_date__gte=dt_datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
+
+    if to_date is not None and to_date != '':
+        queryset = queryset.filter(
+            created_date__lte=(dt_datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
+    return queryset
+
+
 def get_raw_query_statistic(user=None, from_date=None, to_date=None, team_id=None, staff_id=None):
     filter_time = ''
 
@@ -767,7 +771,7 @@ def list_draff(request):
 @api_view(['GET'])
 @permission_required('sale_report_form.report_statistic__export_data', raise_exception=True)
 @login_required
-def export_excel(request):
+def report_statistic_export_data(request):
     """
         API get export statistic view to excel   \n
         param bao gồm  date, month, team_id \n
@@ -949,6 +953,87 @@ def export_excel(request):
         'data': settings.MEDIA_URL + '/excel/sale-report-statistic/' + file_name},
         status=200
     )
+
+
+@api_view(['GET'])
+@permission_required('sale_report_form.report_list_export_data', raise_exception=True)
+@login_required
+def report_list_export_data(request):
+    check_or_create_excel_folder()
+
+    if not os.path.exists(settings.MEDIA_ROOT + '/excel/sale-report'):
+        os.mkdir(os.path.join(settings.MEDIA_ROOT + '/excel', 'sale-report'))
+
+    file_name = 'sale-report_' + str(int(time_f())) + '.xlsx'
+    workbook = xlsxwriter.Workbook(settings.MEDIA_ROOT + '/excel/sale-report/' + file_name)
+    worksheet = workbook.add_worksheet('DANH SÁCH TIẾP CẬN MERCHANT')
+
+    merge_format = workbook.add_format({
+        'bold': 1,
+        'border': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'fg_color': '#74beff',
+        'font_color': '#ffffff',
+    })
+
+    worksheet.write('A1', 'Mục đích', merge_format)
+    worksheet.write('B1', 'Merchant Brand', merge_format)
+    worksheet.write('C1', 'Cửa hàng', merge_format)
+    worksheet.write('D1', 'Ngày tạo', merge_format)
+    worksheet.write('E1', 'Nhân viên tạo', merge_format)
+    worksheet.write('F1', 'Team', merge_format)
+
+    worksheet.freeze_panes(1, 0)
+
+    list_id = get_list_queryset(request)
+    filter_id = ''
+    for sr in list_id:
+        filter_id = filter_id + ',' + str(sr.id)
+
+    date = []
+    if filter_id.startswith(','):
+        filter_id = filter_id[1:]
+        raw_query = '''
+        SELECT srf.id, srf.purpose,
+        ( CASE WHEN srf.purpose=0 THEN srf.new_merchant_name ELSE mc.merchant_code||' - '|| mc.merchant_brand END) AS merchant_name, 
+        sh.code,srf.created_date, st.email, tm.name
+        from sale_report_form srf
+        LEFT JOIN shop sh on srf.shop_code= sh.code
+        LEFT JOIN merchant mc on sh.merchant_id= mc.id
+        LEFT JOIN auth_user au on srf.created_by_id= au.id
+        LEFT JOIN staff st on au.email = st.email
+        LEFT JOIN team tm on st.team_id= tm.id
+        WHERE au.email IS NOT NULL AND au.email!=''  AND srf.id IN (%s) 
+        ORDER BY srf.created_date DESC
+        ''' % (filter_id)
+        with connection.cursor() as cursor:
+            cursor.execute(raw_query)
+            columns = [col[0] for col in cursor.description]
+            data = [
+                dict(zip(columns, row))
+                for row in cursor.fetchall()
+            ]
+
+    row_num = 1
+
+    for item in data:
+        switcher = {
+            0: 'Mở mới',
+            1: 'Triến khai',
+            2: 'Chăm sóc',
+        }
+        worksheet.write(row_num, 0, switcher.get(item['purpose'], "Other"))
+        worksheet.write(row_num, 1, item['merchant_name'])
+        worksheet.write(row_num, 2, item['code'])
+        worksheet.write(row_num, 3, formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") \
+            if item['created_date'] else '')
+        worksheet.write(row_num, 4, item['email'])
+        worksheet.write(row_num, 5, item['name'])
+        row_num += 1
+
+    workbook.close()
+    return successful_response(settings.MEDIA_URL + 'excel/sale-report/' + file_name)
 
 
 def get_statistic_data(request):
