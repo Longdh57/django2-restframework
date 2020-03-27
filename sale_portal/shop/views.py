@@ -85,7 +85,7 @@ def list_shop_for_search(request):
 
 @api_view(['GET'])
 @login_required
-@permission_required('shop.shop_list_data', raise_exception=True)
+@permission_required('shop.shop_recommend_data', raise_exception=True)
 def list_recommend_shops(request, pk):
     '''
     API for get shop number_transaction and nearly shops \n
