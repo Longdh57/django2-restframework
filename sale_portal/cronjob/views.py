@@ -18,6 +18,7 @@ from sale_portal.merchant.management.commands import qr_type_merchant_sync
 from sale_portal.qr_status.management.commands import qr_status_sync
 from sale_portal.shop.management.commands import auto_create_shop_daily
 from sale_portal.shop.management.commands import shop_update_latlng_daily
+from sale_portal.shop.management.commands import shop_check_latlng
 from sale_portal.shop_cube.management.commands import shop_cube_sync_daily
 from sale_portal.staff.management.commands import qr_staff_sync_daily
 from sale_portal.staff.management.commands import staff_synchronize_change
@@ -33,7 +34,7 @@ jobName = [
     'qr_status_sync', 'auto_create_shop_daily',
     'shop_cube_sync_daily', 'qr_staff_sync_daily',
     'staff_synchronize_change', 'qr_terminal_contact_sync_daily',
-    'qr_terminal_sync_daily', 'terminal_synchronize_change'
+    'qr_terminal_sync_daily', 'terminal_synchronize_change','shop_check_latlng'
 ]
 
 

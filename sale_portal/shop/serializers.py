@@ -3,8 +3,8 @@ import ast
 from django.utils import formats
 from rest_framework import serializers
 
-from sale_portal.shop import ShopLogType
 from sale_portal.merchant.models import Merchant
+from sale_portal.shop import ShopLogType
 from sale_portal.shop.models import Shop, ShopFullData, ShopLog
 
 
@@ -72,6 +72,7 @@ class ShopSerializer(serializers.ModelSerializer):
             'voucher_code_list': voucher_code_list,
         }
 
+
     class Meta:
         model = Shop
         fields = (
@@ -112,7 +113,8 @@ class ShopFullDataSerializer(serializers.ModelSerializer):
         }
 
     def get_created_date(self, shop_full_data):
-        return formats.date_format(shop_full_data.created_date, "SHORT_DATE_FORMAT") if shop_full_data.created_date else ''
+        return formats.date_format(shop_full_data.created_date,
+                                   "SHORT_DATE_FORMAT") if shop_full_data.created_date else ''
 
     def get_shop_cube(self, shop_full_data):
         if shop_full_data.number_of_tran is None:
