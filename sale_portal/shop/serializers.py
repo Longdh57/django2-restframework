@@ -25,7 +25,6 @@ class ShopSerializer(serializers.ModelSerializer):
     created_date = serializers.SerializerMethodField()
     count_terminals = serializers.SerializerMethodField()
     shop_cube = serializers.SerializerMethodField()
-    location_status = serializers.SerializerMethodField()
 
     def get_staff(self, shop):
         team = None
