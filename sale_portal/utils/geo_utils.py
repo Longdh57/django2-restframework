@@ -29,7 +29,7 @@ def checkInside(code, latitude, longitude):
         code=str(code)
     ).only('geojson')
     if len(polyPoints) == 0:
-        return 1
+        return -2
     polyPoints = polyPoints[0].geojson.get('geometry').get('coordinates')[0][0]
 
     x = latitude
@@ -70,7 +70,7 @@ def checkInside(code, latitude, longitude):
             if distance < 300:
                 return 1
             else:
-                return 0
+                return -1
 
         else:
             return -1

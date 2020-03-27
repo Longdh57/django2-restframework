@@ -23,11 +23,13 @@ class GeoCheckType:
     UNCHECK = 0
     CHECKED_IN_SHOP_WARD = 1
     CHECKED_NOT_IN_SHOP_WARD = -1
+    NOT_FOUND_WARD = -2
 
     CHOICES = (
         (UNCHECK, 'UNCHECK'),
         (CHECKED_IN_SHOP_WARD, 'CHECKED_IN_SHOP_WARD'),
         (CHECKED_NOT_IN_SHOP_WARD, 'CHECKED_NOT_IN_SHOP_WARD'),
+        (NOT_FOUND_WARD, 'NOT_FOUND_WARD'),
     )
 
 class GeoGenerateType:
