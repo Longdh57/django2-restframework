@@ -432,7 +432,7 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 3, item['merchant_brand'] if item['merchant_brand'] else '')
         worksheet.write(row_num, 4, item['merchant_name'] if item['merchant_name'] else '')
         worksheet.write(row_num, 5, item['email'] if item['email'] else '')
-        worksheet.write(row_num, 6, item['shop_code'] if item['shop_code'] else '')
+        worksheet.write(row_num, 6, item['shop_id'] if item['shop_id'] else '')
         worksheet.write(row_num, 7, item['staff_email'] if item['staff_email'] else '')
         worksheet.write(row_num, 8, item['team_code'] if item['team_code'] else '')
         worksheet.write(row_num, 9, item['business_address'] if item['business_address'] else '')
