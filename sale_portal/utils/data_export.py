@@ -24,11 +24,10 @@ m.merchant_code, m.merchant_brand, m.merchant_name,
 qr_pro.province_name,
 qr_dis.district_name,
 qr_war.wards_name,
-t.created_date, sh.code as shop_code,
+t.created_date, t.shop_id,
 stt.email as staff_email, stt.team as team_code
 from terminal t
 left join merchant m on t.merchant_id = m.id
-left join shop sh on t.shop_id = sh.id
 left join qr_province qr_pro on qr_pro.province_code = t.province_code
 left join qr_district qr_dis on qr_dis.district_code = t.district_code
 left join qr_wards qr_war on qr_war.wards_code = t.wards_code
