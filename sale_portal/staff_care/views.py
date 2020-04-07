@@ -131,32 +131,32 @@ def update_sale_shop(request, data, is_submit=False):
                 shop.street = data['street']
                 shop.save()
         return 'Thành công'
-    else:
-        staff = Staff.objects.filter(email=data['staff_email']).first()
-        if staff is None:
-            return 'Sale_email: Không tìm thấy Sale - Lỗi dữ liệu'
-        if staff.team is None:
-            return 'Sale không thuộc bất kì Team nào - Lỗi dữ liệu'
 
-        if shop.staff == staff and (data['street'] == '' or data['street'] is None):
-            return 'No change'
-        elif shop.staff == staff and (data['street'] != '' and data['street'] is not None):
-            if is_submit:
+    staff = Staff.objects.filter(email=data['staff_email']).first()
+    if staff is None:
+        return 'Sale_email: Không tìm thấy Sale - Lỗi dữ liệu'
+    if staff.team is None:
+        return 'Sale không thuộc bất kì Team nào - Lỗi dữ liệu'
+
+    if shop.staff == staff and (data['street'] == '' or data['street'] is None):
+        return 'No change'
+    elif shop.staff == staff and (data['street'] != '' and data['street'] is not None):
+        if is_submit:
+            shop.street = data['street']
+            shop.save()
+        return 'Thành công'
+    else:
+        if is_submit:
+            if data['street'] != '':
                 shop.street = data['street']
                 shop.save()
-            return 'Thành công'
-        else:
-            if is_submit:
-                if data['street'] != '':
-                    shop.street = data['street']
-                    shop.save()
 
-                if shop.staff:
-                    shop.staff_delete(request=request)
-                    shop.staff_create(staff_id=staff.id, request=request)
-                else:
-                    shop.staff_create(staff_id=staff.id, request=request)
-            return 'Thành công'
+            if shop.staff:
+                shop.staff_delete(request=request)
+                shop.staff_create(staff_id=staff.id, request=request)
+            else:
+                shop.staff_create(staff_id=staff.id, request=request)
+        return 'Thành công'
 
 
 
