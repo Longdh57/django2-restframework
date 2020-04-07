@@ -159,7 +159,6 @@ def update_sale_shop(request, data, is_submit=False):
         return 'Thành công'
 
 
-
 def sale_shop_render_excel_import_error(username='', data=[]):
     folder_name = 'sale-shop-import-error'
     file_name = str(username) + '_' + str(int(time.time())) + '.xlsx'
