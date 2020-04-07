@@ -124,7 +124,14 @@ def update_sale_shop(request, data, is_submit=False):
         return 'Shop_ID: Không tìm thấy Shop - Lỗi dữ liệu'
 
     if data['staff_email'] is None or data['staff_email'] == '':
-        return 'Sale_email: Sale_email trống - Lỗi dữ liệu'
+        if is_submit:
+            if shop.staff:
+                shop.staff_delete(request=request)
+            if data['street'] != '' and data['street'] is not None:
+                shop.street = data['street']
+                shop.save()
+        return 'Thành công'
+
     staff = Staff.objects.filter(email=data['staff_email']).first()
     if staff is None:
         return 'Sale_email: Không tìm thấy Sale - Lỗi dữ liệu'
