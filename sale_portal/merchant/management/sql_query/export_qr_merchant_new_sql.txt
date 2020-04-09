@@ -1,0 +1,27 @@
+select
+	m.merchant_code,
+	m.merchant_name,
+	m.merchant_brand,
+	m.created_date,
+	st.full_name as staff_full_name,
+	st.staff_code,
+	s.id as shop_id,
+	p.province_name as shop_province_name,
+	d.district_name as shop_district_name,
+	w.wards_name as shop_wards_name,
+	s.street as shop_street,
+	s.address as shop_address,
+	t.terminal_id,
+	t.terminal_name
+from
+	merchant m
+inner join shop s on s.merchant_id = m.id
+inner join terminal t on t.merchant_id = m.id
+inner join staff_care sc on s.id = sc.shop_id and sc."type" = 0
+inner join staff st on sc.staff_id = st.id
+left join qr_province p on p.id = s.province_id
+left join qr_district d on d.id = s.district_id
+left join qr_wards w on w.id = s.wards_id
+where m.created_date > date_trunc('month', current_date) and m.status = 1
+order by created_date asc;
+

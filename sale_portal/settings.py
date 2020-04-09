@@ -258,6 +258,10 @@ GEODATA_GOOGLE_ACCOUNT_TOKEN = os.environ.get('GEODATA_GOOGLE_ACCOUNT_TOKEN', ''
 LIST_GEODATA_GOOGLE_ACCOUNT_TOKEN = os.environ.get('LIST_GEODATA_GOOGLE_ACCOUNT_TOKEN', '').split()
 LIMIT_QUERY_PER_GOOGLE_ACCOUNT_TOKEN = int(os.environ.get('LIMIT_QUERY_PER_GOOGLE_ACCOUNT_TOKEN', '0'))
 
+# Google Spread Sheet
+QR_MERCHANT_NEW_SPREAD_ID = os.environ.get('QR_MERCHANT_NEW_SPREAD_ID', '')
+# Google Spread Sheet
+
 # Config send email
 EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
