@@ -93,7 +93,7 @@ class Command(BaseCommand):
             content.append(row)
             index = index + 1
 
-        self.write(spreadObj=spreadObj, content=content, sheet_name='QrMerchantNew2', start_col='A', end_col='O',
+        self.write(spreadObj=spreadObj, content=content, sheet_name='QrMerchantNew', start_col='A', end_col='O',
                    start_row=2)
 
         self.stdout.write(
