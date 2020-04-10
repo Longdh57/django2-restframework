@@ -509,7 +509,7 @@ def render_excel(request=None, return_url=True):
 
     row_num = 1
     for item in shops:
-        worksheet.write(row_num, 0, item['id'])
+        worksheet.write(row_num, 0, item['code'])
         worksheet.write(row_num, 1, item['merchant_code'] if item['merchant_code'] else '')
         worksheet.write(row_num, 2, item['merchant_brand'] if item['merchant_brand'] else '')
         worksheet.write(row_num, 3, item['merchant_name'] if item['merchant_code'] else '')
