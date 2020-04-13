@@ -16,6 +16,7 @@ from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCareImportLog
 from sale_portal.staff_care.serializers import StaffCareImportLogSerializer
 from sale_portal.utils.excel_util import check_or_create_excel_folder, create_simple_excel_file
+from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
 
 @api_view(['POST'])
@@ -97,6 +98,8 @@ def import_sale_shop(request):
             created_by=request.user
         ).save()
         data = f'Cập nhật thành công {row_update}/{total_row} bản ghi'
+
+        refresh_shop_full_data()
     else:
         data = {
             'total_row': total_row,
