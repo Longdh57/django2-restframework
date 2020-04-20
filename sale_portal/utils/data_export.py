@@ -1,6 +1,6 @@
 from django.db import connection
 
-merchant_raw_query = '''select m.merchant_code, m.merchant_brand, m.merchant_name,
+merchant_raw_query = '''select m.merchant_code, m.merchant_brand, m.merchant_name, pro.province_name,
 (select email from qr_staff where staff_id = m.staff) as email,
 stt.email as staff_care_email, stt.team as team_code,
 (select count(*) from terminal where merchant_id = m.id) as count_ter,
@@ -16,6 +16,7 @@ left join (select merchant_id, sum(number_of_tran) as total_number_of_tran, sum(
             select s.merchant_id, sc.number_of_tran, sc.number_of_tran_w_1_7, sc.number_of_tran_w_8_14, sc.number_of_tran_w_15_21, sc.number_of_tran_w_22_end
             from shop s
             left join shop_cube sc on s.id = sc.shop_id) as s_m_tran group by s_m_tran.merchant_id)  m_tran on m.id = m_tran.merchant_id
+            left join qr_province pro on pro.province_code = m.province_code
 '''
 
 terminal_raw_query = '''select t.terminal_id, t.terminal_name, t.business_address,
