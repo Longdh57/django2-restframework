@@ -237,6 +237,9 @@ def shop_store(request):
     else:
         return custom_response(Code.NOT_IMPLEMENTED)
 
+    if terminal.register_vnpayment == 1:
+        return
+
     staff = None
     staff_of_chain = None
     merchant = terminal.merchant
