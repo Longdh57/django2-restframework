@@ -38,7 +38,7 @@ class Command(BaseCommand):
             for item in suggestion_query:
                 suggestion_lists.append(item.id)
             terminals = Terminal.objects.filter(Q(shop=None) & ~Q(status=-1))
-            terminal_for_creates = terminals.filter(~Q(id__in=suggestion_lists))
+            terminal_for_creates = terminals.filter(~Q(id__in=suggestion_lists), ~Q(register_vnpayment=1))
 
             if terminals.count() == 0:
                 raise Exception('Exception: Count Terminal none shop and status = -1 is 0')
