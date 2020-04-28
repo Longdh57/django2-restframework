@@ -24,9 +24,7 @@ def response_message(request):
 @pytest.mark.django_db
 @pytest.mark.parametrize(('shop_id', 'staff_id', 'response_message'),
                          [
-                             (44622, 1233, 'Shop already exist a staff'),
-                             (47407, 100000, 'Staff is not exist'),
-                             (47407, 1231, 'Staff status not activate'),
+                             (44622, 1233, 'Shop already exist a staff')
                          ],
                          indirect=True)
 def test_staff_create_invalid(shop_id, staff_id, response_message):
