@@ -173,8 +173,8 @@ class Shop(models.Model):
                 create_staff_care_log(self, staff_id, StaffCareType.STAFF_SHOP, request)
                 return staff_care.staff
             except Exception as e:
-                logging.error('Create staff-shop exception: %s', e)
-                raise Exception('Create staff-shop exception: %s', e)
+                logging.error(f'Create staff:{staff_id} - shop:{self.id} with exception: {e}')
+                # raise Exception('Create staff-shop exception: %s', e)
         else:
             raise Exception('Shop already exist a staff ')
 

@@ -4,6 +4,8 @@ from django.http import HttpRequest
 from django.core.management.base import BaseCommand
 
 from sale_portal.user.models import User
+from sale_portal.shop.models import Shop
+from sale_portal.shop import ShopActivateType
 from sale_portal.terminal.models import Terminal
 from sale_portal.terminal.views import shop_store
 from sale_portal.utils.cronjob_util import cron_create, cron_update
@@ -38,6 +40,8 @@ class Command(BaseCommand):
             for item in suggestion_query:
                 suggestion_lists.append(item.id)
             terminals = Terminal.objects.filter(Q(shop=None) & ~Q(status=-1))
+
+            # terminal_for_creates la danh sach terminal co the su dung de tao shop
             terminal_for_creates = terminals.filter(~Q(id__in=suggestion_lists), ~Q(register_vnpayment=1))
 
             if terminals.count() == 0:
@@ -49,18 +53,25 @@ class Command(BaseCommand):
                 cron_update(cronjob, description=desc)
 
             for terminal in terminal_for_creates:
-                request = HttpRequest()
-                request.method = 'OTHER'
-                request.user = User.objects.get(pk=1)
-                request.terminal = terminal
-                request.address = terminal.business_address
-                request.street = ''
+                if Shop.objects.filter(
+                        merchant_id=terminal.merchant_id,
+                        activated=ShopActivateType.ACTIVATE,
+                        wards__wards_code=terminal.wards_code
+                ).first():
+                    desc.update(terminal_warnings=desc['terminal_warnings'] + 1)
+                else:
+                    request = HttpRequest()
+                    request.method = 'OTHER'
+                    request.user = User.objects.get(pk=1)
+                    request.terminal = terminal
+                    request.address = terminal.business_address
+                    request.street = ''
 
-                if shop_store(request=request):
-                    total_row += 1
+                    if shop_store(request=request):
+                        total_row += 1
 
-                if total_row % 100 == 0:
-                    print('Created total: ' + str(total_row) + 'shops')
+                    if total_row % 100 == 0:
+                        print('Created total: ' + str(total_row) + 'shops')
 
             self.stdout.write(self.style.SUCCESS('Finish Auto create new shop from terminal daily processing!'))
 
