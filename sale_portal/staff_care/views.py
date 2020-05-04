@@ -13,8 +13,8 @@ from sale_portal.merchant.models import Merchant
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff, QrStaff
 from sale_portal.staff_care import StaffCareType
-from sale_portal.staff_care.models import StaffCareImportLog
-from sale_portal.staff_care.serializers import StaffCareImportLogSerializer
+from sale_portal.staff_care.models import StaffCareImportLog, StaffCareLog
+from sale_portal.staff_care.serializers import StaffCareLogSerializer, StaffCareImportLogSerializer
 from sale_portal.utils.excel_util import check_or_create_excel_folder, create_simple_excel_file
 from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
@@ -321,5 +321,24 @@ class StaffCareImportLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         if to_date is not None and to_date != '':
             queryset = queryset.filter(
                 created_date__lte=(datetime.strptime(to_date, '%d/%m/%Y').strftime('%Y-%m-%d') + ' 23:59:59'))
+
+        return queryset
+
+
+class StaffCareLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+        API get danh sách lịch sử Cham soc  \n
+        Parameters for this api : Có thể bỏ trống hoặc không gửi lên
+        - shop_id -- number
+    """
+    serializer_class = StaffCareLogSerializer
+
+    def get_queryset(self):
+        queryset = StaffCareLog.objects.filter(type=StaffCareType.STAFF_SHOP)
+
+        shop_id = self.request.query_params.get('shop_id', None)
+
+        if shop_id is not None and shop_id != '':
+            queryset = queryset.filter(shop_id=shop_id)
 
         return queryset
