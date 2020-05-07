@@ -205,22 +205,22 @@ DATABASES = {
         'HOST': os.environ.get('MMS_DB_HOST', ''),
         'PORT': os.environ.get('MMS_DB_PORT', ''),
     },
-    'data_warehouse': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DWH_DB_NAME', ''),
-        'USER': os.environ.get('DWH_DB_USER', ''),
-        'PASSWORD': os.environ.get('DWH_DB_PASSWORD', ''),
-        'HOST': os.environ.get('DWH_DB_HOST', ''),
-        'PORT': os.environ.get('DWH_DB_PORT', ''),
-    },
-    'sale_portal_ingestion': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('BI_INGESTION_DB_NAME', ''),
-        'USER': os.environ.get('BI_INGESTION_DB_USER', ''),
-        'PASSWORD': os.environ.get('BI_INGESTION_DB_PASSWORD', ''),
-        'HOST': os.environ.get('BI_INGESTION_DB_HOST', ''),
-        'PORT': os.environ.get('BI_INGESTION_DB_PORT', ''),
-    }
+    # 'data_warehouse': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': os.environ.get('DWH_DB_NAME', ''),
+    #     'USER': os.environ.get('DWH_DB_USER', ''),
+    #     'PASSWORD': os.environ.get('DWH_DB_PASSWORD', ''),
+    #     'HOST': os.environ.get('DWH_DB_HOST', ''),
+    #     'PORT': os.environ.get('DWH_DB_PORT', ''),
+    # },
+    # 'sale_portal_ingestion': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': os.environ.get('BI_INGESTION_DB_NAME', ''),
+    #     'USER': os.environ.get('BI_INGESTION_DB_USER', ''),
+    #     'PASSWORD': os.environ.get('BI_INGESTION_DB_PASSWORD', ''),
+    #     'HOST': os.environ.get('BI_INGESTION_DB_HOST', ''),
+    #     'PORT': os.environ.get('BI_INGESTION_DB_PORT', ''),
+    # }
 }
 
 DATABASE_ROUTERS = ['sale_portal.sale_portal_ingestion.dbrouters.DBRouter']

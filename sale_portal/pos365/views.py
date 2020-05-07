@@ -1,6 +1,7 @@
 import json
 import logging
 
+from django.db.models import Q
 from django.utils import formats
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, get_object_or_404
@@ -12,6 +13,7 @@ from rest_framework.decorators import api_view
 from django.contrib.auth.decorators import login_required, permission_required
 
 from sale_portal import settings
+from sale_portal.administrative_unit.models import QrProvince
 from sale_portal.config_kpi.models import ExchangePointPos365
 from sale_portal.pos365.models import Pos365
 from sale_portal.pos365 import Pos365ContractDuration
@@ -34,24 +36,22 @@ class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         queryset = Pos365.objects.all()
 
         code = self.request.query_params.get('code', None)
-        name = self.request.query_params.get('name', None)
-        sale_email = self.request.query_params.get('sale_email', None)
+        staff_id = self.request.query_params.get('staff_id', None)
         contract_duration = self.request.query_params.get('contract_duration', None)
+        province_id = self.request.query_params.get('province_id', None)
         from_date = self.request.query_params.get('from_date', None)
         to_date = self.request.query_params.get('to_date', None)
 
         if code is not None and code != '':
             code = format_string(code)
             queryset = queryset.filter(code__icontains=code)
-        if name is not None and name != '':
-            name = format_string(name)
-            queryset = queryset.filter(name__icontains=name)
-        if sale_email is not None and sale_email != '':
-            sale_email = format_string(sale_email)
-            queryset = queryset.filter(staff__email__icontains=sale_email)
+        if staff_id is not None and staff_id != '':
+            queryset = queryset.filter(staff_id=staff_id)
         if contract_duration is not None and contract_duration != '':
             contract_duration = int(contract_duration)
             queryset = queryset.filter(contract_duration=contract_duration)
+        if province_id is not None and province_id != '':
+            queryset = queryset.filter(customer_province=province_id)
         if from_date is not None and from_date != '':
             queryset = queryset.filter(
                 contract_start_date__gte=dt_datetime.strptime(from_date, '%d/%m/%Y').strftime('%Y-%m-%d %H:%M:%S'))
@@ -69,24 +69,33 @@ class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 "contract_duration": 1, (type in {0,1,2,3} )
                 "staff_id": 1210,
                 "contract_start_date": "25/01/2020" (format date in %d/%m/%Y),
+                "contract_url": "https://canifa.vn",
+                "contract_product": "Phần mềm POS365",
                 "contract_file": "",
+                "customer_merchant": "Canifa",
                 "customer_name": "Đào Hải Long",
                 "customer_phone": "038123456",
                 "customer_delegate_person": "Long Đào Hải",
                 "customer_address": "36 Hoàng Cầu, Q Đống Đa, Hà Nội"
+                "customer_province": 1 -- number,
         """
         try:
             data = json.loads(request.POST.get('data'))
+
             code = data.get('code', None)
             name = data.get('name', None)
             contract_duration = data.get('contract_duration', None)
             staff_id = data.get('staff_id', None)
+            contract_url = data.get('contract_url', None)
+            contract_product = data.get('contract_product', None)
             contract_start_date = data.get('contract_start_date', None)
             contract_file = request.FILES['contract_file'] if 'contract_file' in request.FILES else None
+            customer_merchant = data.get('customer_merchant', None)
             customer_name = data.get('customer_name', None)
             customer_phone = data.get('customer_phone', None)
             customer_delegate_person = data.get('customer_delegate_person', None)
             customer_address = data.get('customer_address', None)
+            customer_province = data.get('customer_province', None)
 
             if contract_duration is not None and contract_duration != '':
                 if not (isinstance(contract_duration, int) and 0 <= contract_duration <= 3):
@@ -112,22 +121,35 @@ class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 uploaded_file_url = fs.url(filename)
             else:
                 uploaded_file_url = None
+
+            contract_url = format_string(contract_url)
+            contract_product = format_string(contract_product)
             contract_start_date = dt_datetime.strptime(contract_start_date[:10], '%Y-%m-%d')
+
+            customer_merchant = format_string(customer_merchant)
             customer_name = format_string(customer_name)
             customer_phone = format_string(customer_phone)
             customer_delegate_person = format_string(customer_delegate_person)
             customer_address = format_string(customer_address)
+            province = QrProvince.objects.filter(pk=int(customer_province)).first()
+            if not province:
+                return custom_response(Code.BAD_REQUEST, 'Wrong Province')
+
             pos365 = Pos365(
                 code=code,
                 name=name,
                 contract_duration=contract_duration,
                 staff_id=staff_id,
+                contract_url=contract_url,
+                contract_product=contract_product,
                 contract_start_date=contract_start_date,
                 contract_file=uploaded_file_url,
+                customer_merchant=customer_merchant,
                 customer_name=customer_name,
                 customer_phone=customer_phone,
                 customer_delegate_person=customer_delegate_person,
                 customer_address=customer_address,
+                customer_province=province,
                 created_by=request.user,
                 updated_by=request.user
             )
@@ -136,7 +158,7 @@ class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             return successful_response(pos365.id)
 
         except Exception as e:
-            logging.error('Create team exception: %s', e)
+            logging.error('Create pos365 exception: %s', e)
             return custom_response(Code.INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk):
@@ -157,11 +179,18 @@ class Pos365ViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'code': pos365.code,
             'name': pos365.name,
             'contract_duration': pos365.contract_duration,
-            'customer_name': pos365.customer_name,
+            'contract_url': pos365.contract_url,
+            'contract_product': pos365.contract_product,
             'staff': staff,
             'team': team,
+            'contract_start_date': contract_start_date,
             'point': point,
-            'contract_start_date': contract_start_date
+            'customer_merchant': pos365.customer_merchant,
+            'customer_name': pos365.customer_name,
+            'customer_phone': pos365.customer_phone,
+            'customer_delegate_person': pos365.customer_delegate_person,
+            'customer_address': pos365.customer_address,
+            'customer_province': pos365.customer_province.province_name if pos365.customer_province else None,
         })
 
 
