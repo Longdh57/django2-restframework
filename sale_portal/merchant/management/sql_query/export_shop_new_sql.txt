@@ -23,5 +23,5 @@ join staff st on sc.staff_id = st.id
 left join qr_province p on p.id = s.province_id
 left join qr_district d on d.id = s.district_id
 left join qr_wards w on w.id = s.wards_id
-where s.created_date > date_trunc('month', current_date) and m.status = 1
+where s.created_date > (date_trunc('month', current_date - interval '1' month )+ interval '21' day) and m.status = 1
 order by s.created_date asc
