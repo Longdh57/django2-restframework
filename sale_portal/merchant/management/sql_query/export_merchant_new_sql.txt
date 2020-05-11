@@ -5,6 +5,7 @@ select
 	m.created_date,
 	st.full_name as staff_full_name,
 	st.staff_code,
+	st.email as staff_email,
 	s.id as shop_id,
 	p.province_name as shop_province_name,
 	d.district_name as shop_district_name,
