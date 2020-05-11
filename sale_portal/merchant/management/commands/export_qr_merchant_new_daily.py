@@ -81,6 +81,7 @@ class Command(BaseCommand):
                 item['created_date'].strftime("%d-%m-%Y"),
                 item['staff_full_name'],
                 item['staff_code'],
+                item['staff_email'],
                 item['shop_id'],
                 item['shop_province_name'],
                 item['shop_district_name'],
@@ -93,7 +94,7 @@ class Command(BaseCommand):
             content.append(row)
             index = index + 1
 
-        self.write(spreadObj=spreadObj, content=content, sheet_name='QrMerchantNew', start_col='A', end_col='O',
+        self.write(spreadObj=spreadObj, content=content, sheet_name='QrMerchantNew', start_col='A', end_col='P',
                    start_row=2)
 
         self.stdout.write(
