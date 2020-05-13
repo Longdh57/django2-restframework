@@ -128,9 +128,11 @@ class Command(BaseCommand):
                 item['merchant_code'],
                 item['merchant_brand'],
                 item['merchant_name'],
+                item['merchant_staff_email'],
                 item['merchant_created_date'].strftime("%d-%m-%Y"),
                 item['staff_full_name'],
                 item['staff_code'],
+                item['staff_email'],
                 item['shop_id'],
                 item['shop_province_name'],
                 item['shop_district_name'],
@@ -144,7 +146,7 @@ class Command(BaseCommand):
             content.append(row)
             index = index + 1
 
-        self.write(spreadObj=spreadObj, content=content, sheet_name='ShopNew', start_col='A', end_col='P', start_row=2)
+        self.write(spreadObj=spreadObj, content=content, sheet_name='ShopNew', start_col='A', end_col='R', start_row=2)
 
         self.stdout.write(
             self.style.SUCCESS('Finish export Shop new to google spreadsheet daily processing!'))
