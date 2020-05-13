@@ -2,9 +2,11 @@ select
 	m.merchant_code,
 	m.merchant_name,
 	m.merchant_brand,
+	stm.email as merchant_staff_email,
 	m.created_date as merchant_created_date,
 	st.full_name as staff_full_name,
 	st.staff_code,
+	st.email as staff_email,
 	s.id as shop_id,
 	p.province_name as shop_province_name,
 	d.district_name as shop_district_name,
@@ -20,6 +22,7 @@ join shop s on s.merchant_id = m.id
 join terminal t on t.shop_id = s.id
 join staff_care sc on s.id = sc.shop_id and sc."type" = 0
 join staff st on sc.staff_id = st.id
+left join staff stm on m.staff = stm.id
 left join qr_province p on p.id = s.province_id
 left join qr_district d on d.id = s.district_id
 left join qr_wards w on w.id = s.wards_id
