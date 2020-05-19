@@ -29,6 +29,7 @@ from sale_portal.utils.data_export import ExportType, get_data_export
 from sale_portal.utils.excel_util import check_or_create_excel_folder
 from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset
+from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
 
 class TerminalViewSet(mixins.ListModelMixin,
@@ -277,6 +278,9 @@ def shop_store(request):
     data = {
         'shop_id': shop.pk
     }
+
+    refresh_shop_full_data()
+
     return successful_response(data)
 
 
