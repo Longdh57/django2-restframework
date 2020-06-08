@@ -2,10 +2,10 @@ from django.db import models
 import logging
 
 from sale_portal.sale_promotion_form import PromotionStatus
-from ..terminal.models import Terminal
-from ..shop.models import Shop
-from ..staff.models import Staff
-from ..user.models import User
+from sale_portal.terminal.models import Terminal
+from sale_portal.shop.models import Shop
+from sale_portal.staff.models import Staff
+from sale_portal.user.models import User
 
 
 class SalePromotionTitle(models.Model):

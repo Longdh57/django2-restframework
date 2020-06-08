@@ -12,12 +12,12 @@ from sale_portal.utils.queryset import get_shops_viewable_queryset
 from .serializers import SalePromotionSerializer
 from tablib import Dataset
 
-from .models import SalePromotion, SalePromotionTitle
-from ..staff.models import Staff
-from ..terminal.models import Terminal
-from ..shop.models import Shop
-from ..utils.excel_util import create_simple_excel_file
-from ..common.standard_response import successful_response, custom_response, Code
+from sale_portal.shop.models import Shop
+from sale_portal.staff.models import Staff
+from sale_portal.terminal.models import Terminal
+from sale_portal.utils.excel_util import create_simple_excel_file
+from sale_portal.sale_promotion_form.models import SalePromotion, SalePromotionTitle
+from sale_portal.common.standard_response import successful_response, custom_response, Code
 
 
 class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -35,7 +35,8 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_permissions(self):
         if self.action == 'list':
-            permission_classes = get_user_permission_classes('sale_promotion_form.sale_promotion_list_data', self.request)
+            permission_classes = get_user_permission_classes('sale_promotion_form.sale_promotion_list_data',
+                                                             self.request)
         if self.action == 'retrieve':
             permission_classes = get_user_permission_classes('sale_promotion_form.sale_promotion_detail', self.request)
         if self.action == 'update':
@@ -50,7 +51,7 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         team_id = self.request.query_params.get('team_id', None)
         status = self.request.query_params.get('status', None)
 
-        queryset = SalePromotion.objects.filter(shop__in =get_shops_viewable_queryset(self.request.user))
+        queryset = SalePromotion.objects.filter(shop__in=get_shops_viewable_queryset(self.request.user))
 
         if title_id is not None and title_id != '':
             queryset = queryset.filter(title_id=title_id)
@@ -219,11 +220,12 @@ def import_view(request):
     for item in promotion_rows:
         data = {
             'terminal_id': item[0],
-            'shop_code': item[1],
-            'staff_email': item[2],
-            'contact_person': item[3],
-            'contact_phone_number': item[4],
-            'contact_email': item[5],
+            'merchant_code': item[1],
+            'shop_code': item[2],
+            'staff_email': item[3],
+            'contact_person': item[4],
+            'contact_phone_number': item[5],
+            'contact_email': item[6],
             'update_status': ''
         }
         total_row += 1
@@ -256,11 +258,14 @@ def import_view(request):
 def import_view_update_action(data, request, is_submit=False, promotion_title=None):
     if data['terminal_id'] is None or str(data['terminal_id']) == '':
         return 'Terminal_ID: Terminal_ID trống - Lỗi dữ liệu'
+    if data['merchant_code'] is None or str(data['merchant_code']) == '':
+        return 'Merchant_code: Merchant_code trống - Lỗi dữ liệu'
     if data['shop_code'] is None or str(data['shop_code']) == '':
         return 'shop_code: shop_code trống - Lỗi dữ liệu'
     if data['staff_email'] is None or str(data['staff_email']) == '':
         return 'Sale: Sale trống - Lỗi dữ liệu'
-    terminal = Terminal.objects.filter(terminal_id=data['terminal_id']).first()
+    terminal = Terminal.objects.filter(terminal_id=data['terminal_id'],
+                                       merchant__merchant_code=data['merchant_id']).first()
     if terminal is None:
         return 'Terminal_ID: Không tìm thấy Terminal'
     shop = Shop.objects.filter(code=data['shop_code']).first()
@@ -285,9 +290,9 @@ def import_view_update_action(data, request, is_submit=False, promotion_title=No
                 staff=staff,
                 title=promotion_title,
                 contact_person=str(data['contact_person']) if data['contact_person'] is not None else '',
-                contact_phone_number=str(data['contact_phone_number']) if data['contact_phone_number'] is not None else '',
+                contact_phone_number=str(data['contact_phone_number']) if data[
+                                                                              'contact_phone_number'] is not None else '',
                 contact_email=str(data['contact_email']) if data['contact_email'] is not None else '',
-
                 tentcard_ctkm=False,
                 wobbler_ctkm=False,
                 status=0,
@@ -300,7 +305,7 @@ def import_view_update_action(data, request, is_submit=False, promotion_title=No
     else:
         if promotion.staff == staff and promotion.contact_person == str(
                 data['contact_person']) and promotion.contact_phone_number == str(
-                data['contact_phone_number']) and promotion.contact_email == str(data['contact_email']):
+            data['contact_phone_number']) and promotion.contact_email == str(data['contact_email']):
             return 'No change'
         elif promotion.staff != staff:
             message = 'Update staff'
@@ -309,7 +314,8 @@ def import_view_update_action(data, request, is_submit=False, promotion_title=No
         if is_submit:
             promotion.staff = staff
             promotion.contact_person = str(data['contact_person']) if data['contact_person'] is not None else ''
-            promotion.contact_phone_number = str(data['contact_phone_number']) if data['contact_phone_number'] is not None else ''
+            promotion.contact_phone_number = str(data['contact_phone_number']) if data[
+                                                                                      'contact_phone_number'] is not None else ''
             promotion.contact_email = str(data['contact_email']) if data['contact_email'] is not None else ''
             promotion.updated_by = request.user
             promotion.save()
@@ -335,7 +341,8 @@ def get_list_titles(request):
 
     queryset = queryset.order_by('code')[0:settings.PAGINATE_BY]
 
-    data = [{'id': title.id, 'content': title.code + ' - ' + (title.description if title.description else 'N/A')} for title in queryset]
+    data = [{'id': title.id, 'content': title.code + ' - ' + (title.description if title.description else 'N/A')} for
+            title in queryset]
 
     return successful_response(data)
 
@@ -353,7 +360,6 @@ def reset_data(request):
 
 
 def render_excel_import_error(staff_email='', data=[]):
-
     folder_name = 'sale-promotion-import-error'
     file_name = str(staff_email) + '_' + str(int(time.time())) + '.xlsx'
     sheet_name = 'DANH SÁCH BẢN GHI LỖI'
