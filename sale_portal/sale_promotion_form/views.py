@@ -364,6 +364,7 @@ def render_excel_import_error(staff_email='', data=[]):
     file_name = str(staff_email) + '_' + str(int(time.time())) + '.xlsx'
     sheet_name = 'DANH SÁCH BẢN GHI LỖI'
 
-    column_headers = ['Terminal_ID', 'Shop_code', 'Sale', 'Người lien hệ', 'SĐT liên hệ', 'Email liên hệ']
+    column_headers = ['Terminal_ID', 'Merchant Code', 'Shop_code', 'Sale', 'Người lien hệ', 'SĐT liên hệ',
+                      'Email liên hệ']
 
     return create_simple_excel_file(folder_name, file_name, sheet_name, column_headers, data)
