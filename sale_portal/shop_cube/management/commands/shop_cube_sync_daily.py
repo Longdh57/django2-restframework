@@ -71,6 +71,8 @@ class Command(BaseCommand):
                     shop_ward_name=item['shop_ward_name'],
                     department_name=item['department_name'],
                     shop_address=item['shop_address'],
+                    number_of_tran_acm=int(item['number_of_tran_acm']),
+                    number_of_tran_last_m=int(item['number_of_tran_last_m']),
                     number_of_tran=int(item['number_of_tran']),
                     number_of_tran_w_1_7=int(item['number_of_tran_w_1_7']),
                     number_of_tran_w_8_14=int(item['number_of_tran_w_8_14']),

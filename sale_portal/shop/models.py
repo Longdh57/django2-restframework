@@ -314,6 +314,8 @@ class ShopFullData(models.Model):
     team_id = models.IntegerField(null=True)
     count_terminals = models.IntegerField(null=True)
     report_date = models.DateField(null=True, blank=True, help_text='Ngay bao cao')
+    number_of_tran_acm = models.IntegerField(null=True)
+    number_of_tran_last_m = models.IntegerField(null=True)
     number_of_tran = models.IntegerField(null=True)
     number_of_tran_w_1_7 = models.IntegerField(null=True)
     number_of_tran_w_8_14 = models.IntegerField(null=True)
