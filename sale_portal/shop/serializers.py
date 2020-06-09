@@ -64,6 +64,8 @@ class ShopSerializer(serializers.ModelSerializer):
 
         return {
             'report_date': shop_cube.report_date,
+            'number_of_tran_acm': shop_cube.number_of_tran_acm,
+            'number_of_tran_last_m': shop_cube.number_of_tran_last_m,
             'number_of_tran': shop_cube.number_of_tran,
             'number_of_tran_w_1_7': shop_cube.number_of_tran_w_1_7,
             'number_of_tran_w_8_14': shop_cube.number_of_tran_w_8_14,
@@ -129,6 +131,8 @@ class ShopFullDataSerializer(serializers.ModelSerializer):
 
         return {
             'report_date': shop_full_data.report_date,
+            'number_of_tran_acm': shop_full_data.number_of_tran_acm,
+            'number_of_tran_last_m': shop_full_data.number_of_tran_last_m,
             'number_of_tran': shop_full_data.number_of_tran,
             'number_of_tran_w_1_7': shop_full_data.number_of_tran_w_1_7,
             'number_of_tran_w_8_14': shop_full_data.number_of_tran_w_8_14,

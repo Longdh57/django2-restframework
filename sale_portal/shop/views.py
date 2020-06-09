@@ -294,6 +294,8 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             },
             'shop_cube': {
                 'report_date': shop.shop_cube.report_date,
+                'number_of_tran_acm': shop.shop_cube.number_of_tran_acm,
+                'number_of_tran_last_m': shop.shop_cube.number_of_tran_last_m,
                 'number_of_tran': shop.shop_cube.number_of_tran,
                 'number_of_tran_w_1_7': shop.shop_cube.number_of_tran_w_1_7,
                 'number_of_tran_w_8_14': shop.shop_cube.number_of_tran_w_8_14,

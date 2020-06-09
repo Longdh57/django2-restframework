@@ -36,6 +36,8 @@ class ShopCube(models.Model):
     shop_ward_name = models.TextField(blank=True, null=True, help_text='Ten phuong xa')
     department_name = models.TextField(blank=True, null=True)
     shop_address = models.TextField(blank=True, null=True, help_text='Dia chi shop')
+    number_of_tran_acm = models.IntegerField(default=0, help_text='SLGD tu dau thang')
+    number_of_tran_last_m = models.IntegerField(default=0, help_text='SLGD thang truoc')
     number_of_tran = models.IntegerField(default=0, help_text='SLGD hom qua')
     number_of_tran_w_1_7 = models.IntegerField(default=0, help_text='SLGD ky 1')
     number_of_tran_w_8_14 = models.IntegerField(default=0, help_text='SLGD ky 2')
