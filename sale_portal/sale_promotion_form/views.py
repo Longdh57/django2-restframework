@@ -265,7 +265,7 @@ def import_view_update_action(data, request, is_submit=False, promotion_title=No
     if data['staff_email'] is None or str(data['staff_email']) == '':
         return 'Sale: Sale trống - Lỗi dữ liệu'
     terminal = Terminal.objects.filter(terminal_id=data['terminal_id'],
-                                       merchant__merchant_code=data['merchant_id']).first()
+                                       merchant__merchant_code=data['merchant_code']).first()
     if terminal is None:
         return 'Terminal_ID: Không tìm thấy Terminal'
     shop = Shop.objects.filter(code=data['shop_code']).first()
