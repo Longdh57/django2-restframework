@@ -504,7 +504,9 @@ def render_excel(request=None, return_url=True):
     worksheet.write('O1', 'SLGD tuần 2 (8-14)', merge_format)
     worksheet.write('P1', 'SLGD tuần 3 (15-21)', merge_format)
     worksheet.write('Q1', 'SLGD tuần 4 (22-hết tháng)', merge_format)
-    worksheet.write('R1', 'Ngày tạo', merge_format)
+    worksheet.write('R1', 'SLGD tháng này', merge_format)
+    worksheet.write('S1', 'SLGD tháng trước', merge_format)
+    worksheet.write('T1', 'Ngày tạo', merge_format)
     worksheet.freeze_panes(1, 0)
 
     shops = get_shop_exports(request)
@@ -528,7 +530,9 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 14, item['k2'] if item['k2'] else 0)
         worksheet.write(row_num, 15, item['k3'] if item['k3'] else 0)
         worksheet.write(row_num, 16, item['k4'] if item['k4'] else 0)
-        worksheet.write(row_num, 17, formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item[
+        worksheet.write(row_num, 17, item['number_of_tran_acm'] if item['number_of_tran_acm'] else 0)
+        worksheet.write(row_num, 18, item['number_of_tran_last_m'] if item['number_of_tran_last_m'] else 0)
+        worksheet.write(row_num, 19, formats.date_format(item['created_date'], "SHORT_DATETIME_FORMAT") if item[
             'created_date'] else '')
 
         row_num += 1
