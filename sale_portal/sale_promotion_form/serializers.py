@@ -31,7 +31,20 @@ class SalePromotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalePromotion
         fields = (
-            'id', 'terminal', 'merchant', 'shop', 'staff', 'title', 'contact_person', 'contact_phone_number',
-            'contact_email', 'tentcard_ctkm', 'wobbler_ctkm', 'status', 'image', 'sub_image',
-            'created_date', 'updated_date'
+            'id',
+            'terminal',
+            'merchant',
+            'shop',
+            'staff',
+            'title',
+            'contact_person',
+            'contact_phone_number',
+            'contact_email',
+            'tentcard_ctkm',
+            'wobbler_ctkm',
+            'status',
+            'image',
+            'sub_image',
+            'created_date',
+            'updated_date'
         )

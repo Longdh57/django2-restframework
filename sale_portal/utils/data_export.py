@@ -54,13 +54,27 @@ left join qr_wards qr_war on qr_war.id = s.wards_id
 left join (select spf.shop_id, spt.code as ctkm from sale_promotion_form spf
             inner join sale_promotion_title spt on spf.title_id = spt.id group by spf.shop_id, spt.code) p on s.id=p.shop_id			
 left join shop_cube sc on sc.shop_id = s.id
-left join qr_type_merchant d on m.merchant_type = d.id'''
+left join qr_type_merchant d on m.merchant_type = d.id
+'''
 
+
+sale_promotion_form_raw_query = '''select spt.code as sale_promotion_title_code,t.terminal_id as terminal_id,t.terminal_name as terminal_name,m.merchant_code as merchant_code,
+       m.merchant_brand as merchant_brand,s.code as shop_code,s.address as address,s2.email as email,t2.code as team_code,
+       spf.contact_person as contact_person,spf.created_date as created_date,spf.updated_date as updated_date,spf.status as status
+from sale_promotion_form spf
+left join sale_promotion_title spt on spf.title_id = spt.id
+left join terminal t on spf.terminal_id = t.id
+left join shop s on spf.shop_id = s.id
+left join merchant m on s.merchant_id = m.id
+left join staff s2 on spf.staff_id = s2.id
+left join team t2 on s2.team_id = t2.id
+'''
 
 class ExportType:
     MERCHANT = 111
     TERMINAL = 222
     SHOP = 333
+    SALE_PROMOTION_FORM = 444
 
 
 def get_data_export(ids_queryset, type=None):
@@ -74,7 +88,7 @@ def get_data_export(ids_queryset, type=None):
         ids += str(item['id']) + ','
     ids = ids[:-1]
     ids += ')'
-
+    print(f'[x] ids: {ids}')
     if len(ids) < 3:
         return []
 
@@ -84,6 +98,8 @@ def get_data_export(ids_queryset, type=None):
         raw_query = terminal_raw_query + ' where t.id in ' + ids + ' order by t.created_date desc'
     elif type == ExportType.SHOP:
         raw_query = shop_raw_query + ' where s.id in ' + ids + ' order by s.created_date desc'
+    elif type == ExportType.SALE_PROMOTION_FORM:
+        raw_query = sale_promotion_form_raw_query + ' where spf.id in ' + ids + ' order by spf.created_date desc'
     else:
         return []
 

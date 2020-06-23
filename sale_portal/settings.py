@@ -15,7 +15,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'), override=True, verbose=True)
 
 # Logging, default at system.log, read more in https://cuccode.com/python_logging.html
 logging.basicConfig(filename=os.environ.get('LOGGING_FILE', 'system.log'),
-                    format='[%(asctime)s] - [%(levelname)s] - %(message)s')
+                    format='[%(asctime)s] - [%(levelname)s] - %(message)s', level=logging.INFO)
 
 
 def get_list(text):
