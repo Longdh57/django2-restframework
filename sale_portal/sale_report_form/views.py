@@ -166,6 +166,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             new_result = datajson.get('new_result')
             new_note = datajson.get('new_note')
             new_using_application = datajson.get('new_using_application')
+            new_store_image = datajson.get('new_store_image')
 
             try:
                 field_validator.validate_merchant_name(
@@ -204,6 +205,17 @@ class SaleReportViewSet(mixins.ListModelMixin,
                     'status': 400,
                     'message': 'Validate error: ' + str(e),
                 }, status=400)
+
+            if not is_draft:
+                if new_store_image is None or new_store_image == '':
+                    return self.response(
+                        status=400, message='new_store_image is required')
+                new_store_image_filename = str(request.user.username) + '-new_store_image' + str(
+                    time_f()) + '.png'
+                with open(location + '/' + new_store_image_filename, "wb") as f:
+                    f.write(base64.b64decode(new_store_image))
+                    f.close()
+                    sale_report.new_store_image = base_url + '/' + new_store_image_filename
 
         # Xu ly request Triển khai
         elif str(purpose) == '1':
@@ -421,6 +433,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
             shop = get_object_or_404(Shop, code=sale_report.shop_code)
 
         if sale_report.data_version == 1:
+            new_store_image = sale_report.new_store_image or None
             image_outside = sale_report.image_outside.url if sale_report.image_outside else ''
             image_inside = sale_report.image_inside.url if sale_report.image_inside else ''
             image_store_cashier = sale_report.image_store_cashier.url if sale_report.image_store_cashier else ''
@@ -437,6 +450,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 implement_career_guideline = implement_career_guideline.replace('0', "'Thu ngân'") \
                     .replace('1', "'Cửa hàng trưởng'")
         else:
+            new_store_image = sale_report.new_store_image
             image_outside = sale_report.image_outside_v2
             image_inside = sale_report.image_inside_v2
             image_store_cashier = sale_report.image_store_cashier_v2
@@ -459,7 +473,8 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 'new_phone': sale_report.new_phone,
                 'new_result': sale_report.new_result,
                 'new_using_application': sale_report.new_using_application,
-                'new_note': sale_report.new_note
+                'new_note': sale_report.new_note,
+
             },
             'shop': {
                 'shop_id': shop.id if sale_report.shop_code else 0,
@@ -471,6 +486,7 @@ class SaleReportViewSet(mixins.ListModelMixin,
                 'merchant_brand': shop.merchant.merchant_brand if sale_report.shop_code else '',
             },
             'shop_status': sale_report.shop_status,
+            'new_store_image': str(new_store_image),
             'image_outside': image_outside,
             'image_inside': image_inside,
             'image_store_cashier': image_store_cashier,

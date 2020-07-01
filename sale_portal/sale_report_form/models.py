@@ -47,6 +47,11 @@ class SaleReport(models.Model):
     new_using_application = models.CharField(choices=SaleReportFormNewUsingApplications.CHOICES, max_length=100,
                                              null=True, blank=True)
     new_note = models.TextField(help_text='Noi dung ghi chu', null=True)
+    new_store_image = models.ImageField(
+        upload_to='sale_report_form',
+        help_text='Noi dung mo moi - image cua hang',
+        blank=True
+    )
 
     # Noi dung Cham soc, Trien Khai
     shop_code = models.CharField(max_length=100, help_text='Relative with shop.code', null=True, blank=True)
