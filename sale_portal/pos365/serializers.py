@@ -29,7 +29,7 @@ class Pos365Serializer(serializers.ModelSerializer):
             if pos365.contract_start_date else ''
 
     def get_staff(self, pos365):
-        return pos365.staff.email
+        return pos365.staff.email if pos365.staff else None
 
     def get_team(self, pos365):
         if pos365.team is not None:

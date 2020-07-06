@@ -8,6 +8,7 @@ from sale_portal.config_kpi import ProportionKpiTeamType
 
 
 class ExchangePointPos365(models.Model):
+    name = models.CharField(max_length=100, null=True)
     type = models.IntegerField(choices=Pos365ContractDuration.CHOICES, unique=True)
     point = models.DecimalField(max_digits=10, decimal_places=1, default=0,
                                 validators=[MinValueValidator(0), MaxValueValidator(100)])
@@ -20,7 +21,7 @@ class ExchangePointPos365(models.Model):
         )
 
     def __str__(self):
-        return Pos365ContractDuration.CHOICES[self.type][1]
+        return self.name
 
 
 class ProportionKpiTeam(models.Model):
