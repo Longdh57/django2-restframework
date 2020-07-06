@@ -153,7 +153,8 @@ INSTALLED_APPS = [
     'sale_portal.terminal',
     'sale_portal.user',
     'sale_portal.common',
-    'sale_portal.geodata'
+    'sale_portal.geodata',
+    'sale_portal.kpi'
 ]
 
 MIDDLEWARE = [
