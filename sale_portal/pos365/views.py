@@ -202,7 +202,7 @@ def list_contract_durations(request):
     """
     data = []
 
-    for item in ExchangePointPos365.objects.all():
+    for item in ExchangePointPos365.objects.order_by('id').all():
         data.append({"code": item.type, "description": item.name})
 
     return successful_response(data)
