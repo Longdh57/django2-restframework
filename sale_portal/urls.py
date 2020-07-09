@@ -10,6 +10,7 @@ from sale_portal.user.urls import url_login_patterns as login_urls
 from sale_portal.administrative_unit.urls import urlpatterns as administrative_unit_urls
 from sale_portal.area.urls import urlpatterns as area_urls
 from sale_portal.config_kpi.urls import urlpatterns as config_kpi_urls
+from sale_portal.kpi.urls import urlpatterns as kpi_urls
 from sale_portal.merchant.urls import urlpatterns as merchant_urls
 from sale_portal.pos365.urls import urlpatterns as pos365_urls
 from sale_portal.terminal.urls import urlpatterns as terminal_urls
@@ -33,6 +34,7 @@ api_urlpatterns = [
                                           namespace='administrative_unit')),
     url(r'^areas/', include((area_urls, 'area'), namespace='area')),
     url(r'^config_kpi/', include((config_kpi_urls, 'config_kpi'), namespace='config_kpi')),
+    url(r'^kpi/', include((kpi_urls, 'kpi'), namespace='kpi')),
     url(r'^merchants/', include((merchant_urls, 'merchant'), namespace='merchant')),
     url(r'^pos365s/', include((pos365_urls, 'pos365'), namespace='pos365')),
     url(r'^sale-report-form/', include((sale_report_form_urls, 'sale_report_form'), namespace='sale_report_form')),

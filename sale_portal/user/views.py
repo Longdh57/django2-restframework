@@ -570,6 +570,7 @@ def model_permissions(request):
     model_permissions = dict()
 
     for permission in queryset:
+        print(f'Permission: {permission.id}')
         if permission.content_type.model not in model_names:
             continue
         item = {
