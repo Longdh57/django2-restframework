@@ -95,13 +95,14 @@ class GoogleSheetWithVerifyCode(object):
 
         self.put_to_google_sheet(spread_id, range_name, body_content, cleared_range)
 
-    def read(self, spreadsheet_id, range):
+    def read(self, spreadsheet_id, sheet_name, range):
         try:
             service = self.get_google_sheet_service_object()
 
             if service:
+                range_name = sheet_name + '!' + range
                 result = service.spreadsheets().values().get(
-                    spreadsheetId=spreadsheet_id, range=range
+                    spreadsheetId=spreadsheet_id, range=range,
                 ).execute()
 
                 return result['values'] if 'values' in result else []
