@@ -20,7 +20,6 @@ class Pos365Serializer(serializers.ModelSerializer):
     contract_start_date = serializers.SerializerMethodField()
     staff = serializers.SerializerMethodField()
     team = serializers.SerializerMethodField()
-    area = serializers.SerializerMethodField()
     point = serializers.SerializerMethodField()
     customer_province = ProvinceSerializer()
 
@@ -34,11 +33,6 @@ class Pos365Serializer(serializers.ModelSerializer):
     def get_team(self, pos365):
         if pos365.team is not None:
             return pos365.team.name
-        return None
-
-    def get_area(self, pos365):
-        if pos365.area is not None:
-            return pos365.area.name
         return None
 
     def get_point(self, pos365):
@@ -55,13 +49,11 @@ class Pos365Serializer(serializers.ModelSerializer):
         fields = (
             'id',
             'code',
-            'name',
             'contract_duration',
-            'contract_product',
-            'contract_url',
+            'contract_coefficient',
+            'contract_product_quantity',
             'staff',
             'team',
-            'area',
             'point',
             'contract_start_date',
             'customer_merchant',
