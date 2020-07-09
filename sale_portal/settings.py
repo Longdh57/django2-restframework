@@ -153,7 +153,8 @@ INSTALLED_APPS = [
     'sale_portal.terminal',
     'sale_portal.user',
     'sale_portal.common',
-    'sale_portal.geodata'
+    'sale_portal.geodata',
+    'sale_portal.kpi'
 ]
 
 MIDDLEWARE = [
@@ -260,6 +261,7 @@ LIMIT_QUERY_PER_GOOGLE_ACCOUNT_TOKEN = int(os.environ.get('LIMIT_QUERY_PER_GOOGL
 
 # Google Spread Sheet
 QR_MERCHANT_NEW_SPREAD_ID = os.environ.get('QR_MERCHANT_NEW_SPREAD_ID', '')
+KPI_SPREAD_ID = os.environ.get('KPI_SPREAD_ID', '')
 # Google Spread Sheet
 
 # Config send email
