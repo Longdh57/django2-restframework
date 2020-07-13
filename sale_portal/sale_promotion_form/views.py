@@ -317,9 +317,14 @@ def get_list_titles(request):
     queryset = SalePromotionTitle.objects.all()
 
     code = request.GET.get('code', None)
+    show_promotion_reset = request.GET.get('show_promotion_reset', None)
 
     if code is not None and code != '':
         queryset = queryset.filter(code__icontains=code)
+    if show_promotion_reset is not None and show_promotion_reset != '':
+        pass
+    else:
+        queryset = queryset.filter(reset_data_date__isnull=True)
 
     queryset = queryset.order_by('code')[0:settings.PAGINATE_BY]
 
