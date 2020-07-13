@@ -7,9 +7,9 @@ from .views import SalePromotionViewSet, import_view, export, get_list_titles, r
 router = routers.DefaultRouter()
 router.register(r'', SalePromotionViewSet, 'SalePromotion')
 urlpatterns = [
+    url(r'^(?P<pk>[0-9]+)/reset', reset_data, name='reset_data'),
     url(r'^', include(router.urls), name='SalePromotion'),
     url(r'^import', import_view, name='import'),
     url(r'^export', export, name='export_data_sale_promotion'),
     url(r'^list-title', get_list_titles, name='get_list_titles'),
-    url(r'^reset', reset_data, name='reset_data'),
 ]
