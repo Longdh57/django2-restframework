@@ -11,8 +11,13 @@ from sale_portal.user.models import User
 class SalePromotionTitle(models.Model):
     code = models.CharField(max_length=20, unique=True, null=False, blank=False)
     description = models.TextField(null=True)
+    reset_data_date = models.DateTimeField(null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='sale_promotion_title_created_by',
+                                   null=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='sale_promotion_title_updated_by',
+                                   null=True)
 
     class Meta:
         db_table = 'sale_promotion_title'
@@ -23,10 +28,12 @@ class SalePromotionTitle(models.Model):
 
 
 class SalePromotion(models.Model):
-    terminal = models.ForeignKey(Terminal, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
+    terminal = models.ForeignKey(Terminal, on_delete=models.SET_NULL, related_name='sale_promotions', null=True,
+                                 blank=True)
     shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
-    title = models.ForeignKey(SalePromotionTitle, on_delete=models.SET_NULL, related_name='sale_promotions', null=True, blank=True)
+    title = models.ForeignKey(SalePromotionTitle, on_delete=models.SET_NULL, related_name='sale_promotions', null=True,
+                              blank=True)
 
     contact_person = models.CharField(max_length=100, help_text='contact_person', null=True)
     contact_phone_number = models.CharField(max_length=20, help_text='contact_phone_number', null=True)
@@ -92,7 +99,7 @@ class SalePromotion(models.Model):
             'email': staff.email if staff else '',
             'team_code': staff.team.code if (staff and staff.team) else ''
         }
-    
+
     def get_title(self):
         return {
             'code': self.title.code if self.title else '',

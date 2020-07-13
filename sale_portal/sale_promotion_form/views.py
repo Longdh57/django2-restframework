@@ -1,7 +1,8 @@
 import os
-import logging
 import json
 import time
+import logging
+import datetime
 import xlsxwriter
 
 from django.utils import formats
@@ -322,8 +323,12 @@ def get_list_titles(request):
 
     queryset = queryset.order_by('code')[0:settings.PAGINATE_BY]
 
-    data = [{'id': title.id, 'content': title.code + ' - ' + (title.description if title.description else 'N/A')} for
-            title in queryset]
+    data = [
+        {
+            'id': title.id,
+            'content': title.code + ' - ' + (title.description if title.description else 'N/A')
+        }
+        for title in queryset]
 
     return successful_response(data)
 
@@ -331,11 +336,18 @@ def get_list_titles(request):
 @api_view(['DELETE'])
 @login_required
 @permission_required('sale_promotion_form.sale_promotion_reset_data', raise_exception=True)
-def reset_data(request):
+def reset_data(request, pk):
     """
-        API delete all SalePromotion
+        API delete SalePromotion by title_id
     """
-    SalePromotion.objects.all().delete()
+    if SalePromotionTitle.objects.filter(id=pk).first() is None:
+        return custom_response(Code.PROMOTION_NOT_FOUND)
+
+    SalePromotion.objects.filter(title_id=pk).delete()
+    SalePromotionTitle.objects.filter(id=pk).update(
+        reset_data_date=datetime.datetime.now(),
+        updated_by=request.user
+    )
 
     return successful_response()
 
