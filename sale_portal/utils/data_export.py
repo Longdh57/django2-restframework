@@ -6,7 +6,7 @@ stt.email as staff_care_email, stt.team as team_code,
 (select count(*) from terminal where merchant_id = m.id) as count_ter,
 m_tran.total_number_of_tran, m_tran.total_k1, m_tran.total_k2, m_tran.total_k3, m_tran.total_k4,
 qr_st.description as status,
-m.created_date from merchant m
+m.created_date, qtm.brand_name as merchant_type_brand_name from merchant m
 left join (select st.email, tm.code as team, stc.merchant_id from staff st
             left join team tm on st.team_id = tm.id
             inner join staff_care stc on st.id = stc.staff_id and stc.type = 2) stt on stt.merchant_id = m.id
@@ -17,6 +17,7 @@ left join (select merchant_id, sum(number_of_tran) as total_number_of_tran, sum(
             from shop s
             left join shop_cube sc on s.id = sc.shop_id) as s_m_tran group by s_m_tran.merchant_id)  m_tran on m.id = m_tran.merchant_id
             left join qr_province pro on pro.province_code = m.province_code
+left join qr_type_merchant qtm on m.merchant_type = qtm.id and qtm.status = 1
 '''
 
 terminal_raw_query = '''select t.terminal_id, t.terminal_name, t.business_address,
@@ -88,7 +89,6 @@ def get_data_export(ids_queryset, type=None):
         ids += str(item['id']) + ','
     ids = ids[:-1]
     ids += ')'
-    print(f'[x] ids: {ids}')
     if len(ids) < 3:
         return []
 
