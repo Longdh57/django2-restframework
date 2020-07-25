@@ -201,6 +201,7 @@ def render_excel(request=None, return_url=True):
     worksheet.write('M1', 'SLGD K3', merge_format)
     worksheet.write('N1', 'SLGD K4', merge_format)
     worksheet.write('O1', 'Tình trạng', merge_format)
+    worksheet.write('P1', 'Ngành hàng', merge_format)
     worksheet.freeze_panes(1, 0)
 
     terminals = get_merchant_exports(request)
@@ -223,6 +224,7 @@ def render_excel(request=None, return_url=True):
         worksheet.write(row_num, 12, item['total_k3'] if item['total_k3'] else 0)
         worksheet.write(row_num, 13, item['total_k4'] if item['total_k4'] else 0)
         worksheet.write(row_num, 14, item['status'] if item['status'] else '')
+        worksheet.write(row_num, 15, item['merchant_type_brand_name'] if item['merchant_type_brand_name'] else '')
 
         row_num += 1
 
