@@ -37,7 +37,6 @@ class Migration(migrations.Migration):
                    ter.count_terminal as count_terminals,
                    scube.report_date,
                    scube.number_of_tran,
-                   scube.number_of_tran_acm,
                    scube.number_of_tran_w_1_7,
                    scube.number_of_tran_w_8_14,
                    scube.number_of_tran_w_15_21,
