@@ -1,7 +1,7 @@
-from datetime import datetime
-from django.db.models import Q
+import datetime as dt
 from django.conf import settings
 from django.db import connection
+from dateutil.relativedelta import relativedelta
 from django.core.management.base import BaseCommand
 
 from sale_portal.shop.models import Shop
@@ -13,14 +13,17 @@ from sale_portal.merchant.management.credentials.util_googlespread import *
 class Command(BaseCommand):
     help = 'Export merchant new and shop new in this month to google spreadsheet daily'
 
+    def get_day_22_last_month(self):
+        today = dt.date.today()
+        lastMonth = today + relativedelta(months=-1)
+        return lastMonth.replace(day=22)
+
     def get_merchant_count(self):
-        merchant_count = Merchant.objects.filter(Q(created_date__year=datetime.now().year),
-                                                 Q(created_date__month=datetime.now().month)).count()
+        merchant_count = Merchant.objects.filter(created_date__gte=self.get_day_22_last_month()).count()
         return merchant_count
 
     def get_shop_count(self):
-        shop_count = Shop.objects.filter(Q(created_date__year=datetime.now().year),
-                                         Q(created_date__month=datetime.now().month)).count()
+        shop_count = Shop.objects.filter(created_date__gte=self.get_day_22_last_month()).count()
         return shop_count
 
     def get_merchant_new_query(self):
@@ -51,6 +54,9 @@ class Command(BaseCommand):
         return spreadObj.send(spread_id, sheet_name, content, start_col, end_col, start_row)
 
     def export_merchant_new(self):
+        self.stdout.write(
+            self.style.WARNING('Start export Qr_Merchant new to google spreadsheet daily processing...'))
+
         spreadObj = GoogleSheetWithVerifyCode()
 
         merchant_count = self.get_merchant_count()
@@ -101,6 +107,9 @@ class Command(BaseCommand):
             self.style.SUCCESS('Finish export Merchant new to google spreadsheet daily processing!'))
 
     def export_shop_new(self):
+        self.stdout.write(
+            self.style.WARNING('Start export Shop new to google spreadsheet daily processing...'))
+
         spreadObj = GoogleSheetWithVerifyCode()
 
         shop_count = self.get_shop_count()
@@ -156,9 +165,6 @@ class Command(BaseCommand):
         cronjob = cron_create(name='export_qr_merchant_new_daily', type='merchant')
 
         try:
-            self.stdout.write(
-                self.style.WARNING('Start export Qr_Merchant new to google spreadsheet daily processing...'))
-
             self.export_merchant_new()
 
             self.export_shop_new()
