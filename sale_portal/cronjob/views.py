@@ -56,10 +56,14 @@ class CronjobLogViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         queryset = CronjobLog.objects.all()
         date = self.request.query_params.get('date', None)
+        status = self.request.query_params.get('status', None)
 
         if date is not None and date != '':
             queryset = queryset.filter(
                 created_date__date=(datetime.strptime(date, '%d/%m/%Y').strftime('%Y-%m-%d')))
+
+        if status is not None and status != '':
+            queryset = queryset.filter(status=int(status))
 
         return queryset
 
