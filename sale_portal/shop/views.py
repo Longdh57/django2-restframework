@@ -39,6 +39,7 @@ from sale_portal.utils.geo_utils import findDistance
 from sale_portal.utils.permission import get_user_permission_classes
 from sale_portal.utils.queryset import get_shops_viewable_queryset, get_provinces_viewable_queryset, \
     get_staffs_viewable_queryset
+from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
 
 @api_view(['GET'])
@@ -384,6 +385,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             shop.description = description
             shop.save()
 
+            refresh_shop_full_data()
             return successful_response()
 
         except Exception as e:
@@ -437,6 +439,7 @@ class ShopViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 terminal.save()
             else:
                 return custom_response('400', 'Merchant is invalid')
+        refresh_shop_full_data()
         return successful_response('created')
 
 
