@@ -40,7 +40,7 @@ left join (select st.email, tm.code as team, stc.shop_id from staff st
 '''
 
 shop_raw_query = '''select s.code , m.merchant_code, m.merchant_brand, m.merchant_name,d.full_name as department,p.ctkm, stt.email as staff_email, stt.team as team_code,
-qr_pro.province_name, qr_dis.district_name, qr_war.wards_name, s.address, s.street
+qr_pro.province_name, qr_dis.district_name, qr_war.wards_name, s.address, s.street,
 (select count(*) from terminal where shop_id = s.id) as count_ter,
 sc.number_of_tran_w_1_7 as k1, sc.number_of_tran_w_8_14 as k2, sc.number_of_tran_w_15_21 as k3, sc.number_of_tran_w_22_end as k4,
 sc.number_of_tran_acm as number_of_tran_acm, sc.number_of_tran_last_m as number_of_tran_last_m, s.created_date
