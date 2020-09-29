@@ -3,6 +3,7 @@ import json
 import time
 import logging
 import datetime
+import itertools
 import xlsxwriter
 
 from django.utils import formats
@@ -12,11 +13,15 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
 from django.contrib.auth.decorators import login_required, permission_required
 
+from django.db.models import F, Q
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from sale_portal.utils.permission import get_user_permission_classes
-from sale_portal.utils.queryset import get_staffs_viewable_queryset
+from sale_portal.utils.queryset import get_staffs_viewable_queryset, get_promotion_shops_viewable_queryset
 from . import PromotionStatus
+from sale_portal.utils.field_formatter import format_string
 from .serializers import SalePromotionSerializer
 from tablib import Dataset
+from unidecode import unidecode
 
 from sale_portal.shop.models import Shop
 from sale_portal.staff.models import Staff
@@ -25,6 +30,47 @@ from sale_portal.utils.excel_util import create_simple_excel_file, check_or_crea
 from sale_portal.sale_promotion_form.models import SalePromotion, SalePromotionTitle
 from sale_portal.common.standard_response import successful_response, custom_response, Code
 from sale_portal.utils.data_export import ExportType, get_data_export
+
+
+@api_view(['GET'])
+@login_required
+def list_promotion_shops_for_search(request):
+    """
+        API để search full text search không dấu  các shop dựa trên địa chỉ, shop_code hoặc merchant brand, param là name
+    """
+    name = request.GET.get('name', None)
+    user_info = request.user
+    queryset = get_promotion_shops_viewable_queryset(user_info)
+    if name is not None and name != '':
+        name = format_string(name)
+        querysetABS = queryset.filter(
+            Q(code__icontains=name) | Q(merchant__merchant_brand__icontains=name) | Q(address__icontains=name)
+        )[:10]
+        lengQuerysetABS = len(querysetABS)
+
+        if lengQuerysetABS < 10:
+            name_en = unidecode(name).lower()
+            search_query = SearchQuery(name_en)
+            querysetFTS = queryset.annotate(
+                rank=SearchRank(F('document'), search_query)
+            ).order_by(
+                '-rank'
+            ).exclude(pk__in=querysetABS)[:(10 - lengQuerysetABS)]
+        else:
+            querysetFTS = []
+
+    else:
+        querysetABS = queryset[:10]
+        querysetFTS = []
+
+    data = []
+    for shop in itertools.chain(querysetABS, querysetFTS):
+        code = shop.code if shop.code is not None else 'N/A'
+        address = shop.address if shop.address is not None else 'N/A'
+        merchant_brand = shop.merchant.merchant_brand if shop.merchant.merchant_brand is not None else 'N/A'
+        data.append({'id': shop.id, 'shop_info': code + ' - ' + merchant_brand + ' - ' + address})
+
+    return successful_response(data)
 
 
 class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
