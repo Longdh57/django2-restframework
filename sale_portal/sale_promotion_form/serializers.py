@@ -43,8 +43,6 @@ class SalePromotionSerializer(serializers.ModelSerializer):
             'tentcard_ctkm',
             'wobbler_ctkm',
             'status',
-            'image',
-            'sub_image',
             'created_date',
             'updated_date'
         )

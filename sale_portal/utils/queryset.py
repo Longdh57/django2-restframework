@@ -1,5 +1,6 @@
 from django.db.models import Q
 
+from sale_portal.sale_promotion_form.models import SalePromotion
 from sale_portal.shop.models import Shop
 from sale_portal.team.models import Team
 from sale_portal.user.models import User
@@ -105,6 +106,37 @@ def get_shops_viewable_queryset(user):
                     shops = StaffCare.objects.filter(staff__in=staffs, type=StaffCareType.STAFF_SHOP).values('shop')
                 else:
                     shops = StaffCare.objects.filter(staff=staff, type=StaffCareType.STAFF_SHOP).values('shop')
+                return Shop.objects.filter(pk__in=shops)
+            else:
+                return Shop.objects.none()
+
+    return Shop.objects.all()
+
+
+def get_promotion_shops_viewable_queryset(user):
+    if not user.is_superuser:
+        group = user.get_group()
+        if group is None or group.status is False:
+            return Shop.objects.none()
+        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+            # Neu la SM (or SA) cua tripi, teko thi load ds team => ds sale => ds shop
+            if user.is_manager_outside_vnpay:
+                staffs = get_staffs_viewable_queryset(user)
+                shops = SalePromotion.objects.filter(staff__in=staffs).values('shop')
+                return Shop.objects.filter(pk__in=shops)
+            # Neu la SM (or SA) cua Vnpay thi load Shop theo provinces lay ra tu area
+            provinces = QrProvince.objects.none()
+            for area in user.area_set.all():
+                provinces |= area.get_provinces()
+            return Shop.objects.filter(province__in=provinces)
+        else:
+            staff = Staff.objects.filter(email=user.email).first()
+            if staff and staff.team:
+                if staff.role == StaffTeamRoleType.TEAM_MANAGEMENT:
+                    staffs = Staff.objects.filter(team_id=staff.team.id)
+                    shops = SalePromotion.objects.filter(staff__in=staffs).values('shop')
+                else:
+                    shops = SalePromotion.objects.filter(staff=staff).values('shop')
                 return Shop.objects.filter(pk__in=shops)
             else:
                 return Shop.objects.none()
