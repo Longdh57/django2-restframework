@@ -151,11 +151,12 @@ class Command(BaseCommand):
                 item['shop_created_date'].strftime("%d-%m-%Y"),
                 item['terminal_id'],
                 item['terminal_name'],
+                item['merchant_type_name']
             ]
             content.append(row)
             index = index + 1
 
-        self.write(spreadObj=spreadObj, content=content, sheet_name='ShopNew', start_col='A', end_col='R', start_row=2)
+        self.write(spreadObj=spreadObj, content=content, sheet_name='ShopNew', start_col='A', end_col='S', start_row=2)
 
         self.stdout.write(
             self.style.SUCCESS('Finish export Shop new to google spreadsheet daily processing!'))
