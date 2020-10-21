@@ -41,7 +41,7 @@ deploy:develop-vnpay:
   before_script:
     - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
     - eval $(ssh-agent -s)
-    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - ssh-add <(echo "$SP_SSH_PRIVATE_KEY")
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
