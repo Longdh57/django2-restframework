@@ -1,8 +1,18 @@
+include:
+  - project: 'digi-life/workloads/ci-template'
+    ref: master
+    file: '/gitlab-ci.v1.0.yaml'
+variables:
+  IMAGE_REPOSITORY: asia.gcr.io/digilife-registry/sale-portal/sale-portal-api-test
+
 image: python:3.6
 
 stages:
   - test
+  - dockerize
   - deploy
+  - changelog
+  - promote
 
 test:
   stage: test
