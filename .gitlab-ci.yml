@@ -7,14 +7,6 @@ variables:
 
 image: python:3.6
 
-stages:
-  - test
-  - dockerize
-  - deploy
-  - changelog
-  - promote
-
-
 # test:vnpay-cluster:
 #   stage: test
 #   script:
