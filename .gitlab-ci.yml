@@ -51,3 +51,4 @@ deploy:develop-vnpay:
     - master
   tags:
     - marketing-portal
+  allow_failure: true
