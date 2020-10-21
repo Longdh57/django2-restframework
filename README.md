@@ -1,6 +1,6 @@
 # CMS Vnpay Sale Portal
  
-# Main Function
+# Function
 *- Frontend:*  
 Provide a System which helps Sale manager can manage sale staff. Application version 1 use framework Django version 2.2.7 to develop.  
 *- Backend:*  
