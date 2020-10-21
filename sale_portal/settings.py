@@ -98,7 +98,7 @@ configure(
 runserver.default_port = os.environ.get('RUNSERVER_DEFAULT_PORT', '9001')
 print('START SALE PORTAL BACKEND...')
 
-SECRET_KEY = os.environ.get('SECRET_KEY', '')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'auv%ti(v3h^6n)v@40rqsd8$57688i4cszmal^i0bn8llw5soh')
 
 DEBUG = get_bool_from_env('DEBUG', True)
 
