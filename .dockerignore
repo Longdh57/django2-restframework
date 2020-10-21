@@ -1,0 +1,14 @@
+.idea/*
+.dockerignore
+dockerfile
+__pycache__/
+/backend-static/*
+/media/excel/*
+/media/images/*
+/media/documents/*
+/media/sale_report_form/*
+.venv/*
+venv/*
+db.sqlite3
+*.log.*
+*.log
