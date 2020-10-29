@@ -2,9 +2,9 @@ include:
   - project: 'digi-life/workloads/ci-template'
     ref: master
     file: '/gitlab-ci.v1.0.yaml'
+    when: $DEPLOY_K8S==true
 variables:
   IMAGE_REPOSITORY: asia.gcr.io/digilife-registry/sale-portal/sale-portal-api
-when: $DEPLOY_K8S==true
 
 image: python:3.6
 
