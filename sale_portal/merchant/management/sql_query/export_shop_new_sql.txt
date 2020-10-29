@@ -16,13 +16,21 @@ select
 	s.address as shop_address,
 	s.created_date as shop_created_date,
 	t.terminal_id,
-	t.terminal_name
+	t.terminal_name,
+	s_cube.number_of_tran_acm,
+	s_cube.number_of_tran_last_m,
+	s_cube.number_of_tran,
+	s_cube.number_of_tran_w_1_7,
+	s_cube.number_of_tran_w_8_14,
+	s_cube.number_of_tran_w_15_21,
+	s_cube.number_of_tran_w_22_end
 from
 	merchant m
 join shop s on s.merchant_id = m.id
 join terminal t on t.shop_id = s.id
 join staff_care sc on s.id = sc.shop_id and sc."type" = 0
 join staff st on sc.staff_id = st.id
+left join shop_cube s_cube on s.id = s_cube.shop_id
 left join qr_type_merchant qtm on m.merchant_type = qtm.id
 left join qr_staff stm on m.staff = stm.staff_id
 left join qr_province p on p.id = s.province_id
