@@ -1,10 +1,12 @@
 import os
 import json
 import time
+import base64
 import logging
 import datetime
 import itertools
 import xlsxwriter
+from time import time as time_f
 
 from django.utils import formats
 from django.conf import settings
@@ -165,14 +167,29 @@ class SalePromotionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         tentcard_ctkm = True if tentcard_ctkm is not None and tentcard_ctkm == 'true' else False
         wobbler_ctkm = True if wobbler_ctkm is not None and wobbler_ctkm == 'true' else False
 
+        # Tao folder save image
+        location = settings.FS_IMAGE_UPLOADS + datetime.date.today().isoformat()
+        base_url = settings.FS_IMAGE_URL + datetime.date.today().isoformat()
+        if not os.path.exists(location):
+            os.makedirs(location)
+
         if image is not None and image != '':
-            sale_promotion.image = image
+            promotion_image_filename = str(request.user.username) + '-promo_image' + str(time_f()) + '.png'
+            with open(location + '/' + promotion_image_filename, "wb") as f:
+                f.write(base64.b64decode(image[23:]))
+                f.close()
+                sale_promotion.image = base_url + '/' + promotion_image_filename
 
         elif status != 0 and (sale_promotion.image is None or sale_promotion.image == ''):
             return custom_response(Code.BAD_REQUEST, 'Cần upload ảnh nghiệm thu với trạng thái hiện tại của shop')
 
         if sub_image is not None and sub_image != '':
             sale_promotion.sub_image = sub_image
+            promotion_sub_image_filename = str(request.user.username) + '-promo_sub_image' + str(time_f()) + '.png'
+            with open(location + '/' + promotion_sub_image_filename, "wb") as f:
+                f.write(base64.b64decode(sub_image[23:]))
+                f.close()
+                sale_promotion.sub_image = base_url + '/' + promotion_sub_image_filename
 
         sale_promotion.status = status
         sale_promotion.tentcard_ctkm = tentcard_ctkm
