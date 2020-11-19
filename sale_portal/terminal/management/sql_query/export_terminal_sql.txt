@@ -1,0 +1,19 @@
+select t.terminal_id,
+       t.terminal_name,
+       m.merchant_code,
+       m.merchant_brand,
+       m.merchant_name,
+       qs.email         as mer_staff_email,
+       s.code,
+       st.email         as shop_staff_email,
+       qp.province_name as ter_province_name,
+       t.created_date   as ter_created_date
+from terminal t
+         inner join merchant m on m.id = t.merchant_id
+         left join qr_staff qs on m.staff = qs.staff_id
+         inner join shop s on t.shop_id = s.id
+         left join staff_care sc on s.id = sc.shop_id
+         left join staff st on sc.staff_id = st.id
+         left join qr_province qp on t.province_code = qp.province_code
+where t.status = 1
+order by t.id desc
