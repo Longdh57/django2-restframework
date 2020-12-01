@@ -1,12 +1,27 @@
 include:
   - project: 'digi-life/workloads/ci-template'
-    ref: master
-    file: '/gitlab-ci.v1.0.yaml'
+    ref: f/dungntc
+    file: '/vnpay-gitlab-ci.yaml'
     when: $DEPLOY_K8S==true
 variables:
   IMAGE_REPOSITORY: asia.gcr.io/digilife-registry/sale-portal/sale-portal-api
 
 image: python:3.6
+
+dockerize:dockerize-k8s:
+  only:
+    refs:
+      - master
+
+deploy:develop-k8s:
+  only:
+    refs:
+      - master
+
+release:
+  only:
+    refs:
+      - master
 
 # test:vnpay-cluster:
 #   stage: test
