@@ -9,6 +9,7 @@ from django.db import connections, connection
 from sale_portal.shop.models import Shop
 from sale_portal.shop_cube.models import ShopCube
 from sale_portal.utils.cronjob_util import cron_create, cron_update
+from sale_portal.utils.integrate_slack import post_message as slack_post_message
 from sale_portal.utils.refresh_shop_full_data import refresh_shop_full_data
 
 
@@ -42,6 +43,10 @@ class Command(BaseCommand):
             count_shop_cube = self.get_count_shop_cube()
 
             if count_shop_cube == 0:
+                slack_post_message(
+                    pretext='Hệ thống Sale Portal V2',
+                    title=f'Job Transaction publish_shop lỗi ngày {date.today().strftime("%d/%m/%Y")}'
+                )
                 raise Exception("number of shop cube is 0")
             print(f'Count DWH shop_cube row: {count_shop_cube}')
 

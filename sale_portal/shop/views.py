@@ -132,7 +132,7 @@ def list_recommend_shops(request, pk):
                                             current_shop.longitude)
                     nearly_shops_by_latlong.append({
                         'id': shop.id,
-                        'shop_info_html': '<strong>'+code + ' - ' + shop.name + '</strong> - ' + address,
+                        'shop_info_html': '<strong>' + code + ' - ' + shop.name + '</strong> - ' + address,
                         'shop_info': code + ' - ' + shop.name + ' - ' + address,
                         'address': shop.address,
                         'latitude': shop.latitude,
