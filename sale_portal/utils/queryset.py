@@ -9,7 +9,7 @@ from sale_portal.staff import StaffTeamRoleType
 from sale_portal.staff_care import StaffCareType
 from sale_portal.staff_care.models import StaffCare
 from sale_portal.administrative_unit.models import QrProvince
-from sale_portal.user import ROLE_SALE_MANAGER, ROLE_SALE_ADMIN
+from sale_portal.user import ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ONLY_VIEW
 
 
 def get_provinces_viewable_queryset(user):
@@ -17,7 +17,7 @@ def get_provinces_viewable_queryset(user):
         group = user.get_group()
         if group is None or group.status is False:
             return QrProvince.objects.none()
-        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+        if group.name in [ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ONLY_VIEW]:
             # Neu la SM (or SA) cua tripi, teko thi load all province
             if user.is_manager_outside_vnpay:
                 return QrProvince.objects.all()
@@ -38,7 +38,7 @@ def get_staffs_viewable_queryset(user):
         group = user.get_group()
         if group is None or group.status is False:
             return Staff.objects.none()
-        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+        if group.name in [ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ONLY_VIEW]:
             # Neu la SM (or SA) cua tripi, teko thi load ds team => ds sale
             if user.is_manager_outside_vnpay:
                 teams = user.team_set.all()
@@ -63,7 +63,7 @@ def get_teams_viewable_queryset(user):
         group = user.get_group()
         if group is None or group.status is False:
             return Team.objects.none()
-        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+        if group.name in [ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ONLY_VIEW]:
             # Neu la SM (or SA) cua tripi, teko thi load luon ds team
             if user.is_manager_outside_vnpay:
                 return user.team_set.all()
@@ -87,7 +87,7 @@ def get_shops_viewable_queryset(user):
         group = user.get_group()
         if group is None or group.status is False:
             return Shop.objects.none()
-        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+        if group.name in [ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ONLY_VIEW]:
             # Neu la SM (or SA) cua tripi, teko thi load ds team => ds sale => ds shop
             if user.is_manager_outside_vnpay:
                 staffs = get_staffs_viewable_queryset(user)
@@ -118,7 +118,7 @@ def get_promotion_shops_viewable_queryset(user):
         group = user.get_group()
         if group is None or group.status is False:
             return Shop.objects.none()
-        if group.name == ROLE_SALE_MANAGER or group.name == ROLE_SALE_ADMIN:
+        if group.name in [ROLE_SALE_MANAGER, ROLE_SALE_ADMIN, ROLE_ONLY_VIEW]:
             # Neu la SM (or SA) cua tripi, teko thi load ds team => ds sale => ds shop
             if user.is_manager_outside_vnpay:
                 staffs = get_staffs_viewable_queryset(user)
