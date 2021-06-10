@@ -398,3 +398,10 @@ SWAGGER_SETTINGS = {
         'delete'
     ],
 }
+
+MINIO_AUTH = {
+    'url': os.environ.get('MINIO_URL', ''),
+    'access_key': os.environ.get('MINIO_ACCESS_KEY', ''),
+    'secret_key': os.environ.get('MINIO_SECRET_KEY', ''),
+    'bucket_name': os.environ.get('MINIO_BUCKET_NAME', '')
+}
