@@ -33,7 +33,7 @@ class Command(BaseCommand):
             converters = {column: str.strip for column in column_names}
             file = minio_client.client.get_object(minio_client.bucket_name, object_name)
             dfs = pd.read_csv(file, converters=converters)
-            print(dfs)
+
             if len(dfs.columns.tolist()) != len(column_names):
                 raise Exception('Format file wrong')
 
@@ -44,7 +44,7 @@ class Command(BaseCommand):
             cursor = connection.cursor()
             cursor.execute('TRUNCATE TABLE "{0}" RESTART IDENTITY'.format(QrStaff._meta.db_table))
 
-            print("Truncate table qr_staff before synchronize all data from MMS - MINIO")
+            print("Step: Truncate table qr_staff before synchronize all data from MMS - MINIO")
 
             objs = (QrStaff(
                 staff_id=int(item[0]),
